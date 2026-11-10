@@ -94,7 +94,33 @@
   .livedot{color:var(--green);}
   #haChart{width:100%; height:340px; display:block; margin-top:8px;
            background:#0a1017; border:1px solid var(--line);
-           border-radius:6px;}
+           border-radius:6px; cursor:grab; touch-action:none;}
+  #haChart.grabbing{cursor:grabbing;}
+  /* ===== Chart view controls (build 2238): pan / zoom / height ====
+     The Warlord's ruling: he must be able to pull the candles back
+     and pull them to the middle of the screen, and set the chart
+     height himself. View only — HA candles and the timeframe tabs
+     are untouched. */
+  .chartctl{display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center;
+            margin-top:8px;}
+  .ctlbtn{background:var(--panel2); color:var(--txt);
+          border:1px solid var(--ice-dim); border-radius:6px;
+          padding:6px 13px; font-size:13px; font-weight:800;
+          letter-spacing:1px; cursor:pointer; font-family:inherit;}
+  .ctlbtn:hover{border-color:var(--ice);}
+  #btnLive{color:var(--green); border-color:rgba(46,230,107,.4);}
+  #btnLive.held{color:#06121a; background:#ffd75e; border-color:#ffd75e;
+          animation:wcpulse 1.6s ease-in-out infinite;}
+  .ctlgroup{display:inline-flex; align-items:center; gap:6px;}
+  .ctllab{font-size:11px; color:var(--dim); letter-spacing:1px;
+          font-weight:700;}
+  .ctlhint{font-size:11.5px; color:var(--dim); letter-spacing:.5px;}
+  #chartResize{margin-top:6px; text-align:center; font-size:11px;
+          font-weight:700; letter-spacing:2px; color:var(--dim);
+          background:var(--panel2); border:1px dashed var(--line);
+          border-radius:6px; padding:5px 0; cursor:ns-resize;
+          touch-action:none; user-select:none;}
+  #chartResize:hover{color:var(--ice); border-color:var(--ice-dim);}
   .trade{margin-top:12px; border-top:1px dashed #1c2833; padding-top:12px;}
   .picks{display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center;}
   .levwrap{font-size:11px; color:var(--dim); letter-spacing:1px;}
@@ -297,6 +323,14 @@
       <span id="chartTfName">3M</span> · Heikin-Ashi · LIVE · candle closes in <span id="candleClock">--:--</span></div>
     </div>
     <canvas id="haChart"></canvas>
+    <div class="chartctl">
+      <button type="button" id="btnLive" class="ctlbtn">● LIVE VIEW</button>
+      <span class="ctlgroup"><button type="button" id="btnZoomOut" class="ctlbtn">−</button><span class="ctllab">WIDEN</span><button type="button" id="btnZoomIn" class="ctlbtn">+</button></span>
+      <span class="ctlgroup"><button type="button" id="btnYMinus" class="ctlbtn">−</button><span class="ctllab">LENGTHEN</span><button type="button" id="btnYPlus" class="ctlbtn">+</button></span>
+      <span class="ctlgroup"><button type="button" id="btnHMinus" class="ctlbtn">−</button><span class="ctllab">HEIGHT</span><button type="button" id="btnHPlus" class="ctlbtn">+</button></span>
+      <span class="ctlhint">🖱️ Drag the candles to MOVE them — back through time, or up &amp; down to the middle · wheel / pinch WIDENS · drag the price numbers on the right edge up &amp; down to LENGTHEN</span>
+    </div>
+    <div id="chartResize" title="Drag to make the chart taller or shorter">↕ DRAG — CHART HEIGHT ↕</div>
     <div class="trade">
       <div class="picks">
         <span class="levwrap">SIZE = LEVERAGE<br>
@@ -581,6 +615,46 @@ function wcAxisUsd(v, coin){
   return coin === "LTC" ? "$" + v.toFixed(2) : fmtUsd(v);
 }
 
+function wcRows(){
+  var s = WC_VIEW.state, coin = WC_VIEW.coin;
+  var perCoin = (s && s.candles && s.candles[coin]) || null;
+  /* pre-2237 state carried one flat 3m series per coin — read it as
+     the 3M view so the chart never blanks mid-upgrade */
+  return !perCoin ? [] : (Array.isArray(perCoin)
+    ? (WC_VIEW.tf === "3m" ? perCoin : [])
+    : (perCoin[WC_VIEW.tf] || []));
+}
+
+/* ===== Chart view state (build 2238) =====
+   back: newest candles held off the right edge — 0 pins the view to
+   the live edge; when the soldier has dragged back, fresh candles
+   EXTEND back so the held window is never yanked forward.
+   visN: candles on screen — 0 = all (the old fit-everything view).
+   yOff: vertical pull, in price units added to the auto scale —
+   grab the chart and drag up/down to pull the candles to the
+   middle of the screen. yZoom: the lengthen — a stretch of the
+   price scale itself (1 = standard; >1 candle bodies run taller,
+   <1 they compress flat), worked by dragging the price axis.
+   m: last draw's css metrics for drags. */
+var WC_CHART = {back: 0, visN: 0, yOff: 0, yZoom: 1,
+                key: "", len: 0, m: null};
+
+function wcChartUi(){
+  var b = document.getElementById("btnLive");
+  if(!b) return;
+  var held = WC_CHART.back > 0 || WC_CHART.visN > 0
+             || WC_CHART.yOff !== 0 || WC_CHART.yZoom !== 1;
+  b.textContent = held ? "⟲ BACK TO LIVE" : "● LIVE VIEW";
+  b.classList.toggle("held", held);
+}
+
+function wcResetView(redraw){
+  WC_CHART.back = 0; WC_CHART.visN = 0; WC_CHART.yOff = 0;
+  WC_CHART.yZoom = 1;
+  wcChartUi();
+  if(redraw !== false) drawChart();
+}
+
 function drawChart(){
   var cvs = document.getElementById("haChart");
   if(!cvs) return;
@@ -592,12 +666,7 @@ function drawChart(){
   if(cvs.width !== W || cvs.height !== H){ cvs.width = W; cvs.height = H; }
   var ctx = cvs.getContext("2d");
   ctx.clearRect(0, 0, W, H);
-  var perCoin = (s && s.candles && s.candles[coin]) || null;
-  /* pre-2237 state carried one flat 3m series per coin — read it as
-     the 3M view so the chart never blanks mid-upgrade */
-  var rows = !perCoin ? [] : (Array.isArray(perCoin)
-    ? (WC_VIEW.tf === "3m" ? perCoin : [])
-    : (perCoin[WC_VIEW.tf] || []));
+  var rows = wcRows();
   ctx.font = (11 * dpr) + "px 'Segoe UI', Arial, sans-serif";
   if(!rows.length){
     ctx.fillStyle = "#7d93a5";
@@ -607,15 +676,48 @@ function drawChart(){
   }
   var axisW = 64 * dpr, padT = 8 * dpr, padB = 6 * dpr;
   var plotW = W - axisW, plotH = H - padT - padB;
+  /* --- view window (build 2238): slice the rows the soldier is
+     looking at; a held (panned-back) window rides over new candles
+     by extending `back`, so the 2s redraw never yanks it home --- */
+  var total = rows.length;
+  var vkey = coin + "|" + WC_VIEW.tf;
+  if(WC_CHART.key !== vkey){ WC_CHART.key = vkey; WC_CHART.len = total; }
+  else{
+    var grew = total - WC_CHART.len;
+    if(grew > 0 && WC_CHART.back > 0) WC_CHART.back += grew;
+    WC_CHART.len = total;
+  }
+  if(WC_CHART.back > total - 1) WC_CHART.back = Math.max(0, total - 1);
+  if(WC_CHART.back < 0) WC_CHART.back = 0;
+  var visN = WC_CHART.visN > 0 ? Math.min(WC_CHART.visN, total) : total;
+  var endIdx = total - 1 - WC_CHART.back;
+  var startIdx = Math.max(0, endIdx - visN + 1);
+  var view = rows.slice(startIdx, endIdx + 1);
   var lo = Infinity, hi = -Infinity, i, c;
-  for(i = 0; i < rows.length; i++){
-    if(rows[i][2] > hi) hi = rows[i][2];
-    if(rows[i][3] < lo) lo = rows[i][3];
+  for(i = 0; i < view.length; i++){
+    if(view[i][2] > hi) hi = view[i][2];
+    if(view[i][3] < lo) lo = view[i][3];
   }
   var live = s && s.prices ? s.prices[coin] : null;
-  if(live != null){ if(live > hi) hi = live; if(live < lo) lo = live; }
+  if(live != null && WC_CHART.back === 0){
+    if(live > hi) hi = live; if(live < lo) lo = live;
+  }
   var span = (hi - lo) || 1;
   hi += span * 0.07; lo -= span * 0.07; span = hi - lo;
+  /* the lengthen: stretch or compress the price scale around the
+     window's middle — candle bodies run taller, or flatten back */
+  if(WC_CHART.yZoom !== 1){
+    var ymid = (hi + lo) / 2;
+    hi = ymid + (hi - ymid) / WC_CHART.yZoom;
+    lo = ymid - (ymid - lo) / WC_CHART.yZoom;
+    span = hi - lo;
+  }
+  /* the vertical pull: shift the whole price window by the drag
+     offset so the candles can sit in the middle of the screen */
+  hi += WC_CHART.yOff; lo += WC_CHART.yOff;
+  WC_CHART.m = {plotH: Math.max(1, rect.height - 14), span: span,
+                step: Math.max(4, (rect.width - 64)
+                               / Math.max(1, view.length))};
   function Y(v){ return padT + (hi - v) / span * plotH; }
   /* grid + price axis */
   ctx.strokeStyle = "rgba(34,48,61,.9)"; ctx.fillStyle = "#7d93a5";
@@ -625,11 +727,11 @@ function drawChart(){
     ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(plotW, gy); ctx.stroke();
     ctx.fillText(wcAxisUsd(gv, coin), plotW + 6 * dpr, gy + 4 * dpr);
   }
-  var step = plotW / rows.length;
+  var step = plotW / view.length;
   var bodyW = Math.max(2, Math.min(14 * dpr, step * 0.62));
   var pulse = 0.55 + 0.45 * Math.sin(Date.now() / 380);
-  for(i = 0; i < rows.length; i++){
-    c = rows[i];
+  for(i = 0; i < view.length; i++){
+    c = view[i];
     var up = c[4] >= c[1];
     var col = up ? "#2ee66b" : "#ff4d5e";
     var cx = step * (i + 0.5);
@@ -639,7 +741,7 @@ function drawChart(){
     ctx.stroke();
     var yO = Y(c[1]), yC = Y(c[4]);
     var top = Math.min(yO, yC), hgt = Math.max(2, Math.abs(yC - yO));
-    if(i === rows.length - 1){
+    if(startIdx + i === total - 1){
       /* the forming candle glows — it is alive */
       ctx.save();
       ctx.shadowColor = col; ctx.shadowBlur = 14 * dpr * pulse;
@@ -665,6 +767,7 @@ function drawChart(){
   /* forming candle tag */
   ctx.fillStyle = "#ffd75e";
   ctx.fillText("● FORMING", Math.max(4, plotW - 74 * dpr), 14 * dpr);
+  wcChartUi();
 }
 
 function wcTickClock(){
@@ -689,11 +792,167 @@ document.getElementById("tfTabs").addEventListener("click", function(ev){
   document.getElementById("chartTfName").textContent =
     WC_TF_LABEL[WC_VIEW.tf];
   wcTickClock();
+  wcResetView(false); /* a fresh timeframe starts pinned to live */
   drawChart();
 });
 setInterval(wcTickClock, 500); wcTickClock();
-setInterval(drawChart, 2000);
+/* the chart repaints on a short beat so the forming candle's glow
+   glides instead of blinking at the 2s data cadence — the canvas
+   only resets its backing store when its size actually changed,
+   so a repaint is a clean in-place redraw, never a flash */
+setInterval(drawChart, 500);
 window.addEventListener("resize", drawChart);
+
+/* ===== Chart view controls (build 2238) — the hands on the chart ==
+   DRAG the canvas: sideways pulls through the candles (back in
+   time and home again); up/down pulls the candles themselves to
+   the middle of the screen. WHEEL / PINCH / the ZOOM buttons set
+   the candle spacing. HEIGHT buttons and the drag handle under
+   the chart set how tall the sheet is (remembered on this
+   device). BACK TO LIVE snaps home: latest candles, auto scale,
+   pinned to the live edge. While a view is held, new candles
+   never yank it — they queue up past the right edge until the
+   soldier comes back to live. View only: Heikin-Ashi stays the
+   only candle, the tabs stay the only timeframe switch. ===== */
+function wcZoomBy(f){
+  var rows = wcRows();
+  if(!rows.length) return;
+  var cur = WC_CHART.visN > 0 ? Math.min(WC_CHART.visN, rows.length)
+                              : rows.length;
+  var nv = Math.max(8, Math.min(rows.length, Math.round(cur * f)));
+  WC_CHART.visN = nv >= rows.length ? 0 : nv;
+  drawChart();
+}
+
+/* the lengthen: stretch the price scale (bodies taller) or
+   compress it back (bodies flatter) — snapped home near 1 */
+function wcYZoomBy(f){
+  var z = WC_CHART.yZoom * f;
+  z = Math.max(0.35, Math.min(4, z));
+  if(Math.abs(Math.log(z)) < 0.03) z = 1;
+  WC_CHART.yZoom = z;
+  drawChart();
+}
+
+function wcSetChartH(h){
+  var cvs = document.getElementById("haChart");
+  if(!cvs) return;
+  h = Math.max(200, Math.min(760, Math.round(h)));
+  cvs.style.height = h + "px";
+  try{ localStorage.setItem("wc-chart-h", String(h)); }catch(e){}
+  drawChart();
+}
+
+(function(){
+  var cvs = document.getElementById("haChart");
+  if(!cvs) return;
+  try{
+    var sh = parseInt(localStorage.getItem("wc-chart-h") || "", 10);
+    if(sh >= 200 && sh <= 760) cvs.style.height = sh + "px";
+  }catch(e){}
+  var bl = document.getElementById("btnLive");
+  if(bl) bl.addEventListener("click", function(){ wcResetView(true); });
+  var zi = document.getElementById("btnZoomIn"),
+      zo = document.getElementById("btnZoomOut");
+  if(zi) zi.addEventListener("click", function(){ wcZoomBy(0.7); });
+  if(zo) zo.addEventListener("click", function(){ wcZoomBy(1.4); });
+  var yp = document.getElementById("btnYPlus"),
+      ym = document.getElementById("btnYMinus");
+  if(yp) yp.addEventListener("click", function(){ wcYZoomBy(1.3); });
+  if(ym) ym.addEventListener("click", function(){ wcYZoomBy(0.77); });
+  var hp = document.getElementById("btnHPlus"),
+      hm = document.getElementById("btnHMinus");
+  if(hp) hp.addEventListener("click", function(){
+    wcSetChartH(cvs.getBoundingClientRect().height + 60); });
+  if(hm) hm.addEventListener("click", function(){
+    wcSetChartH(cvs.getBoundingClientRect().height - 60); });
+
+  var pts = {}, drag = null, pinchD = 0;
+  cvs.addEventListener("pointerdown", function(e){
+    try{ cvs.setPointerCapture(e.pointerId); }catch(err){}
+    pts[e.pointerId] = {x: e.clientX, y: e.clientY};
+    var ids = Object.keys(pts);
+    if(ids.length === 2){
+      pinchD = Math.hypot(pts[ids[0]].x - pts[ids[1]].x,
+                          pts[ids[0]].y - pts[ids[1]].y);
+      drag = null;
+    }else if(ids.length === 1){
+      var rect0 = cvs.getBoundingClientRect();
+      /* a drag that starts on the price axis (the right gutter,
+         where the price numbers live) LENGTHENS the scale instead
+         of moving the candles */
+      var onAxis = (e.clientX - rect0.left) > (rect0.width - 64);
+      drag = {x: e.clientX, y: e.clientY, axis: onAxis,
+              back: WC_CHART.back, yOff: WC_CHART.yOff,
+              yZoom: WC_CHART.yZoom};
+      cvs.classList.add("grabbing");
+    }
+    e.preventDefault();
+  });
+  cvs.addEventListener("pointermove", function(e){
+    if(!pts[e.pointerId]) return;
+    pts[e.pointerId] = {x: e.clientX, y: e.clientY};
+    var ids = Object.keys(pts);
+    if(ids.length === 2){
+      var d = Math.hypot(pts[ids[0]].x - pts[ids[1]].x,
+                         pts[ids[0]].y - pts[ids[1]].y);
+      if(pinchD > 0 && d > 0){ wcZoomBy(pinchD / d); pinchD = d; }
+      return;
+    }
+    if(!drag) return;
+    if(drag.axis){
+      /* lengthen: pull down to stretch the candles taller, push
+         up to compress them back — exponential, so it stays smooth
+         all the way out and all the way home */
+      var z = drag.yZoom * Math.exp((e.clientY - drag.y) / 140);
+      z = Math.max(0.35, Math.min(4, z));
+      if(Math.abs(Math.log(z)) < 0.03) z = 1;
+      WC_CHART.yZoom = z;
+      drawChart();
+      return;
+    }
+    if(!WC_CHART.m) return;
+    var rows = wcRows();
+    if(!rows.length) return;
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    /* grab-and-pull: drag right and older candles slide in (back
+       grows); drag down and the candles themselves sink down the
+       screen — the price window rises under them */
+    WC_CHART.back = Math.max(0, Math.min(rows.length - 1,
+      drag.back + Math.round(dx / WC_CHART.m.step)));
+    WC_CHART.yOff = drag.yOff
+      + dy / WC_CHART.m.plotH * WC_CHART.m.span;
+    drawChart();
+  });
+  function endPt(e){
+    delete pts[e.pointerId];
+    if(!Object.keys(pts).length){
+      drag = null; pinchD = 0; cvs.classList.remove("grabbing");
+    }
+  }
+  cvs.addEventListener("pointerup", endPt);
+  cvs.addEventListener("pointercancel", endPt);
+  cvs.addEventListener("wheel", function(e){
+    e.preventDefault();
+    wcZoomBy(e.deltaY > 0 ? 1.12 : 0.89);
+  }, {passive: false});
+
+  var handle = document.getElementById("chartResize");
+  if(handle){
+    var rz = null;
+    handle.addEventListener("pointerdown", function(e){
+      try{ handle.setPointerCapture(e.pointerId); }catch(err){}
+      rz = {y: e.clientY, h: cvs.getBoundingClientRect().height};
+      e.preventDefault();
+    });
+    handle.addEventListener("pointermove", function(e){
+      if(rz) wcSetChartH(rz.h + (e.clientY - rz.y));
+    });
+    handle.addEventListener("pointerup", function(){ rz = null; });
+    handle.addEventListener("pointercancel", function(){ rz = null; });
+  }
+  wcChartUi();
+})();
 
 document.getElementById("coinTabs").addEventListener("click", function(ev){
   var b = ev.target.closest ? ev.target.closest(".tab") : null;
@@ -702,6 +961,7 @@ document.getElementById("coinTabs").addEventListener("click", function(ev){
   var tabs = this.querySelectorAll(".tab");
   for(var i = 0; i < tabs.length; i++)
     tabs[i].classList.toggle("active", tabs[i] === b);
+  wcResetView(false); /* a fresh coin starts pinned to live */
   drawChart();
   var s = WC_VIEW.state;
   if(s && s.prices && s.prices[WC_VIEW.coin] != null)
