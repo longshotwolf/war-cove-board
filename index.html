@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>WAR COVE — Paper Trading Game</title><!-- build 2229 -->
+<title>WAR COVE — Paper Trading Game</title><!-- build 2230 -->
 <style>
   :root{
     --steel:#0b0f14; --panel:#121a22; --panel2:#0e141b; --line:#22303d;
@@ -20,7 +20,13 @@
      text-shadow:0 0 14px rgba(87,200,255,.45);}
   h1 small{display:block; font-size:11px; letter-spacing:2px; color:var(--dim);}
   .price{text-align:right;}
-  .price .btc{font-size:26px; font-weight:700;}
+  .price .ltc{font-size:27px; font-weight:800; color:#a6d8ff;
+              text-shadow:0 0 12px rgba(87,200,255,.35);}
+  .price .ltc .home{font-size:11px; color:#ffd75e; letter-spacing:2px;
+                    vertical-align:middle;}
+  .price .alts{font-size:15px; font-weight:700; margin-top:2px;}
+  .price .alts .alt{margin-left:14px;}
+  .price .stale{color:var(--red) !important;}
   .price .sub{font-size:11px; color:var(--dim); letter-spacing:1px;}
   .badge{display:inline-block; padding:2px 10px; border-radius:9px;
          font-size:11px; font-weight:700; letter-spacing:1px;}
@@ -74,7 +80,8 @@
   <header>
     <h1>⚔️ WAR COVE<small>PAPER TRADING GAME · VIRTUAL SATS ONLY · NO REAL MONEY</small></h1>
     <div class="price">
-      <div class="btc" id="btcPrice">BTC $—</div>
+      <div class="ltc"><span id="ltcPrice">LTC $—</span> <span class="home">★ HOME COIN</span></div>
+      <div class="alts"><span class="alt" id="btcPrice">BTC $—</span><span class="alt" id="ethPrice">ETH $—</span></div>
       <div class="sub"><span id="feedBadge" class="badge stalled">FEED …</span>
       &nbsp;margin <span id="margin">10,000</span> sats / trade</div>
       <div class="soundrow"><button id="soundBtn" type="button">🔊 SOUND ON</button><span id="soundHint" class="soundhint">👆 TAP ANYWHERE FOR SOUND</span></div>
@@ -102,7 +109,7 @@
     </div>
     <div class="box">
       <h3>🎯 OPEN POSITIONS</h3>
-      <table><thead><tr><th>SOLDIER</th><th>SIDE</th><th>ENTRY</th><th>uPnL</th></tr></thead>
+      <table><thead><tr><th>SOLDIER</th><th>SIDE</th><th>COIN</th><th>ENTRY</th><th>uPnL</th></tr></thead>
       <tbody id="positions"></tbody></table>
     </div>
   </div>
@@ -112,7 +119,7 @@
     <ul id="events"></ul>
   </div>
 
-  <div class="foot">TYPE <span class="cmd">!long 50x</span> OR <span class="cmd">!short 50x</span> TO ENLIST ·
+  <div class="foot">TYPE <span class="cmd">!long LTC 50x</span> OR <span class="cmd">!short LTC 50x</span> TO ENLIST — LTC IS HOME · BTC &amp; ETH TOO (<span class="cmd">!long BTC</span> · <span class="cmd">!short ETH</span>) ·
   <span class="cmd">!close</span> TO BANK · <span class="cmd">!rank</span> · <span class="cmd">!positions</span> ·
   SHORT THE TOP · LONG THE BOTTOM ·<br>EVERY SOLDIER STARTS WITH 100,000 SATS · BLOW THE ACCOUNT AND YOU RE-ENLIST — 💀 IT GOES ON YOUR RECORD</div>
 </div>
@@ -122,7 +129,7 @@ function fmtSats(n){ return (n>0?"+":"") + n.toLocaleString("en-US") + " sats"; 
 function fmtUsd(v){ return "$" + v.toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2}); }
 function cls(n){ return n>=0 ? "pos" : "neg"; }
 
-/* ===== War Cove event sounds + leaderboard flashes (build 2229) =====
+/* ===== War Cove event sounds + leaderboard flashes (build 2230) =====
    Event kind -> cue map (unit-checked):
      close with pnl > 0  -> "win"  (winning close: bright chime, green flash)
      close with pnl < 0  -> "lose" (losing close: sad wah-wah sting, red flash)
@@ -309,8 +316,16 @@ async function refresh(){
   try{
     const s = await (await fetch("state.json?t=" + Date.now(), {cache:"no-store"})).json();
     wcProcessEvents(s.events);
-    document.getElementById("btcPrice").textContent =
-      s.btc_price == null ? "BTC $—" : "BTC " + fmtUsd(s.btc_price);
+    const px = s.prices || {};
+    const staleMap = s.stalled_by_coin || {};
+    function setPx(id, coin){
+      const el = document.getElementById(id);
+      const v = px[coin] != null ? px[coin]
+        : (coin === "BTC" ? s.btc_price : null);
+      el.textContent = v == null ? coin + " $—" : coin + " " + fmtUsd(v);
+      el.classList.toggle("stale", !!staleMap[coin]);
+    }
+    setPx("ltcPrice", "LTC"); setPx("btcPrice", "BTC"); setPx("ethPrice", "ETH");
     const badge = document.getElementById("feedBadge");
     badge.textContent = s.stalled ? "⏸ FEED STALLED" : "● LIVE TAPE";
     badge.className = "badge " + (s.stalled ? "stalled" : "live");
@@ -334,9 +349,10 @@ async function refresh(){
     document.getElementById("positions").innerHTML = s.open_positions.map(p=>
       `<tr><td>${p.user}</td>` +
       `<td class="side-${p.side}">${p.side.toUpperCase()} ${p.lev}x</td>` +
+      `<td>${p.coin || "BTC"}</td>` +
       `<td>${fmtUsd(p.entry)}</td>` +
       `<td class="${cls(p.upnl)}">${fmtSats(p.upnl)}</td></tr>`).join("")
-      || '<tr><td colspan="4" style="color:var(--dim)">No open positions.</td></tr>';
+      || '<tr><td colspan="5" style="color:var(--dim)">No open positions.</td></tr>';
 
     document.getElementById("events").innerHTML =
       s.events.map(e=>`<li>${e.text}</li>`).join("")
