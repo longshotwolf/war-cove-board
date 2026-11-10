@@ -110,7 +110,7 @@ function cls(n){ return n>=0 ? "pos" : "neg"; }
 
 async function refresh(){
   try{
-    const s = await (await fetch("https://gist.githubusercontent.com/longshotwolf/17c3403c80096477efc2df82348514b5/raw/state.json?t=" + Date.now(), {cache:"no-store"})).json();
+    const s = await (await fetch("state.json?t=" + Date.now(), {cache:"no-store"})).json();
     document.getElementById("btcPrice").textContent =
       s.btc_price == null ? "BTC $—" : "BTC " + fmtUsd(s.btc_price);
     const badge = document.getElementById("feedBadge");
