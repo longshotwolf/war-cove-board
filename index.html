@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>WAR COVE — Paper Trading Game</title><!-- build 2231 -->
+<title>WAR COVE — Paper Trading Game</title><!-- build 2232 -->
 <style>
   :root{
     --steel:#0b0f14; --panel:#121a22; --panel2:#0e141b; --line:#22303d;
@@ -50,7 +50,7 @@
   table{width:100%; border-collapse:collapse; font-size:14px;}
   td, th{padding:4px 6px; text-align:left;}
   th{color:var(--dim); font-size:11px; letter-spacing:1px;}
-  tr.top1 td{color:#ffd75e; font-weight:700;}
+  tr.top1 td{color:var(--txt); font-weight:700;}
   .pos{color:var(--green);} .neg{color:var(--red);}
   .side-long{color:var(--green); font-weight:700;}
   .side-short{color:var(--red); font-weight:700;}
@@ -130,7 +130,7 @@ function fmtSats(n){ return (n>0?"+":"") + n.toLocaleString("en-US") + " sats"; 
 function fmtUsd(v){ return "$" + v.toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2}); }
 function cls(n){ return n>=0 ? "pos" : "neg"; }
 
-/* ===== War Cove event sounds + leaderboard flashes (build 2231) =====
+/* ===== War Cove event sounds + leaderboard flashes (build 2232) =====
    Event kind -> cue map (unit-checked):
      close with pnl > 0  -> "win"  (winning close: bright chime, green flash)
      close with pnl < 0  -> "lose" (losing close: sad wah-wah sting, red flash)
