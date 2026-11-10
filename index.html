@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>WAR COVE — Paper Trading Game</title><!-- build 2227 -->
+<title>WAR COVE — Paper Trading Game</title><!-- build 2228 -->
 <style>
   :root{
     --steel:#0b0f14; --panel:#121a22; --panel2:#0e141b; --line:#22303d;
@@ -83,7 +83,7 @@
   <div class="cols">
     <div class="box">
       <h3>🏆 LEADERBOARD — TOP 10</h3>
-      <table><thead><tr><th>#</th><th>SOLDIER</th><th>P&amp;L</th><th>W–L</th><th>💀</th></tr></thead>
+      <table><thead><tr><th>#</th><th>SOLDIER</th><th>BALANCE</th><th>P&amp;L</th><th>W–L</th><th>💀 ACCOUNTS BLOWN</th><th>TRADES LIQUIDATED</th></tr></thead>
       <tbody id="board"></tbody></table>
     </div>
     <div class="box">
@@ -100,7 +100,7 @@
 
   <div class="foot">TYPE <span class="cmd">!long 50x</span> OR <span class="cmd">!short 50x</span> TO ENLIST ·
   <span class="cmd">!close</span> TO BANK · <span class="cmd">!rank</span> · <span class="cmd">!positions</span> ·
-  SHORT THE TOP · LONG THE BOTTOM</div>
+  SHORT THE TOP · LONG THE BOTTOM ·<br>EVERY SOLDIER STARTS WITH 100,000 SATS · BLOW THE ACCOUNT AND YOU RE-ENLIST — 💀 IT GOES ON YOUR RECORD</div>
 </div>
 
 <script>
@@ -128,9 +128,10 @@ async function refresh(){
 
     document.getElementById("board").innerHTML = s.leaderboard.map((row,i)=>
       `<tr class="${i===0?'top1':''}"><td>${i+1}</td><td>${row.display}</td>` +
+      `<td>${(row.balance ?? 0).toLocaleString("en-US")} sats</td>` +
       `<td class="${cls(row.realized)}">${fmtSats(row.realized)}</td>` +
-      `<td>${row.wins}–${row.losses}</td><td>${row.liqs}</td></tr>`).join("")
-      || '<tr><td colspan="5" style="color:var(--dim)">No settled trades yet — be the first on the board.</td></tr>';
+      `<td>${row.wins}–${row.losses}</td><td>${row.busts ?? 0}</td><td>${row.liqs}</td></tr>`).join("")
+      || '<tr><td colspan="7" style="color:var(--dim)">No settled trades yet — be the first on the board.</td></tr>';
 
     document.getElementById("positions").innerHTML = s.open_positions.map(p=>
       `<tr><td>${p.user}</td>` +
