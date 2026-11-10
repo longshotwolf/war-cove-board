@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>WAR COVE — Paper Trading Game</title><!-- build 2233 -->
+<title>WAR COVE — Paper Trading Game</title><!-- build 2234 -->
 <style>
   :root{
     --steel:#0b0f14; --panel:#121a22; --panel2:#0e141b; --line:#22303d;
@@ -12,7 +12,7 @@
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{background:var(--steel); color:var(--txt);
-       font-family:"Segoe UI", Arial, sans-serif; padding:14px;}
+       font-family:"Segoe UI", Arial, sans-serif; padding:36px 28px 28px;}
   .wrap{max-width:1060px; margin:0 auto;}
   header{display:flex; justify-content:space-between; align-items:flex-end;
          border-bottom:2px solid var(--ice-dim); padding-bottom:8px;}
@@ -74,9 +74,34 @@
   tr.flash-red td{animation:wcFlashRed .5s ease-in-out 3;}
   tr.flash-green td{animation:wcFlashGreen .5s ease-in-out 4;}
   tr.flash-red-hard td{animation:wcFlashRedHard .45s ease-in-out 6;}
+  /* ===== War Cove neon frame (build 2234) — fixed full-viewport border:
+     neon GREEN double-line frame with a soft outer glow, electric BLUE
+     corner accents (Enity energy). Overlay only: pointer-events none,
+     content padded inside it via body padding above. ===== */
+  .wc-frame{position:fixed; inset:6px; z-index:9999; pointer-events:none;
+            border:2px solid #39ff6a; border-radius:4px;
+            box-shadow:0 0 12px rgba(57,255,106,.55),
+                       inset 0 0 12px rgba(57,255,106,.30);}
+  .wc-frame::before{content:""; position:absolute; inset:5px;
+                    border:1px solid rgba(57,255,106,.38); border-radius:2px;}
+  .wc-frame i{position:absolute; width:38px; height:38px;
+              border:0 solid var(--ice);
+              filter:drop-shadow(0 0 6px rgba(87,200,255,.85));}
+  .wc-frame .tl{top:-4px; left:-4px; border-top-width:4px; border-left-width:4px;}
+  .wc-frame .tr{top:-4px; right:-4px; border-top-width:4px; border-right-width:4px;}
+  .wc-frame .bl{bottom:-4px; left:-4px; border-bottom-width:4px; border-left-width:4px;}
+  .wc-frame .br{bottom:-4px; right:-4px; border-bottom-width:4px; border-right-width:4px;}
+  .wc-frame .wc-title{position:absolute; top:-13px; left:50%;
+                      transform:translateX(-50%); white-space:nowrap;
+                      background:var(--steel); padding:2px 14px 2px 18px;
+                      font-size:21px; font-weight:800; letter-spacing:4px;
+                      color:#39ff6a;
+                      text-shadow:0 0 10px rgba(57,255,106,.85),
+                                  0 0 24px rgba(57,255,106,.40);}
 </style>
 </head>
 <body>
+<div class="wc-frame" aria-hidden="true"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i><span class="wc-title">WAR COVE PAPER TRADING GAME</span></div>
 <div class="wrap">
   <header>
     <h1>⚔️ WAR COVE<small>PAPER TRADING GAME · VIRTUAL SATS ONLY · NO REAL MONEY</small></h1>
@@ -130,7 +155,7 @@ function fmtSats(n){ return (n>0?"+":"") + n.toLocaleString("en-US") + " sats"; 
 function fmtUsd(v){ return "$" + v.toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2}); }
 function cls(n){ return n>=0 ? "pos" : "neg"; }
 
-/* ===== War Cove event sounds + leaderboard flashes (build 2233) =====
+/* ===== War Cove event sounds + leaderboard flashes (build 2234) =====
    Event kind -> cue map (unit-checked):
      close with pnl > 0  -> "win"  (winning close: bright chime, green flash)
      close with pnl < 0  -> "lose" (losing close: sad wah-wah sting, red flash)
