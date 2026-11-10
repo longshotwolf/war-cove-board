@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>WAR COVE — Paper Trading Game</title><!-- build 2236 -->
+<title>WAR COVE — Paper Trading Game</title><!-- build 2237 -->
 <style>
   :root{
     --steel:#0b0f14; --panel:#121a22; --panel2:#0e141b; --line:#22303d;
@@ -74,8 +74,9 @@
   tr.flash-red td{animation:wcFlashRed .5s ease-in-out 3;}
   tr.flash-green td{animation:wcFlashGreen .5s ease-in-out 4;}
   tr.flash-red-hard td{animation:wcFlashRedHard .45s ease-in-out 6;}
-  /* ===== Game screen (build 2236): live 3m Heikin-Ashi chart, the
-     LONG/SHORT call buttons, and the YOUR BALANCE panel — one screen:
+  /* ===== Game screen (build 2237): live Heikin-Ashi chart on all
+     three timeframes (3M / 1H / 6H tabs), the LONG/SHORT call
+     buttons, and the YOUR BALANCE panel — one screen:
      chart -> buttons -> balance. ===== */
   .charthead{display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end;
              justify-content:space-between; margin-bottom:2px;}
@@ -278,15 +279,22 @@
   </div>
 
   <div class="box" style="margin-bottom:12px;">
-    <h3>📈 THE GAME SCREEN — 3M · HEIKIN-ASHI · <span class="livedot">● LIVE</span></h3>
+    <h3>📈 THE GAME SCREEN — HEIKIN-ASHI · <span class="livedot">● LIVE</span></h3>
     <div class="charthead">
-      <div class="tabs" id="coinTabs">
-        <button type="button" class="tab active" data-coin="LTC">LTC ★ HOME</button>
-        <button type="button" class="tab" data-coin="BTC">BTC</button>
-        <button type="button" class="tab" data-coin="ETH">ETH</button>
+      <div>
+        <div class="tabs" id="coinTabs">
+          <button type="button" class="tab active" data-coin="LTC">LTC ★ HOME</button>
+          <button type="button" class="tab" data-coin="BTC">BTC</button>
+          <button type="button" class="tab" data-coin="ETH">ETH</button>
+        </div>
+        <div class="tabs" id="tfTabs" style="margin-top:6px;">
+          <button type="button" class="tab active" data-tf="3m">3M</button>
+          <button type="button" class="tab" data-tf="1h">1H</button>
+          <button type="button" class="tab" data-tf="6h">6H</button>
+        </div>
       </div>
       <div class="chartmeta"><span class="big" id="chartPrice">—</span><br>
-      3m · Heikin-Ashi · LIVE · candle closes in <span id="candleClock">--:--</span></div>
+      <span id="chartTfName">3M</span> · Heikin-Ashi · LIVE · candle closes in <span id="candleClock">--:--</span></div>
     </div>
     <canvas id="haChart"></canvas>
     <div class="trade">
@@ -555,15 +563,19 @@ document.getElementById("soundBtn").addEventListener("click", function(ev){
 wcSoundUi();
 
 
-/* ===== Game screen (build 2236): HA chart + call buttons + balance ==
-   The chart draws state.candles[coin] — [time_ms, o, h, l, c] rows of
-   3m Heikin-Ashi from the shared engine, last row FORMING. The buttons
-   never execute anything: they compose the exact chat command from
-   the picks and open the Kick channel; the trade fires in chat, like
-   it does for everybody. The balance panel reads ONLY the published
-   state (leaderboard + open_positions) — no local figures, ever. */
-var WC_VIEW = {coin: "LTC", state: null};
+/* ===== Game screen (build 2237): HA chart + call buttons + balance ==
+   The chart draws state.candles[coin][tf] — [time_ms, o, h, l, c]
+   rows of Heikin-Ashi from the shared engine on the selected
+   timeframe (3M / 1H / 6H — HA only, no other candle type, ever),
+   last row FORMING. The buttons never execute anything: they compose
+   the exact chat command from the picks and open the Kick channel;
+   the trade fires in chat, like it does for everybody. The balance
+   panel reads ONLY the published state (leaderboard +
+   open_positions) — no local figures, ever. */
+var WC_VIEW = {coin: "LTC", tf: "3m", state: null};
 var WC_COINS = ["LTC", "BTC", "ETH"];
+var WC_TF_SECS = {"3m": 180, "1h": 3600, "6h": 21600};
+var WC_TF_LABEL = {"3m": "3M", "1h": "1H", "6h": "6H"};
 
 function wcAxisUsd(v, coin){
   return coin === "LTC" ? "$" + v.toFixed(2) : fmtUsd(v);
@@ -580,7 +592,12 @@ function drawChart(){
   if(cvs.width !== W || cvs.height !== H){ cvs.width = W; cvs.height = H; }
   var ctx = cvs.getContext("2d");
   ctx.clearRect(0, 0, W, H);
-  var rows = (s && s.candles && s.candles[coin]) || [];
+  var perCoin = (s && s.candles && s.candles[coin]) || null;
+  /* pre-2237 state carried one flat 3m series per coin — read it as
+     the 3M view so the chart never blanks mid-upgrade */
+  var rows = !perCoin ? [] : (Array.isArray(perCoin)
+    ? (WC_VIEW.tf === "3m" ? perCoin : [])
+    : (perCoin[WC_VIEW.tf] || []));
   ctx.font = (11 * dpr) + "px 'Segoe UI', Arial, sans-serif";
   if(!rows.length){
     ctx.fillStyle = "#7d93a5";
@@ -653,10 +670,27 @@ function drawChart(){
 function wcTickClock(){
   var el = document.getElementById("candleClock");
   if(!el) return;
-  var remain = 180 - (Math.floor(Date.now() / 1000) % 180);
-  var m = Math.floor(remain / 60), ss = remain % 60;
-  el.textContent = m + ":" + (ss < 10 ? "0" : "") + ss;
+  var step = WC_TF_SECS[WC_VIEW.tf] || 180;
+  var remain = step - (Math.floor(Date.now() / 1000) % step);
+  var h = Math.floor(remain / 3600), m = Math.floor((remain % 3600) / 60),
+      ss = remain % 60;
+  function p2(n){ return (n < 10 ? "0" : "") + n; }
+  el.textContent = h > 0 ? h + ":" + p2(m) + ":" + p2(ss)
+                         : m + ":" + p2(ss);
 }
+
+document.getElementById("tfTabs").addEventListener("click", function(ev){
+  var b = ev.target.closest ? ev.target.closest(".tab") : null;
+  if(!b) return;
+  WC_VIEW.tf = b.getAttribute("data-tf");
+  var tabs = this.querySelectorAll(".tab");
+  for(var i = 0; i < tabs.length; i++)
+    tabs[i].classList.toggle("active", tabs[i] === b);
+  document.getElementById("chartTfName").textContent =
+    WC_TF_LABEL[WC_VIEW.tf];
+  wcTickClock();
+  drawChart();
+});
 setInterval(wcTickClock, 500); wcTickClock();
 setInterval(drawChart, 2000);
 window.addEventListener("resize", drawChart);
