@@ -57,7 +57,7 @@
   .chg{font-size:18px; font-weight:700; padding:4px 10px; border-radius:6px;}
   .chg.up{color:var(--green); background:#00ff8814; border:1px solid #00ff8833;}
   .chg.dn{color:var(--red); background:#ff2d5514; border:1px solid #ff2d5533;}
-  canvas.chart{width:100%; height:220px; background:#080b08; border:1px solid var(--line); border-radius:8px;}
+  canvas.chart{width:100%; height:220px; background:#080b08; border:1px solid var(--line); border-radius:8px; cursor:grab; touch-action:none;}
   .stats{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
   .stat{background:#0a0e0a; border:1px solid var(--line); border-radius:8px; padding:8px 10px;}
   .stat .k{font-size:11px; color:var(--dim); letter-spacing:1px; text-transform:uppercase;}
@@ -112,7 +112,7 @@
     <div class="read" data-f="read">Loading intel…</div>
   </section>
 </main>
-<footer>Live perps data: OKX public API · auto-refreshes every 60s · funding &gt; 0 = longs pay shorts</footer>
+<footer>Live perps data: OKX public API · drag the candles to scroll back in time · double-click a chart to jump back to live · funding &gt; 0 = longs pay shorts</footer>
 
 <script>
 const COINS = ['BTC','ETH','SOL','LTC','DOGE','XRP'];
@@ -204,7 +204,7 @@ function drawChart(canvas, candles, last){
     ctx.fillRect(x - bw/2, Math.min(yo,yc), bw, Math.max(2, Math.abs(yc - yo)));
   });
   // last price line
-  const yl = h - ((last - lo) / (hi - lo)) * h;
+  const yl = Math.max(0, Math.min(h, h - ((last - lo) / (hi - lo)) * h));
   ctx.setLineDash([5,4]);
   ctx.strokeStyle = last >= +candles[candles.length-1][1] ? '#00ff88' : '#ff2d55';
   ctx.beginPath(); ctx.moveTo(0, yl); ctx.lineTo(w, yl); ctx.stroke();
@@ -212,6 +212,48 @@ function drawChart(canvas, candles, last){
   ctx.fillStyle = '#7d8a7d'; ctx.font = '11px sans-serif';
   ctx.fillText(fmt(hi - pad), 6, 14);
   ctx.fillText(fmt(lo + pad), 6, h - 6);
+  if(canvas.dataset.off && +canvas.dataset.off > 0){
+    ctx.fillStyle = '#ffb020'; ctx.font = 'bold 11px sans-serif';
+    const tag = '\u25c2 HISTORY \u2014 double-click for LIVE';
+    ctx.fillText(tag, w - ctx.measureText(tag).width - 6, 14);
+  }
+}
+function viewSlice(flank){
+  const all = state[flank].all || [];
+  const lim = state[flank].limit;
+  const off = Math.min(state[flank].off || 0, Math.max(0, all.length - lim));
+  state[flank].off = off;
+  const end = all.length - off;
+  return all.slice(Math.max(0, end - lim), end);
+}
+function drawView(flank, last){
+  const slice = viewSlice(flank);
+  if(!slice.length) return;
+  const cv = el(flank, 'chart');
+  cv.dataset.off = state[flank].off || 0;
+  const lp = (state[flank].off || 0) === 0 && last ? last : +slice[slice.length - 1][4];
+  drawChart(cv, slice, lp);
+}
+function attachPan(flank){
+  const cv = el(flank, 'chart');
+  let drag = null;
+  cv.addEventListener('pointerdown', e => {
+    drag = { x: e.clientX, off: state[flank].off || 0 };
+    try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+    cv.style.cursor = 'grabbing';
+  });
+  cv.addEventListener('pointermove', e => {
+    if(!drag) return;
+    const px = cv.clientWidth / state[flank].limit;
+    const all = state[flank].all || [];
+    const maxOff = Math.max(0, all.length - state[flank].limit);
+    state[flank].off = Math.max(0, Math.min(maxOff, drag.off + Math.round((e.clientX - drag.x) / px)));
+    drawView(flank);
+  });
+  const end = () => { drag = null; cv.style.cursor = 'grab'; };
+  cv.addEventListener('pointerup', end);
+  cv.addEventListener('pointercancel', end);
+  cv.addEventListener('dblclick', () => { state[flank].off = 0; drawView(flank); });
 }
 function el(flank, f){ return document.querySelector('#flank' + flank + ' [data-f="' + f + '"]'); }
 
@@ -257,6 +299,15 @@ function livePrice(sym, t){
       const pos = Math.min(1, Math.max(0, (last - r.low) / Math.max(r.high - r.low, 1e-9)));
       el(flank,'mark').style.left = 'calc(' + (pos*100).toFixed(1) + '% - 2px)';
     }
+    const raw = state[flank].rawAll;
+    if(raw && raw.length && (state[flank].off || 0) === 0){
+      const lc = raw[raw.length - 1];
+      lc[4] = String(last);
+      if(last > +lc[2]) lc[2] = String(last);
+      if(last < +lc[3]) lc[3] = String(last);
+      state[flank].all = haMode ? heikinAshi(raw) : raw;
+      drawView(flank, last);
+    }
   });
   document.getElementById('updated').textContent =
     'live ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -265,7 +316,7 @@ async function renderFlank(flank){
   const sym = state[flank].coin, tf = state[flank].tf;
   const read = el(flank,'read');
   try{
-    const d = await loadCoin(sym, tf, state[flank].limit);
+    const d = await loadCoin(sym, tf, Math.min(300, state[flank].limit * 3));
     const last = parseFloat(d.tick.last);
     const open24 = parseFloat(d.tick.open24h);
     const chg = (last - open24) / open24 * 100;
@@ -290,7 +341,9 @@ async function renderFlank(flank){
     const pos = Math.min(1, Math.max(0, (last - low) / Math.max(high - low, 1e-9)));
     el(flank,'mark').style.left = 'calc(' + (pos*100).toFixed(1) + '% - 2px)';
     read.innerHTML = battleRead(sym, tf, last, high, low, fr);
-    drawChart(el(flank,'chart'), haMode ? heikinAshi(d.candles) : d.candles, last);
+    state[flank].rawAll = d.candles;
+    state[flank].all = haMode ? heikinAshi(d.candles) : d.candles;
+    drawView(flank, last);
   }catch(e){
     read.innerHTML = '<span class="err">SIGNAL LOST for ' + sym + ' — retrying…</span>';
   }
@@ -309,7 +362,7 @@ function init(){
       if(c === state[flank].coin) o.selected = true;
       sel.appendChild(o);
     });
-    sel.addEventListener('change', () => { state[flank].coin = sel.value; renderFlank(flank); connectWS(); });
+    sel.addEventListener('change', () => { state[flank].coin = sel.value; state[flank].off = 0; renderFlank(flank); connectWS(); });
   });
   document.querySelectorAll('[data-tfbar]').forEach(bar => {
     const flank = bar.dataset.tfbar;
@@ -318,7 +371,7 @@ function init(){
       b.textContent = t;
       if(t === state[flank].tf) b.classList.add('on');
       b.addEventListener('click', () => {
-        state[flank].tf = t;
+        state[flank].tf = t; state[flank].off = 0;
         bar.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
         renderFlank(flank);
       });
@@ -331,7 +384,7 @@ function init(){
     z.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
       const i = ZOOMS.indexOf(state[flank].limit);
       const ni = Math.min(ZOOMS.length - 1, Math.max(0, i + (+b.dataset.z)));
-      state[flank].limit = ZOOMS[ni];
+      state[flank].limit = ZOOMS[ni]; state[flank].off = 0;
       z.querySelector('.zval').textContent = ZOOMS[ni];
       renderFlank(flank);
     }));
@@ -350,6 +403,7 @@ function init(){
     document.getElementById('clock').textContent =
       new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }, 1000);
+  attachPan('A'); attachPan('B');
   refreshAll();
   setInterval(refreshAll, 60000);
   connectWS();
