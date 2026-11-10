@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>WAR COVE — Paper Trading Game</title><!-- build 2235 -->
+<title>WAR COVE — Paper Trading Game</title><!-- build 2236 -->
 <style>
   :root{
     --steel:#0b0f14; --panel:#121a22; --panel2:#0e141b; --line:#22303d;
@@ -74,6 +74,97 @@
   tr.flash-red td{animation:wcFlashRed .5s ease-in-out 3;}
   tr.flash-green td{animation:wcFlashGreen .5s ease-in-out 4;}
   tr.flash-red-hard td{animation:wcFlashRedHard .45s ease-in-out 6;}
+  /* ===== Game screen (build 2236): live 3m Heikin-Ashi chart, the
+     LONG/SHORT call buttons, and the YOUR BALANCE panel — one screen:
+     chart -> buttons -> balance. ===== */
+  .charthead{display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end;
+             justify-content:space-between; margin-bottom:2px;}
+  .tabs{display:flex; gap:6px; flex-wrap:wrap;}
+  .tab{background:var(--panel2); color:var(--dim); border:1px solid var(--line);
+       border-radius:6px; padding:7px 16px; font-size:15px; font-weight:800;
+       letter-spacing:1px; cursor:pointer; font-family:inherit;}
+  .tab:hover{border-color:var(--ice-dim); color:var(--txt);}
+  .tab.active{color:#06121a; background:var(--ice); border-color:var(--ice);
+              box-shadow:0 0 14px rgba(87,200,255,.55);}
+  .chartmeta{font-size:12px; letter-spacing:1px; color:var(--dim);
+             text-align:right; line-height:1.35;}
+  .chartmeta .big{font-size:23px; font-weight:800; color:#a6d8ff;
+                  text-shadow:0 0 10px rgba(87,200,255,.35);}
+  .livedot{color:var(--green);}
+  #haChart{width:100%; height:340px; display:block; margin-top:8px;
+           background:#0a1017; border:1px solid var(--line);
+           border-radius:6px;}
+  .trade{margin-top:12px; border-top:1px dashed #1c2833; padding-top:12px;}
+  .picks{display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center;}
+  .levwrap{font-size:11px; color:var(--dim); letter-spacing:1px;}
+  select#levSel{background:var(--panel2); color:var(--txt);
+                border:1px solid var(--ice-dim); border-radius:6px;
+                padding:8px 10px; font-size:17px; font-weight:700;
+                font-family:inherit; margin-top:3px;}
+  .firebtns{display:flex; gap:12px; margin-top:12px;}
+  .fire{flex:1; border-radius:8px; padding:16px 10px; font-size:23px;
+        font-weight:900; letter-spacing:2px; cursor:pointer;
+        font-family:inherit; border:1px solid;}
+  .fire.long{background:rgba(46,230,107,.14); color:var(--green);
+             border-color:var(--green);}
+  .fire.long:hover{background:rgba(46,230,107,.30);
+                   box-shadow:0 0 20px rgba(46,230,107,.40);}
+  .fire.short{background:rgba(255,77,94,.12); color:var(--red);
+              border-color:var(--red);}
+  .fire.short:hover{background:rgba(255,77,94,.28);
+                    box-shadow:0 0 20px rgba(255,77,94,.40);}
+  .armlabel{font-size:12.5px; color:var(--dim); margin-top:10px;
+            line-height:1.55;}
+  .cmdout{display:none; margin-top:12px; background:#071018;
+          border:1px solid var(--ice-dim); border-radius:8px;
+          padding:14px 12px; text-align:center;}
+  .cmdout.show{display:block;}
+  .cmdtxt{font-size:32px; font-weight:900; letter-spacing:1px; color:#fff;
+          text-shadow:0 0 14px rgba(87,200,255,.65); user-select:all;}
+  .copybtn{margin-top:9px; background:var(--panel); color:var(--ice);
+           border:1px solid var(--ice-dim); border-radius:6px;
+           padding:9px 20px; font-size:14px; font-weight:800;
+           letter-spacing:1px; cursor:pointer; font-family:inherit;}
+  .copybtn:hover{border-color:var(--ice);}
+  /* YOUR BALANCE — money AND record at one glance */
+  .who{font-size:13px; letter-spacing:2px; color:var(--ice);
+       font-weight:700;}
+  .balbig{font-size:42px; font-weight:900; color:#ffd75e; line-height:1.1;
+          text-shadow:0 0 18px rgba(255,215,94,.35);}
+  .balgrid{display:flex; flex-wrap:wrap; gap:10px 26px; margin-top:10px;}
+  .balgrid .cell{font-size:19px; font-weight:800; color:#fff;}
+  .balgrid .lab{display:block; font-size:11px; font-weight:700;
+                color:var(--dim); letter-spacing:1px; margin-bottom:1px;}
+  .balpos{margin-top:10px; font-size:15.5px; border-top:1px dashed #1c2833;
+          padding-top:9px;}
+  .namebar{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  #nameInput{background:var(--panel2); border:1px solid var(--ice-dim);
+             color:var(--txt); border-radius:6px; padding:10px 12px;
+             font-size:16px; flex:1; min-width:180px; font-family:inherit;}
+  .namebtn{background:var(--panel); color:var(--ice);
+           border:1px solid var(--ice-dim); border-radius:6px;
+           padding:10px 18px; font-size:14px; font-weight:800;
+           letter-spacing:1px; cursor:pointer; font-family:inherit;}
+  .namebtn:hover{border-color:var(--ice);}
+  .notyou{background:none; border:none; color:var(--ice); font-size:12px;
+          cursor:pointer; text-decoration:underline; padding:2px 0;
+          font-family:inherit;}
+  @media (max-width:760px){
+    body{padding:62px 12px 16px;}
+    .wc-frame .wc-title{font-size:17px; letter-spacing:1.5px;}
+    .wc-frame .wc-title::before{letter-spacing:1.5px;}
+    .cols{flex-direction:column;}
+    .armies{flex-direction:column;}
+    header{flex-direction:column; align-items:flex-start; gap:6px;}
+    .price{text-align:left;}
+    #haChart{height:260px;}
+    .fire{font-size:18px; padding:14px 6px;}
+    .cmdtxt{font-size:23px;}
+    .balbig{font-size:33px;}
+    .chartmeta{text-align:left;}
+    table{font-size:12px;}
+    td, th{padding:3px 4px;}
+  }
   /* ===== War Cove HOLOGRAM frame (build 2235) — a projected-light border:
      multi-layer energy frame (bright core line + outer bloom + inner line)
      with a slow shimmer of light travelling the perimeter, oversized ice-
@@ -178,6 +269,73 @@
       <h2>🔴 RED ARMY — SHORTS</h2>
       <div class="score" id="redScore">+0 sats</div>
       <div class="meta" id="redMeta">0 soldiers in · uPnL +0</div>
+    </div>
+  </div>
+
+  <div class="box" style="margin-bottom:12px;">
+    <h3>📈 THE GAME SCREEN — 3M · HEIKIN-ASHI · <span class="livedot">● LIVE</span></h3>
+    <div class="charthead">
+      <div class="tabs" id="coinTabs">
+        <button type="button" class="tab active" data-coin="LTC">LTC ★ HOME</button>
+        <button type="button" class="tab" data-coin="BTC">BTC</button>
+        <button type="button" class="tab" data-coin="ETH">ETH</button>
+      </div>
+      <div class="chartmeta"><span class="big" id="chartPrice">—</span><br>
+      3m · Heikin-Ashi · LIVE · candle closes in <span id="candleClock">--:--</span></div>
+    </div>
+    <canvas id="haChart"></canvas>
+    <div class="trade">
+      <div class="picks">
+        <span class="levwrap">SIZE = LEVERAGE<br>
+          <select id="levSel">
+            <option value="5">5x</option><option value="10">10x</option>
+            <option value="15">15x</option><option value="20">20x</option>
+            <option value="25" selected>25x</option><option value="30">30x</option>
+            <option value="40">40x</option><option value="50">50x</option>
+            <option value="60">60x</option><option value="75">75x</option>
+            <option value="100">100x</option>
+          </select></span>
+        <span class="armlabel" style="margin-top:0; flex:1; min-width:220px;">Every trade is 10,000 sats of virtual money — no real money, ever. Pick your coin above, set your size, then fire your call.</span>
+      </div>
+      <div class="firebtns">
+        <button type="button" class="fire long" id="btnLong">🟢 LONG</button>
+        <button type="button" class="fire short" id="btnShort">🔴 SHORT</button>
+      </div>
+      <div class="armlabel">Buttons arm your call — tap LONG or SHORT, then paste it in the Kick chat to fire. The buttons open the Warlord's Kick channel in a new tab with your command below, ready to copy — a trade only counts when it lands in the chat, same as for everybody in there.</div>
+      <div class="cmdout" id="cmdOut">
+        <div class="cmdtxt" id="cmdText">!long LTC 25x</div>
+        <button type="button" class="copybtn" id="copyBtn">📋 COPY COMMAND</button>
+        <div class="armlabel" id="copyMsg">Paste this in the Kick chat to fire your trade.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box" style="margin-bottom:12px;">
+    <h3>💰 YOUR BALANCE — YOUR MONEY · YOUR RECORD</h3>
+    <div id="balAnon">
+      <div class="armlabel" style="margin-top:0;">Type the name you use in the Kick chat and the board pulls up your balance and your record — straight from the live books, nothing typed in by hand.</div>
+      <div class="namebar">
+        <input id="nameInput" type="text" placeholder="Your Kick chat name" autocomplete="off" spellcheck="false">
+        <button type="button" class="namebtn" id="nameGo">SHOW MY BALANCE</button>
+      </div>
+      <div class="armlabel" id="balMsg"></div>
+    </div>
+    <div id="balCard" style="display:none">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+        <div>
+          <div class="who" id="balWho">@—</div>
+          <div class="balbig"><span id="balAmt">—</span> <span style="font-size:19px;">sats</span></div>
+        </div>
+        <button type="button" class="notyou" id="notYou">not you? change name</button>
+      </div>
+      <div class="balgrid">
+        <div class="cell"><span class="lab">RANK</span><span id="balRank">—</span></div>
+        <div class="cell"><span class="lab">RECORD · W–L</span><span id="balWL">—</span></div>
+        <div class="cell"><span class="lab">REALIZED P&amp;L</span><span id="balPnl">—</span></div>
+        <div class="cell"><span class="lab">💀 TRADES LIQUIDATED</span><span id="balLiqs">—</span></div>
+        <div class="cell"><span class="lab">💀 ACCOUNTS BLOWN</span><span id="balBusts">—</span></div>
+      </div>
+      <div class="balpos" id="balPos">—</div>
     </div>
   </div>
 
@@ -392,6 +550,241 @@ document.getElementById("soundBtn").addEventListener("click", function(ev){
 wcSoundUi();
 
 
+/* ===== Game screen (build 2236): HA chart + call buttons + balance ==
+   The chart draws state.candles[coin] — [time_ms, o, h, l, c] rows of
+   3m Heikin-Ashi from the shared engine, last row FORMING. The buttons
+   never execute anything: they compose the exact chat command from
+   the picks and open the Kick channel; the trade fires in chat, like
+   it does for everybody. The balance panel reads ONLY the published
+   state (leaderboard + open_positions) — no local figures, ever. */
+var WC_VIEW = {coin: "LTC", state: null};
+var WC_COINS = ["LTC", "BTC", "ETH"];
+
+function wcAxisUsd(v, coin){
+  return coin === "LTC" ? "$" + v.toFixed(2) : fmtUsd(v);
+}
+
+function drawChart(){
+  var cvs = document.getElementById("haChart");
+  if(!cvs) return;
+  var s = WC_VIEW.state, coin = WC_VIEW.coin;
+  var dpr = window.devicePixelRatio || 1;
+  var rect = cvs.getBoundingClientRect();
+  if(rect.width < 10) return;
+  var W = Math.round(rect.width * dpr), H = Math.round(rect.height * dpr);
+  if(cvs.width !== W || cvs.height !== H){ cvs.width = W; cvs.height = H; }
+  var ctx = cvs.getContext("2d");
+  ctx.clearRect(0, 0, W, H);
+  var rows = (s && s.candles && s.candles[coin]) || [];
+  ctx.font = (11 * dpr) + "px 'Segoe UI', Arial, sans-serif";
+  if(!rows.length){
+    ctx.fillStyle = "#7d93a5";
+    ctx.fillText("Candles loading — the tape is warming up…",
+                 14 * dpr, 24 * dpr);
+    return;
+  }
+  var axisW = 64 * dpr, padT = 8 * dpr, padB = 6 * dpr;
+  var plotW = W - axisW, plotH = H - padT - padB;
+  var lo = Infinity, hi = -Infinity, i, c;
+  for(i = 0; i < rows.length; i++){
+    if(rows[i][2] > hi) hi = rows[i][2];
+    if(rows[i][3] < lo) lo = rows[i][3];
+  }
+  var live = s && s.prices ? s.prices[coin] : null;
+  if(live != null){ if(live > hi) hi = live; if(live < lo) lo = live; }
+  var span = (hi - lo) || 1;
+  hi += span * 0.07; lo -= span * 0.07; span = hi - lo;
+  function Y(v){ return padT + (hi - v) / span * plotH; }
+  /* grid + price axis */
+  ctx.strokeStyle = "rgba(34,48,61,.9)"; ctx.fillStyle = "#7d93a5";
+  ctx.lineWidth = 1;
+  for(var g = 0; g <= 4; g++){
+    var gv = lo + span * g / 4, gy = Y(gv);
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(plotW, gy); ctx.stroke();
+    ctx.fillText(wcAxisUsd(gv, coin), plotW + 6 * dpr, gy + 4 * dpr);
+  }
+  var step = plotW / rows.length;
+  var bodyW = Math.max(2, Math.min(14 * dpr, step * 0.62));
+  var pulse = 0.55 + 0.45 * Math.sin(Date.now() / 380);
+  for(i = 0; i < rows.length; i++){
+    c = rows[i];
+    var up = c[4] >= c[1];
+    var col = up ? "#2ee66b" : "#ff4d5e";
+    var cx = step * (i + 0.5);
+    ctx.strokeStyle = col; ctx.fillStyle = col;
+    ctx.lineWidth = Math.max(1, dpr * 0.8);
+    ctx.beginPath(); ctx.moveTo(cx, Y(c[2])); ctx.lineTo(cx, Y(c[3]));
+    ctx.stroke();
+    var yO = Y(c[1]), yC = Y(c[4]);
+    var top = Math.min(yO, yC), hgt = Math.max(2, Math.abs(yC - yO));
+    if(i === rows.length - 1){
+      /* the forming candle glows — it is alive */
+      ctx.save();
+      ctx.shadowColor = col; ctx.shadowBlur = 14 * dpr * pulse;
+      ctx.fillRect(cx - bodyW / 2, top, bodyW, hgt);
+      ctx.restore();
+      ctx.strokeRect(cx - bodyW / 2, top, bodyW, hgt);
+    }else{
+      ctx.fillRect(cx - bodyW / 2, top, bodyW, hgt);
+    }
+  }
+  /* live price dashed line */
+  if(live != null){
+    var ly = Y(live);
+    ctx.save();
+    ctx.strokeStyle = "rgba(87,200,255,.75)";
+    ctx.setLineDash([5 * dpr, 4 * dpr]);
+    ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(plotW, ly); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#a6d8ff";
+    ctx.fillText(fmtUsd(live), plotW + 6 * dpr, ly - 4 * dpr);
+    ctx.restore();
+  }
+  /* forming candle tag */
+  ctx.fillStyle = "#ffd75e";
+  ctx.fillText("● FORMING", Math.max(4, plotW - 74 * dpr), 14 * dpr);
+}
+
+function wcTickClock(){
+  var el = document.getElementById("candleClock");
+  if(!el) return;
+  var remain = 180 - (Math.floor(Date.now() / 1000) % 180);
+  var m = Math.floor(remain / 60), ss = remain % 60;
+  el.textContent = m + ":" + (ss < 10 ? "0" : "") + ss;
+}
+setInterval(wcTickClock, 500); wcTickClock();
+setInterval(drawChart, 2000);
+window.addEventListener("resize", drawChart);
+
+document.getElementById("coinTabs").addEventListener("click", function(ev){
+  var b = ev.target.closest ? ev.target.closest(".tab") : null;
+  if(!b) return;
+  WC_VIEW.coin = b.getAttribute("data-coin");
+  var tabs = this.querySelectorAll(".tab");
+  for(var i = 0; i < tabs.length; i++)
+    tabs[i].classList.toggle("active", tabs[i] === b);
+  drawChart();
+  var s = WC_VIEW.state;
+  if(s && s.prices && s.prices[WC_VIEW.coin] != null)
+    document.getElementById("chartPrice").textContent =
+      WC_VIEW.coin + " " + fmtUsd(s.prices[WC_VIEW.coin]);
+});
+
+function wcCopyCmd(cmd){
+  var msg = document.getElementById("copyMsg");
+  function done(){ if(msg) msg.textContent =
+    "Copied — now paste it in the Kick chat to fire your trade."; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(cmd).then(done, function(){});
+  }
+}
+function wcFire(side){
+  var lev = document.getElementById("levSel").value;
+  var cmd = "!" + side + " " + WC_VIEW.coin + " " + lev + "x";
+  document.getElementById("cmdText").textContent = cmd;
+  document.getElementById("cmdOut").classList.add("show");
+  wcCopyCmd(cmd);
+  window.open("https://kick.com/longshotwolf", "_blank");
+}
+document.getElementById("btnLong").addEventListener("click",
+  function(){ wcFire("long"); });
+document.getElementById("btnShort").addEventListener("click",
+  function(){ wcFire("short"); });
+document.getElementById("copyBtn").addEventListener("click", function(){
+  wcCopyCmd(document.getElementById("cmdText").textContent);
+});
+
+/* ----- YOUR BALANCE: live books only ----- */
+var WC_NAME = "";
+try{ WC_NAME = localStorage.getItem("wc-name") || ""; }catch(e){}
+
+function wcFindPlayer(s, name){
+  var q = (name || "").trim().toLowerCase();
+  if(!q || !s) return null;
+  var out = {row: null, rank: null, total: 0, pos: null, display: name};
+  var lb = s.leaderboard || [];
+  out.total = lb.length;
+  for(var i = 0; i < lb.length; i++){
+    if((lb[i].display || "").toLowerCase() === q){
+      out.row = lb[i]; out.rank = i + 1; out.display = lb[i].display;
+    }
+  }
+  var op = s.open_positions || [];
+  for(var j = 0; j < op.length; j++){
+    if((op[j].user || "").toLowerCase() === q){
+      out.pos = op[j]; out.display = op[j].user;
+    }
+  }
+  return (out.row || out.pos) ? out : null;
+}
+
+function wcRenderBalance(){
+  var s = WC_VIEW.state; if(!s) return;
+  var anon = document.getElementById("balAnon");
+  var card = document.getElementById("balCard");
+  var msg = document.getElementById("balMsg");
+  if(!WC_NAME){ anon.style.display = ""; card.style.display = "none";
+                return; }
+  var f = wcFindPlayer(s, WC_NAME);
+  if(!f){
+    anon.style.display = ""; card.style.display = "none";
+    msg.innerHTML = "New soldier — you start with <b>100,000 sats</b>. " +
+      "Your balance appears here after your first trade.<br>" +
+      "(\u201C" + WC_NAME + "\u201D isn't on the books yet — check the " +
+      "spelling matches your Kick chat name.)";
+    return;
+  }
+  anon.style.display = "none"; card.style.display = "";
+  var start = s.starting_balance_sats || 100000;
+  document.getElementById("balWho").textContent = "@" + f.display +
+    (f.rank ? " · RANK #" + f.rank + " OF " + f.total
+            : " · NO SETTLED TRADES YET");
+  document.getElementById("balAmt").textContent =
+    (f.row ? f.row.balance : start).toLocaleString("en-US");
+  document.getElementById("balRank").textContent =
+    f.rank ? "#" + f.rank : "—";
+  document.getElementById("balWL").textContent = f.row
+    ? f.row.wins + "W – " + f.row.losses + "L" : "0W – 0L";
+  var pnlEl = document.getElementById("balPnl");
+  pnlEl.textContent = f.row ? fmtSats(f.row.realized) : "+0 sats";
+  pnlEl.className = f.row ? cls(f.row.realized) : "";
+  document.getElementById("balLiqs").textContent = f.row ? f.row.liqs : 0;
+  document.getElementById("balBusts").textContent =
+    f.row ? (f.row.busts || 0) : 0;
+  var posEl = document.getElementById("balPos");
+  if(f.pos){
+    var p = f.pos;
+    posEl.innerHTML = "🎯 OPEN NOW: <span class='side-" + p.side + "'>" +
+      p.side.toUpperCase() + " " + p.lev + "x</span> · " +
+      (p.coin || "LTC") + " @ " + fmtUsd(p.entry) + " · uPnL " +
+      "<span class='" + cls(p.upnl) + "'>" + fmtSats(p.upnl) + "</span>" +
+      " — type <span class='cmd'>!close</span> in chat to bank it";
+  }else{
+    posEl.innerHTML = "No open position — fire a call above and " +
+      "paste it in the chat.";
+  }
+}
+
+document.getElementById("nameGo").addEventListener("click", function(){
+  var v = document.getElementById("nameInput").value.trim();
+  if(!v) return;
+  WC_NAME = v;
+  try{ localStorage.setItem("wc-name", v); }catch(e){}
+  wcRenderBalance();
+});
+document.getElementById("nameInput").addEventListener("keydown",
+  function(ev){ if(ev.key === "Enter")
+    document.getElementById("nameGo").click(); });
+document.getElementById("notYou").addEventListener("click", function(){
+  WC_NAME = "";
+  try{ localStorage.removeItem("wc-name"); }catch(e){}
+  document.getElementById("nameInput").value = "";
+  document.getElementById("balMsg").textContent = "";
+  wcRenderBalance();
+});
+if(WC_NAME) document.getElementById("nameInput").value = WC_NAME;
+
+
 async function refresh(){
   try{
     const s = await (await fetch("state.json?t=" + Date.now(), {cache:"no-store"})).json();
@@ -437,6 +830,13 @@ async function refresh(){
     document.getElementById("events").innerHTML =
       s.events.map(e=>`<li>${e.text}</li>`).join("")
       || '<li style="color:var(--dim)">Standing by for the first order…</li>';
+
+    WC_VIEW.state = s;
+    if(px[WC_VIEW.coin] != null)
+      document.getElementById("chartPrice").textContent =
+        WC_VIEW.coin + " " + fmtUsd(px[WC_VIEW.coin]);
+    drawChart();
+    wcRenderBalance();
   }catch(e){ /* server momentarily unreachable — next tick retries */ }
 }
 refresh();
