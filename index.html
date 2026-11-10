@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>WAR COVE — Paper Trading Game</title><!-- build 2234 -->
+<title>WAR COVE — Paper Trading Game</title><!-- build 2235 -->
 <style>
   :root{
     --steel:#0b0f14; --panel:#121a22; --panel2:#0e141b; --line:#22303d;
@@ -12,7 +12,7 @@
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{background:var(--steel); color:var(--txt);
-       font-family:"Segoe UI", Arial, sans-serif; padding:36px 28px 28px;}
+       font-family:"Segoe UI", Arial, sans-serif; padding:100px 28px 28px;}
   .wrap{max-width:1060px; margin:0 auto;}
   header{display:flex; justify-content:space-between; align-items:flex-end;
          border-bottom:2px solid var(--ice-dim); padding-bottom:8px;}
@@ -74,34 +74,88 @@
   tr.flash-red td{animation:wcFlashRed .5s ease-in-out 3;}
   tr.flash-green td{animation:wcFlashGreen .5s ease-in-out 4;}
   tr.flash-red-hard td{animation:wcFlashRedHard .45s ease-in-out 6;}
-  /* ===== War Cove neon frame (build 2234) — fixed full-viewport border:
-     neon GREEN double-line frame with a soft outer glow, electric BLUE
-     corner accents (Enity energy). Overlay only: pointer-events none,
+  /* ===== War Cove HOLOGRAM frame (build 2235) — a projected-light border:
+     multi-layer energy frame (bright core line + outer bloom + inner line)
+     with a slow shimmer of light travelling the perimeter, oversized ice-
+     blue corner brackets, and the game title FLOATING at the top line as a
+     hologram: big gradient letters, a blurred projection-ghost behind them,
+     a gentle flicker and a shine sweep through the type. No plaque — the
+     letters are light, never boxed. Overlay only: pointer-events none,
      content padded inside it via body padding above. ===== */
+  @property --wcang{syntax:"<angle>"; initial-value:0deg; inherits:false;}
   .wc-frame{position:fixed; inset:6px; z-index:9999; pointer-events:none;
-            border:2px solid #39ff6a; border-radius:4px;
-            box-shadow:0 0 12px rgba(57,255,106,.55),
-                       inset 0 0 12px rgba(57,255,106,.30);}
+            border:2px solid #59ffa0; border-radius:4px;
+            box-shadow:0 0 10px rgba(87,200,255,.55),
+                       0 0 24px rgba(57,255,106,.50),
+                       0 0 48px rgba(57,255,106,.22),
+                       inset 0 0 10px rgba(87,200,255,.35),
+                       inset 0 0 24px rgba(57,255,106,.22);}
   .wc-frame::before{content:""; position:absolute; inset:5px;
-                    border:1px solid rgba(57,255,106,.38); border-radius:2px;}
-  .wc-frame i{position:absolute; width:38px; height:38px;
+                    border:1px solid rgba(87,200,255,.45); border-radius:2px;
+                    box-shadow:inset 0 0 8px rgba(87,200,255,.18);}
+  /* travelling perimeter shimmer — a pulse of light running the ring */
+  .wc-frame::after{content:""; position:absolute; inset:-3px;
+                   border-radius:5px; padding:3px;
+                   background:conic-gradient(from var(--wcang),
+                     transparent 0deg, rgba(87,200,255,.95) 35deg,
+                     rgba(200,255,225,.90) 55deg, rgba(57,255,106,.75) 85deg,
+                     transparent 135deg, transparent 360deg);
+                   -webkit-mask:linear-gradient(#000 0 0) content-box,
+                                 linear-gradient(#000 0 0);
+                   -webkit-mask-composite:xor; mask-composite:exclude;
+                   animation:wcshimmer 7s linear infinite;}
+  @keyframes wcshimmer{to{--wcang:360deg;}}
+  .wc-frame i{position:absolute; width:58px; height:58px;
               border:0 solid var(--ice);
-              filter:drop-shadow(0 0 6px rgba(87,200,255,.85));}
-  .wc-frame .tl{top:-4px; left:-4px; border-top-width:4px; border-left-width:4px;}
-  .wc-frame .tr{top:-4px; right:-4px; border-top-width:4px; border-right-width:4px;}
-  .wc-frame .bl{bottom:-4px; left:-4px; border-bottom-width:4px; border-left-width:4px;}
-  .wc-frame .br{bottom:-4px; right:-4px; border-bottom-width:4px; border-right-width:4px;}
-  .wc-frame .wc-title{position:absolute; top:-13px; left:50%;
-                      transform:translateX(-50%); white-space:nowrap;
-                      background:var(--steel); padding:2px 14px 2px 18px;
-                      font-size:21px; font-weight:800; letter-spacing:4px;
-                      color:#39ff6a;
-                      text-shadow:0 0 10px rgba(57,255,106,.85),
-                                  0 0 24px rgba(57,255,106,.40);}
+              filter:drop-shadow(0 0 6px rgba(87,200,255,.95))
+                     drop-shadow(0 0 16px rgba(87,200,255,.55));}
+  .wc-frame .tl{top:-5px; left:-5px; border-top-width:5px; border-left-width:5px;}
+  .wc-frame .tr{top:-5px; right:-5px; border-top-width:5px; border-right-width:5px;}
+  .wc-frame .bl{bottom:-5px; left:-5px; border-bottom-width:5px; border-left-width:5px;}
+  .wc-frame .br{bottom:-5px; right:-5px; border-bottom-width:5px; border-right-width:5px;}
+  /* the title — projected hologram letters, floating at the top frame line */
+  .wc-frame .wc-title{position:absolute; top:0; left:50%;
+                      transform:translateX(calc(-50% + 5px));
+                      white-space:nowrap; line-height:1.05;
+                      font-size:50px; font-weight:800; letter-spacing:10px;
+                      color:transparent; -webkit-text-fill-color:transparent;
+                      background:
+                        linear-gradient(105deg, rgba(255,255,255,0) 42%,
+                          rgba(255,255,255,.90) 50%, rgba(255,255,255,0) 58%),
+                        linear-gradient(180deg, #f2fdff 0%, #bdf0ff 28%,
+                          #57c8ff 55%, #7dffb0 82%, #39ff6a 100%);
+                      background-size:250% 100%, 100% 100%;
+                      background-position:120% 0, 0 0;
+                      -webkit-background-clip:text; background-clip:text;
+                      filter:drop-shadow(0 2px 3px rgba(0,0,0,.65))
+                             drop-shadow(0 0 7px rgba(87,200,255,.85))
+                             drop-shadow(0 0 26px rgba(57,255,106,.50));
+                      animation:wcflicker 4.6s linear infinite,
+                                wcshine 5.5s ease-in-out infinite;}
+  /* projection ghost — blurred duplicate offset behind the letters */
+  .wc-frame .wc-title::before{content:attr(data-text); position:absolute;
+                      left:4px; top:3px; z-index:-1; letter-spacing:10px;
+                      color:rgba(87,200,255,.50);
+                      -webkit-text-fill-color:rgba(87,200,255,.50);
+                      filter:blur(3px);
+                      animation:wcghost 4.6s linear infinite;}
+  @keyframes wcflicker{0%,100%{opacity:1} 3%{opacity:.82} 5%{opacity:1}
+                       41%{opacity:1} 43%{opacity:.88} 45%{opacity:1}
+                       72%{opacity:.94} 74%{opacity:1}}
+  @keyframes wcshine{0%{background-position:120% 0, 0 0}
+                     55%,100%{background-position:-120% 0, 0 0}}
+  @keyframes wcghost{0%,100%{opacity:.85; transform:translate(0,0)}
+                     3%{opacity:.55; transform:translate(1px,1px)}
+                     5%{opacity:.85; transform:translate(0,0)}
+                     43%{opacity:.65; transform:translate(-1px,0)}
+                     45%,100%{opacity:.85; transform:translate(0,0)}}
+  @media (prefers-reduced-motion: reduce){
+    .wc-frame::after, .wc-frame .wc-title,
+    .wc-frame .wc-title::before{animation:none;}}
 </style>
 </head>
 <body>
-<div class="wc-frame" aria-hidden="true"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i><span class="wc-title">WAR COVE PAPER TRADING GAME</span></div>
+<div class="wc-frame" aria-hidden="true"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i><span class="wc-title" data-text="WAR COVE PAPER TRADING GAME">WAR COVE PAPER TRADING GAME</span></div>
 <div class="wrap">
   <header>
     <h1>⚔️ WAR COVE<small>PAPER TRADING GAME · VIRTUAL SATS ONLY · NO REAL MONEY</small></h1>
