@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>WAR COVE — Paper Trading Game</title><!-- build 2230 -->
+<title>WAR COVE — Paper Trading Game</title><!-- build 2231 -->
 <style>
   :root{
     --steel:#0b0f14; --panel:#121a22; --panel2:#0e141b; --line:#22303d;
@@ -65,14 +65,15 @@
             border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700;
             letter-spacing:1px; cursor:pointer;}
   #soundBtn:hover{border-color:var(--ice);}
-  .soundhint{margin-left:8px; font-size:11px; color:#ffd75e; letter-spacing:1px;
+  .soundhint{margin-left:8px; font-size:11px; color:var(--ice); letter-spacing:1px;
              animation:wcpulse 1.6s ease-in-out infinite;}
   @keyframes wcpulse{0%,100%{opacity:.45}50%{opacity:1}}
-  @keyframes wcFlashRed{0%,100%{background:transparent}50%{background:rgba(255,77,94,.45)}}
-  @keyframes wcFlashGreen{0%,100%{background:transparent}50%{background:rgba(46,230,107,.45)}}
+  @keyframes wcFlashRed{0%,100%{background:transparent}50%{background:rgba(255,77,94,.85)}}
+  @keyframes wcFlashGreen{0%,100%{background:transparent}50%{background:rgba(0,190,70,.9)}}
+  @keyframes wcFlashRedHard{0%,100%{background:transparent}50%{background:rgba(255,45,60,1)}}
   tr.flash-red td{animation:wcFlashRed .5s ease-in-out 3;}
-  tr.flash-green td{animation:wcFlashGreen .5s ease-in-out 3;}
-  tr.flash-red-hard td{animation:wcFlashRed .45s ease-in-out 6;}
+  tr.flash-green td{animation:wcFlashGreen .5s ease-in-out 4;}
+  tr.flash-red-hard td{animation:wcFlashRedHard .45s ease-in-out 6;}
 </style>
 </head>
 <body>
@@ -129,7 +130,7 @@ function fmtSats(n){ return (n>0?"+":"") + n.toLocaleString("en-US") + " sats"; 
 function fmtUsd(v){ return "$" + v.toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2}); }
 function cls(n){ return n>=0 ? "pos" : "neg"; }
 
-/* ===== War Cove event sounds + leaderboard flashes (build 2230) =====
+/* ===== War Cove event sounds + leaderboard flashes (build 2231) =====
    Event kind -> cue map (unit-checked):
      close with pnl > 0  -> "win"  (winning close: bright chime, green flash)
      close with pnl < 0  -> "lose" (losing close: sad wah-wah sting, red flash)
@@ -248,7 +249,7 @@ function wcSoundUi(){
    the sounds: green for a winning close, red for the bad ones, and a
    longer, harder red for a blown account. */
 var WC_FLASH = {
-  win:  {cls: "flash-green",    ms: 1900, pri: 1},
+  win:  {cls: "flash-green",    ms: 2000, pri: 1},
   lose: {cls: "flash-red",      ms: 1900, pri: 2},
   liq:  {cls: "flash-red",      ms: 1900, pri: 2},
   bust: {cls: "flash-red-hard", ms: 2900, pri: 3}
