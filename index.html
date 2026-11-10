@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WAR COVE — Paper Trading Game</title>
+<style>
+  :root{
+    --steel:#0b0f14; --panel:#121a22; --panel2:#0e141b; --line:#22303d;
+    --ice:#57c8ff; --ice-dim:#2e6f8e; --txt:#d7e6f0; --dim:#7d93a5;
+    --green:#2ee66b; --green-bg:rgba(46,230,107,.08);
+    --red:#ff4d5e;  --red-bg:rgba(255,77,94,.08);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--steel); color:var(--txt);
+       font-family:"Segoe UI", Arial, sans-serif; padding:14px;}
+  .wrap{max-width:1060px; margin:0 auto;}
+  header{display:flex; justify-content:space-between; align-items:flex-end;
+         border-bottom:2px solid var(--ice-dim); padding-bottom:8px;}
+  h1{font-size:26px; letter-spacing:3px; color:var(--ice);
+     text-shadow:0 0 14px rgba(87,200,255,.45);}
+  h1 small{display:block; font-size:11px; letter-spacing:2px; color:var(--dim);}
+  .price{text-align:right;}
+  .price .btc{font-size:26px; font-weight:700;}
+  .price .sub{font-size:11px; color:var(--dim); letter-spacing:1px;}
+  .badge{display:inline-block; padding:2px 10px; border-radius:9px;
+         font-size:11px; font-weight:700; letter-spacing:1px;}
+  .badge.live{background:rgba(46,230,107,.15); color:var(--green);
+              border:1px solid var(--green);}
+  .badge.stalled{background:rgba(255,77,94,.15); color:var(--red);
+                 border:1px solid var(--red);}
+  .armies{display:flex; gap:12px; margin:12px 0;}
+  .army{flex:1; border-radius:8px; padding:12px 16px; border:1px solid var(--line);}
+  .army.green{background:var(--green-bg); border-color:rgba(46,230,107,.35);}
+  .army.red{background:var(--red-bg); border-color:rgba(255,77,94,.35);}
+  .army h2{font-size:19px; letter-spacing:2px;}
+  .army.green h2{color:var(--green);} .army.red h2{color:var(--red);}
+  .army .score{font-size:30px; font-weight:800; margin:2px 0;}
+  .army .meta{font-size:12px; color:var(--dim); letter-spacing:.5px;}
+  .cols{display:flex; gap:12px;}
+  .box{flex:1; background:var(--panel); border:1px solid var(--line);
+       border-radius:8px; padding:10px 14px;}
+  .box h3{font-size:13px; letter-spacing:2px; color:var(--ice);
+          border-bottom:1px solid var(--line); padding-bottom:6px; margin-bottom:8px;}
+  table{width:100%; border-collapse:collapse; font-size:14px;}
+  td, th{padding:4px 6px; text-align:left;}
+  th{color:var(--dim); font-size:11px; letter-spacing:1px;}
+  tr.top1 td{color:#ffd75e; font-weight:700;}
+  .pos{color:var(--green);} .neg{color:var(--red);}
+  .side-long{color:var(--green); font-weight:700;}
+  .side-short{color:var(--red); font-weight:700;}
+  #events{list-style:none; font-size:13px;}
+  #events li{padding:4px 2px; border-bottom:1px dashed #1c2833;}
+  #events li:first-child{color:#fff;}
+  .foot{margin-top:10px; font-size:12px; color:var(--dim); letter-spacing:1px;
+        text-align:center;}
+  .cmd{color:var(--ice); font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>⚔️ WAR COVE<small>PAPER TRADING GAME · VIRTUAL SATS ONLY · NO REAL MONEY</small></h1>
+    <div class="price">
+      <div class="btc" id="btcPrice">BTC $—</div>
+      <div class="sub"><span id="feedBadge" class="badge stalled">FEED …</span>
+      &nbsp;margin <span id="margin">10,000</span> sats / trade</div>
+    </div>
+  </header>
+
+  <div class="armies">
+    <div class="army green">
+      <h2>🟢 GREEN ARMY — LONGS</h2>
+      <div class="score" id="greenScore">+0 sats</div>
+      <div class="meta" id="greenMeta">0 soldiers in · uPnL +0</div>
+    </div>
+    <div class="army red">
+      <h2>🔴 RED ARMY — SHORTS</h2>
+      <div class="score" id="redScore">+0 sats</div>
+      <div class="meta" id="redMeta">0 soldiers in · uPnL +0</div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="box">
+      <h3>🏆 LEADERBOARD — TOP 10</h3>
+      <table><thead><tr><th>#</th><th>SOLDIER</th><th>P&amp;L</th><th>W–L</th><th>💀</th></tr></thead>
+      <tbody id="board"></tbody></table>
+    </div>
+    <div class="box">
+      <h3>🎯 OPEN POSITIONS</h3>
+      <table><thead><tr><th>SOLDIER</th><th>SIDE</th><th>ENTRY</th><th>uPnL</th></tr></thead>
+      <tbody id="positions"></tbody></table>
+    </div>
+  </div>
+
+  <div class="box" style="margin-top:12px;">
+    <h3>📣 BATTLE LOG</h3>
+    <ul id="events"></ul>
+  </div>
+
+  <div class="foot">TYPE <span class="cmd">!long 50x</span> OR <span class="cmd">!short 50x</span> TO ENLIST ·
+  <span class="cmd">!close</span> TO BANK · <span class="cmd">!rank</span> · <span class="cmd">!positions</span> ·
+  SHORT THE TOP · LONG THE BOTTOM</div>
+</div>
+
+<script>
+function fmtSats(n){ return (n>0?"+":"") + n.toLocaleString("en-US") + " sats"; }
+function fmtUsd(v){ return "$" + v.toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2}); }
+function cls(n){ return n>=0 ? "pos" : "neg"; }
+
+async function refresh(){
+  try{
+    const s = await (await fetch("https://gist.githubusercontent.com/longshotwolf/17c3403c80096477efc2df82348514b5/raw/state.json?t=" + Date.now(), {cache:"no-store"})).json();
+    document.getElementById("btcPrice").textContent =
+      s.btc_price == null ? "BTC $—" : "BTC " + fmtUsd(s.btc_price);
+    const badge = document.getElementById("feedBadge");
+    badge.textContent = s.stalled ? "⏸ FEED STALLED" : "● LIVE TAPE";
+    badge.className = "badge " + (s.stalled ? "stalled" : "live");
+    document.getElementById("margin").textContent = s.margin_sats.toLocaleString("en-US");
+
+    const g = s.armies.green, r = s.armies.red;
+    document.getElementById("greenScore").textContent = fmtSats(g.realized);
+    document.getElementById("redScore").textContent = fmtSats(r.realized);
+    document.getElementById("greenMeta").textContent =
+      g.open + " soldiers in · uPnL " + fmtSats(g.unrealized);
+    document.getElementById("redMeta").textContent =
+      r.open + " soldiers in · uPnL " + fmtSats(r.unrealized);
+
+    document.getElementById("board").innerHTML = s.leaderboard.map((row,i)=>
+      `<tr class="${i===0?'top1':''}"><td>${i+1}</td><td>${row.display}</td>` +
+      `<td class="${cls(row.realized)}">${fmtSats(row.realized)}</td>` +
+      `<td>${row.wins}–${row.losses}</td><td>${row.liqs}</td></tr>`).join("")
+      || '<tr><td colspan="5" style="color:var(--dim)">No settled trades yet — be the first on the board.</td></tr>';
+
+    document.getElementById("positions").innerHTML = s.open_positions.map(p=>
+      `<tr><td>${p.user}</td>` +
+      `<td class="side-${p.side}">${p.side.toUpperCase()} ${p.lev}x</td>` +
+      `<td>${fmtUsd(p.entry)}</td>` +
+      `<td class="${cls(p.upnl)}">${fmtSats(p.upnl)}</td></tr>`).join("")
+      || '<tr><td colspan="4" style="color:var(--dim)">No open positions.</td></tr>';
+
+    document.getElementById("events").innerHTML =
+      s.events.map(e=>`<li>${e.text}</li>`).join("")
+      || '<li style="color:var(--dim)">Standing by for the first order…</li>';
+  }catch(e){ /* server momentarily unreachable — next tick retries */ }
+}
+refresh();
+setInterval(refresh, 2000);
+</script>
+</body>
+</html>
