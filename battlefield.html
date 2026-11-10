@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>War Cove Battlefield</title>
+<style>
+  :root{
+    --green:#00ff88; --red:#ff2d55; --amber:#ffb020;
+    --bg:#070907; --panel:#0e120e; --line:#1d2b1d; --txt:#d7e0d7; --dim:#7d8a7d;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--txt); font-family:"Segoe UI",Arial,sans-serif; min-height:100vh;}
+  header{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;
+    padding:14px 18px; border-bottom:2px solid var(--line);
+    background:linear-gradient(180deg,#0c100c,#070907);
+  }
+  header h1{font-family:Impact,"Arial Black",sans-serif; letter-spacing:3px; font-size:26px;}
+  header h1 .g{color:var(--green); text-shadow:0 0 12px #00ff8855;}
+  header h1 .r{color:var(--red); text-shadow:0 0 12px #ff2d5555;}
+  .meta{display:flex; align-items:center; gap:10px; color:var(--dim); font-size:13px;}
+  .meta button{
+    background:#141a14; color:var(--txt); border:1px solid var(--line); border-radius:6px;
+    padding:6px 12px; cursor:pointer; font-size:14px;
+  }
+  .meta button:hover{border-color:var(--green);}
+  .seg{display:flex; border:1px solid var(--line); border-radius:6px; overflow:hidden;}
+  .seg button{background:transparent; color:var(--dim); border:none; padding:6px 10px; cursor:pointer; font-size:13px; font-weight:700; border-radius:0;}
+  .seg button.on{background:#1a2b1a; color:var(--green);}
+  .tfbar{display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
+  .tfbar button{background:#141a14; color:var(--dim); border:1px solid var(--line); border-radius:8px; padding:12px 14px; font-size:15px; font-weight:700; cursor:pointer; min-height:44px; min-width:52px; touch-action:manipulation;}
+  .tfbar button.on{color:var(--green); border-color:var(--green); background:#1a2b1a;}
+  .zoom{display:flex; align-items:center; gap:6px; margin-left:6px; padding-left:10px; border-left:1px solid var(--line);}
+  .zoom .zlab{font-size:11px; color:var(--dim); letter-spacing:1px; text-transform:uppercase;}
+  .zoom .zval{font-size:15px; font-weight:700; color:var(--txt); min-width:44px; text-align:center; font-variant-numeric:tabular-nums;}
+  button{touch-action:manipulation; -webkit-tap-highlight-color:transparent;}
+  .meta button{padding:10px 14px;}
+  .live{font-size:12px; font-weight:700; letter-spacing:1px; color:var(--dim);}
+  .live.on{color:var(--green); animation:pulse 1.6s infinite;}
+  .live.off{color:var(--amber);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  main{display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:14px;}
+  @media(max-width:900px){ main{grid-template-columns:1fr;} }
+  .flank{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px;
+    display:flex; flex-direction:column; gap:10px; min-width:0;
+  }
+  .flank-head{display:flex; justify-content:space-between; align-items:center;}
+  .flank-name{font-family:Impact,"Arial Black",sans-serif; letter-spacing:2px; color:var(--dim); font-size:15px;}
+  select{
+    background:#141a14; color:var(--txt); border:1px solid var(--line); border-radius:6px;
+    padding:6px 10px; font-size:15px; font-weight:bold;
+  }
+  .price-row{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;}
+  .price{font-size:38px; font-weight:800; font-variant-numeric:tabular-nums;}
+  .chg{font-size:18px; font-weight:700; padding:4px 10px; border-radius:6px;}
+  .chg.up{color:var(--green); background:#00ff8814; border:1px solid #00ff8833;}
+  .chg.dn{color:var(--red); background:#ff2d5514; border:1px solid #ff2d5533;}
+  canvas.chart{width:100%; height:220px; background:#080b08; border:1px solid var(--line); border-radius:8px;}
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .stat{background:#0a0e0a; border:1px solid var(--line); border-radius:8px; padding:8px 10px;}
+  .stat .k{font-size:11px; color:var(--dim); letter-spacing:1px; text-transform:uppercase;}
+  .stat .v{font-size:17px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:2px;}
+  .stat .v.g{color:var(--green);} .stat .v.r{color:var(--red);} .stat .v.a{color:var(--amber);}
+  .rangebar{height:10px; border-radius:5px; background:linear-gradient(90deg,var(--red),#555 50%,var(--green)); position:relative; margin-top:14px;}
+  .rangebar .mark{position:absolute; top:-4px; width:4px; height:18px; background:#fff; border-radius:2px; box-shadow:0 0 6px #fff;}
+  .range-lbls{display:flex; justify-content:space-between; font-size:11px; color:var(--dim); margin-top:4px;}
+  .read{
+    border-left:3px solid var(--amber); background:#0a0e0a; padding:10px 12px; border-radius:0 8px 8px 0;
+    font-size:14px; line-height:1.5;
+  }
+  .read b{color:var(--amber);}
+  .err{color:var(--red); font-size:13px;}
+  footer{text-align:center; color:var(--dim); font-size:12px; padding:10px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚔ <span class="g">WAR COVE</span> <span class="r">BATTLEFIELD</span></h1>
+  <div class="meta"><span id="liveDot" class="live">● CONNECTING</span><span id="clock"></span><span id="updated"></span><span class="seg"><button id="haBtn" class="on">HA</button><button id="cBtn">STD</button></span><button id="refreshBtn">⟳ refresh</button></div>
+</header>
+<main>
+  <section class="flank" id="flankA">
+    <div class="flank-head"><span class="flank-name">◣ LEFT FLANK</span><select data-flank="A"></select></div>
+    <div class="tfbar" data-tfbar="A"></div>
+    <div class="price-row"><span class="price" data-f="price">—</span><span class="chg" data-f="chg">—</span></div>
+    <canvas class="chart" data-f="chart"></canvas>
+    <div class="stats">
+      <div class="stat"><div class="k">Funding rate</div><div class="v" data-f="fund">—</div></div>
+      <div class="stat"><div class="k">Open interest</div><div class="v" data-f="oi">—</div></div>
+      <div class="stat"><div class="k">Range high</div><div class="v g" data-f="high">—</div></div>
+      <div class="stat"><div class="k">Range low</div><div class="v r" data-f="low">—</div></div>
+    </div>
+    <div><div class="rangebar"><div class="mark" data-f="mark"></div></div>
+    <div class="range-lbls"><span>range low (red territory)</span><span>range high (green territory)</span></div></div>
+    <div class="read" data-f="read">Loading intel…</div>
+  </section>
+  <section class="flank" id="flankB">
+    <div class="flank-head"><span class="flank-name">RIGHT FLANK ◢</span><select data-flank="B"></select></div>
+    <div class="tfbar" data-tfbar="B"></div>
+    <div class="price-row"><span class="price" data-f="price">—</span><span class="chg" data-f="chg">—</span></div>
+    <canvas class="chart" data-f="chart"></canvas>
+    <div class="stats">
+      <div class="stat"><div class="k">Funding rate</div><div class="v" data-f="fund">—</div></div>
+      <div class="stat"><div class="k">Open interest</div><div class="v" data-f="oi">—</div></div>
+      <div class="stat"><div class="k">Range high</div><div class="v g" data-f="high">—</div></div>
+      <div class="stat"><div class="k">Range low</div><div class="v r" data-f="low">—</div></div>
+    </div>
+    <div><div class="rangebar"><div class="mark" data-f="mark"></div></div>
+    <div class="range-lbls"><span>range low (red territory)</span><span>range high (green territory)</span></div></div>
+    <div class="read" data-f="read">Loading intel…</div>
+  </section>
+</main>
+<footer>Live perps data: OKX public API · auto-refreshes every 60s · funding &gt; 0 = longs pay shorts</footer>
+
+<script>
+const COINS = ['BTC','ETH','SOL','LTC','DOGE','XRP'];
+const API = 'https://www.okx.com/api/v5';
+const TFS = ['1m','3m','15m','1H','4H','6H','1D','1W','1M'];
+const state = { A:{coin:'LTC', tf:'1H', limit:120}, B:{coin:'ETH', tf:'1H', limit:120} };
+const ZOOMS = [60, 120, 240];
+const rangeCache = {};
+let haMode = true;
+let ws = null;
+
+function heikinAshi(candles){
+  // candles oldest-first: [ts, o, h, l, c, ...] -> [ts, haO, haH, haL, haC]
+  const out = [];
+  let po = 0, pc = 0;
+  candles.forEach((c, i) => {
+    const o = +c[1], h = +c[2], l = +c[3], cl = +c[4];
+    const hc = (o + h + l + cl) / 4;
+    const ho = i === 0 ? (o + cl) / 2 : (po + pc) / 2;
+    out.push([c[0], ho, Math.max(h, ho, hc), Math.min(l, ho, hc), hc]);
+    po = ho; pc = hc;
+  });
+  return out;
+}
+
+function fmt(n){
+  n = parseFloat(n);
+  if(n >= 1000) return n.toLocaleString('en-US',{maximumFractionDigits:1});
+  if(n >= 100) return n.toLocaleString('en-US',{maximumFractionDigits:2});
+  return n.toLocaleString('en-US',{maximumFractionDigits:4});
+}
+function fmtUsd(n){
+  n = parseFloat(n);
+  if(n >= 1e9) return '$'+(n/1e9).toFixed(2)+'B';
+  if(n >= 1e6) return '$'+(n/1e6).toFixed(1)+'M';
+  return '$'+Math.round(n).toLocaleString('en-US');
+}
+async function jget(url){
+  const r = await fetch(url);
+  const d = await r.json();
+  if(d.code !== '0') throw new Error(d.msg || 'api error');
+  return d.data;
+}
+async function loadCoin(sym, tf, limit){
+  const inst = sym + '-USDT-SWAP';
+  const [tick, fund, oi, candles] = await Promise.all([
+    jget(API + '/market/ticker?instId=' + inst).then(d => d[0]),
+    jget(API + '/public/funding-rate?instId=' + inst).then(d => d[0]),
+    jget(API + '/public/open-interest?instType=SWAP&instId=' + inst).then(d => d[0]),
+    jget(API + '/market/candles?instId=' + inst + '&bar=' + tf + '&limit=' + (limit || 120))
+  ]);
+  return { sym, tf, tick, fund, oi, candles: candles.slice().reverse() };
+}
+function battleRead(sym, tf, last, high, low, fr){
+  const pos = (last - low) / Math.max(high - low, 1e-9);
+  let terrain, side;
+  if(pos >= 0.75){ terrain = 'pressing the range highs'; }
+  else if(pos >= 0.4){ terrain = 'holding mid-range — no-man\u2019s land'; }
+  else if(pos >= 0.15){ terrain = 'slipping toward the range lows'; }
+  else { terrain = 'pinned to the range lows'; }
+  if(fr > 0.0001){ side = 'green army crowded — longs are paying shorts'; }
+  else if(fr < -0.0001){ side = 'red army crowded — shorts are paying longs'; }
+  else { side = 'funding neutral — neither army overextended'; }
+  const f = (fr*100).toFixed(4) + '%';
+  return '<b>' + sym + ' ' + tf + ' battlefield read:</b> ' + terrain + '. Funding ' + f + ' — ' + side + '.';
+}
+function drawChart(canvas, candles, last){
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0,0,w,h);
+  let hi = -Infinity, lo = Infinity;
+  candles.forEach(c => { hi = Math.max(hi, +c[2]); lo = Math.min(lo, +c[3]); });
+  const pad = (hi - lo) * 0.08 || 1;
+  hi += pad; lo -= pad;
+  const n = candles.length, cw = w / n;
+  candles.forEach((c,i) => {
+    const o=+c[1], hh=+c[2], l=+c[3], cl=+c[4];
+    const y = p => h - ((p - lo) / (hi - lo)) * h;
+    const up = cl >= o;
+    const col = up ? '#00ff88' : '#ff2d55';
+    ctx.strokeStyle = col; ctx.fillStyle = col;
+    const x = i * cw + cw/2;
+    ctx.beginPath(); ctx.moveTo(x, y(hh)); ctx.lineTo(x, y(l)); ctx.stroke();
+    const bw = Math.max(2, cw * 0.6);
+    const yo = y(o), yc = y(cl);
+    ctx.fillRect(x - bw/2, Math.min(yo,yc), bw, Math.max(2, Math.abs(yc - yo)));
+  });
+  // last price line
+  const yl = h - ((last - lo) / (hi - lo)) * h;
+  ctx.setLineDash([5,4]);
+  ctx.strokeStyle = last >= +candles[candles.length-1][1] ? '#00ff88' : '#ff2d55';
+  ctx.beginPath(); ctx.moveTo(0, yl); ctx.lineTo(w, yl); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#7d8a7d'; ctx.font = '11px sans-serif';
+  ctx.fillText(fmt(hi - pad), 6, 14);
+  ctx.fillText(fmt(lo + pad), 6, h - 6);
+}
+function el(flank, f){ return document.querySelector('#flank' + flank + ' [data-f="' + f + '"]'); }
+
+function connectWS(){
+  const dot = document.getElementById('liveDot');
+  if(ws){ try{ ws.close(); }catch(e){} ws = null; }
+  const coins = [state.A.coin, state.B.coin];
+  try{ ws = new WebSocket('wss://ws.okx.com:8443/ws/v5/public'); }
+  catch(e){ dot.className = 'live off'; dot.textContent = '● RETRYING'; setTimeout(connectWS, 4000); return; }
+  ws.onopen = () => {
+    dot.className = 'live on'; dot.textContent = '● LIVE';
+    ws.send(JSON.stringify({ op:'subscribe', args: coins.map(c => ({ channel:'tickers', instId: c + '-USDT-SWAP' })) }));
+  };
+  ws.onmessage = (ev) => {
+    try{
+      const m = JSON.parse(ev.data);
+      if(m.arg && m.arg.channel === 'tickers' && m.data && m.data[0]){
+        livePrice(m.arg.instId.split('-')[0], m.data[0]);
+      }
+    }catch(e){}
+  };
+  ws.onclose = () => {
+    dot.className = 'live off'; dot.textContent = '● RECONNECTING';
+    setTimeout(connectWS, 4000);
+  };
+  ws.onerror = () => { try{ ws.close(); }catch(e){} };
+}
+function livePrice(sym, t){
+  ['A','B'].forEach(flank => {
+    if(state[flank].coin !== sym) return;
+    const last = parseFloat(t.last);
+    const open24 = parseFloat(t.open24h);
+    if(!isFinite(last) || !isFinite(open24) || open24 === 0) return;
+    const chg = (last - open24) / open24 * 100;
+    const pEl = el(flank,'price');
+    pEl.textContent = '$' + fmt(last);
+    pEl.style.color = chg >= 0 ? 'var(--green)' : 'var(--red)';
+    const chgEl = el(flank,'chg');
+    chgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+    chgEl.className = 'chg ' + (chg >= 0 ? 'up' : 'dn');
+    const r = rangeCache[flank];
+    if(r){
+      const pos = Math.min(1, Math.max(0, (last - r.low) / Math.max(r.high - r.low, 1e-9)));
+      el(flank,'mark').style.left = 'calc(' + (pos*100).toFixed(1) + '% - 2px)';
+    }
+  });
+  document.getElementById('updated').textContent =
+    'live ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+async function renderFlank(flank){
+  const sym = state[flank].coin, tf = state[flank].tf;
+  const read = el(flank,'read');
+  try{
+    const d = await loadCoin(sym, tf, state[flank].limit);
+    const last = parseFloat(d.tick.last);
+    const open24 = parseFloat(d.tick.open24h);
+    const chg = (last - open24) / open24 * 100;
+    const fr = parseFloat(d.fund.fundingRate);
+    let high = -Infinity, low = Infinity;
+    d.candles.forEach(c => { high = Math.max(high, +c[2]); low = Math.min(low, +c[3]); });
+    rangeCache[flank] = { high, low };
+
+    el(flank,'price').textContent = '$' + fmt(last);
+    el(flank,'price').style.color = chg >= 0 ? 'var(--green)' : 'var(--red)';
+    const chgEl = el(flank,'chg');
+    chgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+    chgEl.className = 'chg ' + (chg >= 0 ? 'up' : 'dn');
+
+    const fundEl = el(flank,'fund');
+    fundEl.textContent = (fr*100).toFixed(4) + '%';
+    fundEl.className = 'v ' + (fr > 0.0001 ? 'g' : fr < -0.0001 ? 'r' : 'a');
+
+    el(flank,'oi').textContent = fmtUsd(d.oi.oiUsd);
+    el(flank,'high').textContent = '$' + fmt(high);
+    el(flank,'low').textContent = '$' + fmt(low);
+    const pos = Math.min(1, Math.max(0, (last - low) / Math.max(high - low, 1e-9)));
+    el(flank,'mark').style.left = 'calc(' + (pos*100).toFixed(1) + '% - 2px)';
+    read.innerHTML = battleRead(sym, tf, last, high, low, fr);
+    drawChart(el(flank,'chart'), haMode ? heikinAshi(d.candles) : d.candles, last);
+  }catch(e){
+    read.innerHTML = '<span class="err">SIGNAL LOST for ' + sym + ' — retrying…</span>';
+  }
+}
+async function refreshAll(){
+  await Promise.all([renderFlank('A'), renderFlank('B')]);
+  document.getElementById('updated').textContent =
+    'updated ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+function init(){
+  document.querySelectorAll('select[data-flank]').forEach(sel => {
+    const flank = sel.dataset.flank;
+    COINS.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c + ' / USDT';
+      if(c === state[flank].coin) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', () => { state[flank].coin = sel.value; renderFlank(flank); connectWS(); });
+  });
+  document.querySelectorAll('[data-tfbar]').forEach(bar => {
+    const flank = bar.dataset.tfbar;
+    TFS.forEach(t => {
+      const b = document.createElement('button');
+      b.textContent = t;
+      if(t === state[flank].tf) b.classList.add('on');
+      b.addEventListener('click', () => {
+        state[flank].tf = t;
+        bar.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+        renderFlank(flank);
+      });
+      bar.appendChild(b);
+    });
+    const z = document.createElement('div');
+    z.className = 'zoom';
+    z.innerHTML = '<span class="zlab">Zoom</span><button data-z="-1">−</button><span class="zval">120</span><button data-z="1">+</button>';
+    bar.appendChild(z);
+    z.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      const i = ZOOMS.indexOf(state[flank].limit);
+      const ni = Math.min(ZOOMS.length - 1, Math.max(0, i + (+b.dataset.z)));
+      state[flank].limit = ZOOMS[ni];
+      z.querySelector('.zval').textContent = ZOOMS[ni];
+      renderFlank(flank);
+    }));
+  });
+  document.getElementById('refreshBtn').addEventListener('click', refreshAll);
+  const haBtn = document.getElementById('haBtn'), cBtn = document.getElementById('cBtn');
+  function setMode(ha){
+    haMode = ha;
+    haBtn.classList.toggle('on', ha);
+    cBtn.classList.toggle('on', !ha);
+    refreshAll();
+  }
+  haBtn.addEventListener('click', () => setMode(true));
+  cBtn.addEventListener('click', () => setMode(false));
+  setInterval(() => {
+    document.getElementById('clock').textContent =
+      new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }, 1000);
+  refreshAll();
+  setInterval(refreshAll, 60000);
+  connectWS();
+}
+init();
+</script>
+</body>
+</html>
