@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>WAR COVE — Paper Trading Game</title><!-- build 2237 -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>WAR COVE — Paper Trading Game</title><!-- build 2239 -->
 <style>
   :root{
     --steel:#0b0f14; --panel:#121a22; --panel2:#0e141b; --line:#22303d;
@@ -94,7 +98,9 @@
   .livedot{color:var(--green);}
   #haChart{width:100%; height:340px; display:block; margin-top:8px;
            background:#0a1017; border:1px solid var(--line);
-           border-radius:6px; cursor:grab; touch-action:none;}
+           border-radius:6px; cursor:grab; touch-action:none;
+           user-select:none; -webkit-user-select:none;
+           -webkit-touch-callout:none;}
   #haChart.grabbing{cursor:grabbing;}
   /* ===== Chart view controls (build 2238): pan / zoom / height ====
      The Warlord's ruling: he must be able to pull the candles back
@@ -328,7 +334,8 @@
       <span class="ctlgroup"><button type="button" id="btnZoomOut" class="ctlbtn">−</button><span class="ctllab">WIDEN</span><button type="button" id="btnZoomIn" class="ctlbtn">+</button></span>
       <span class="ctlgroup"><button type="button" id="btnYMinus" class="ctlbtn">−</button><span class="ctllab">LENGTHEN</span><button type="button" id="btnYPlus" class="ctlbtn">+</button></span>
       <span class="ctlgroup"><button type="button" id="btnHMinus" class="ctlbtn">−</button><span class="ctllab">HEIGHT</span><button type="button" id="btnHPlus" class="ctlbtn">+</button></span>
-      <span class="ctlhint">🖱️ Drag the candles to MOVE them — back through time, or up &amp; down to the middle · wheel / pinch WIDENS · drag the price numbers on the right edge up &amp; down to LENGTHEN</span>
+      <span class="ctlhint">🖱️ Drag the candles to MOVE them — pull back through the history, or up &amp; down to the middle · wheel / pinch WIDENS · drag the price numbers on the right edge up &amp; down to LENGTHEN</span>
+      <span class="ctllab" id="buildTag">BUILD 2239</span>
     </div>
     <div id="chartResize" title="Drag to make the chart taller or shorter">↕ DRAG — CHART HEIGHT ↕</div>
     <div class="trade">
@@ -625,11 +632,18 @@ function wcRows(){
     : (perCoin[WC_VIEW.tf] || []));
 }
 
-/* ===== Chart view state (build 2238) =====
+/* ===== Chart view state (build 2238, drag fix 2239) =====
    back: newest candles held off the right edge — 0 pins the view to
    the live edge; when the soldier has dragged back, fresh candles
    EXTEND back so the held window is never yanked forward.
-   visN: candles on screen — 0 = all (the old fit-everything view).
+   visN: candles on screen — 0 = the DEFAULT window: the latest
+   WC_DEF_VIS candles of the (now much longer) history series.
+   Build 2239 root cause of "can't pull it back": the feed used to
+   carry exactly 60 candles and the default showed ALL of them, so
+   there was no earlier history for a pull-back to reveal — the
+   left edge was already the oldest candle in existence. The feed
+   now keeps up to 300 and the default window opens on the
+   latest 60, so dragging back slides real history into view.
    yOff: vertical pull, in price units added to the auto scale —
    grab the chart and drag up/down to pull the candles to the
    middle of the screen. yZoom: the lengthen — a stretch of the
@@ -638,11 +652,16 @@ function wcRows(){
    m: last draw's css metrics for drags. */
 var WC_CHART = {back: 0, visN: 0, yOff: 0, yZoom: 1,
                 key: "", len: 0, m: null};
+var WC_DEF_VIS = 60; /* the default window: latest 60 candles */
+function wcDefVis(total){ return Math.min(WC_DEF_VIS, total); }
 
 function wcChartUi(){
   var b = document.getElementById("btnLive");
   if(!b) return;
-  var held = WC_CHART.back > 0 || WC_CHART.visN > 0
+  var rows = wcRows(), total = rows.length;
+  var effVis = WC_CHART.visN > 0 ? Math.min(WC_CHART.visN, total)
+                                 : wcDefVis(total);
+  var held = WC_CHART.back > 0 || effVis !== wcDefVis(total)
              || WC_CHART.yOff !== 0 || WC_CHART.yZoom !== 1;
   b.textContent = held ? "⟲ BACK TO LIVE" : "● LIVE VIEW";
   b.classList.toggle("held", held);
@@ -689,7 +708,8 @@ function drawChart(){
   }
   if(WC_CHART.back > total - 1) WC_CHART.back = Math.max(0, total - 1);
   if(WC_CHART.back < 0) WC_CHART.back = 0;
-  var visN = WC_CHART.visN > 0 ? Math.min(WC_CHART.visN, total) : total;
+  var visN = WC_CHART.visN > 0 ? Math.min(WC_CHART.visN, total)
+                               : wcDefVis(total);
   var endIdx = total - 1 - WC_CHART.back;
   var startIdx = Math.max(0, endIdx - visN + 1);
   var view = rows.slice(startIdx, endIdx + 1);
@@ -803,7 +823,7 @@ setInterval(wcTickClock, 500); wcTickClock();
 setInterval(drawChart, 500);
 window.addEventListener("resize", drawChart);
 
-/* ===== Chart view controls (build 2238) — the hands on the chart ==
+/* ===== Chart view controls (build 2238, drag fix 2239) — the hands on the chart ==
    DRAG the canvas: sideways pulls through the candles (back in
    time and home again); up/down pulls the candles themselves to
    the middle of the screen. WHEEL / PINCH / the ZOOM buttons set
@@ -818,9 +838,11 @@ function wcZoomBy(f){
   var rows = wcRows();
   if(!rows.length) return;
   var cur = WC_CHART.visN > 0 ? Math.min(WC_CHART.visN, rows.length)
-                              : rows.length;
-  var nv = Math.max(8, Math.min(rows.length, Math.round(cur * f)));
-  WC_CHART.visN = nv >= rows.length ? 0 : nv;
+                              : wcDefVis(rows.length);
+  /* an explicit count from here on — 0 stays reserved for the
+     default latest-60 window (build 2239) */
+  WC_CHART.visN = Math.max(8, Math.min(rows.length,
+                                       Math.round(cur * f)));
   drawChart();
 }
 
