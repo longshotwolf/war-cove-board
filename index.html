@@ -325,6 +325,116 @@
   body.compact .box{padding:8px 10px;} body.compact table td{padding:2px 6px;}
   .badges{margin-left:5px;} .ptitle{color:#ffd75e; font-size:11px;
     letter-spacing:1px; margin-left:5px;}
+/* ===== MARKET MIRROR · Nov 11, 2026 — the battlefield's market layer on
+   the paper-game board (the Warlord's mirror order). Presentation ported
+   from the battlefield page (BFBUILD v5 market layer + WC-COMBINED duel
+   strip), class-prefixed mk- so nothing in the game layer is touched.
+   Data: the SAME battlefield.json the battlefield page reads. This layer
+   draws NO trades on any chart — the board's HA chart stays clean. ===== */
+#wcMarket{--gold:#ffd75e; --amber:#ffb02e; margin-top:18px;}
+#wcMarket .mk-up{color:var(--green)} #wcMarket .mk-dn{color:var(--red)}
+#wcMarket .mk-stale{color:var(--amber);font-weight:800}
+/* ----- duel strip (ported from the combined page's game strip) ----- */
+.mk-duel{border:1px solid var(--line);border-top:3px solid var(--ice);
+  background:linear-gradient(180deg,var(--panel2),var(--panel));border-radius:10px;
+  padding:14px 18px 16px;box-shadow:0 0 22px rgba(87,200,255,.07), inset 0 0 22px rgba(87,200,255,.03)}
+.mk-duel h2{margin:0;font-size:15px;letter-spacing:2px;color:#cfeeff;font-weight:800;
+  text-shadow:0 0 12px rgba(87,200,255,.45)}
+.mk-bars{display:grid;grid-template-columns:1fr 1fr;gap:14px 26px;margin-top:10px}
+@media(max-width:900px){.mk-bars{grid-template-columns:1fr}}
+.mk-barlab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  font-size:14.5px;font-weight:700;letter-spacing:.5px;flex-wrap:wrap}
+.mk-barlab .nm{font-size:16px;letter-spacing:1.5px;font-weight:900}
+.mk-barlab .bears{color:var(--red)} .mk-barlab .bulls{color:var(--green)}
+.mk-barlab b{font-variant-numeric:tabular-nums}
+.mk-track{height:20px;border-radius:10px;margin-top:6px;position:relative;
+  background:linear-gradient(90deg,#5d1d1d,#8a3324 30%,#6b5a33 50%,#2e6b34 70%,#1d5d2e);
+  border:1px solid #2a3a48;overflow:hidden;box-shadow:inset 0 0 10px rgba(0,0,0,.5)}
+.mk-track .pos{position:absolute;top:-2px;width:5px;height:24px;background:#fff;border-radius:2px;
+  box-shadow:0 0 10px #fff;transition:left .8s ease}
+.mk-track .fillb{position:absolute;left:0;top:0;bottom:0;background:rgba(255,77,94,.30)}
+.mk-track .fillg{position:absolute;right:0;top:0;bottom:0;background:rgba(46,230,107,.25)}
+.mk-track.split{background:#3d1116}
+.mk-track.split .fl{position:absolute;left:0;top:0;bottom:0;
+  background:linear-gradient(180deg,#3df57e,#1d9e4b);transition:width .8s ease}
+.mk-track.split .fr{position:absolute;right:0;top:0;bottom:0;
+  background:linear-gradient(180deg,#ff6473,#c22a38);transition:width .8s ease}
+.mk-barmeta{font-size:12.5px;color:var(--dim);margin-top:5px;letter-spacing:.4px;
+  font-variant-numeric:tabular-nums}
+.mk-scope{display:inline-flex;gap:5px;margin-left:10px;vertical-align:2px}
+.mk-scope button{background:var(--panel);color:var(--dim);border:1px solid var(--line);
+  border-radius:6px;padding:2px 9px;font-size:11.5px;font-weight:800;letter-spacing:1px;
+  cursor:pointer;font-family:inherit}
+.mk-scope button.on{color:#06121a;background:var(--ice);border-color:var(--ice)}
+/* ----- battlefield readings (ported from BFBUILD v5 .btools) ----- */
+.mk-tools{margin-top:16px;border:1px solid var(--line);border-top:3px solid var(--ice);
+  background:linear-gradient(180deg,var(--panel2),var(--panel));border-radius:10px;padding:16px 18px;
+  box-shadow:0 0 22px rgba(87,200,255,.07), inset 0 0 22px rgba(87,200,255,.03)}
+.mk-tools h2{margin:0;font-size:19px;letter-spacing:2px;color:#cfeeff;font-weight:800;
+  text-shadow:0 0 12px rgba(87,200,255,.45)}
+.mk-badge{display:inline-block;font-size:11.5px;font-weight:800;letter-spacing:1px;border-radius:999px;
+  padding:3px 11px;margin-left:8px;vertical-align:2px}
+.mk-badge.ok{color:var(--green);border:1px solid var(--green);background:rgba(46,230,107,.10);
+  box-shadow:0 0 10px rgba(46,230,107,.2)}
+.mk-badge.stale{color:#141005;background:var(--amber);border:1px solid var(--amber);font-weight:800;
+  box-shadow:0 0 12px rgba(255,176,46,.45)}
+.mk-btcrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  flex-wrap:wrap;margin-top:8px;font-size:13px}
+.mk-btcpx{font-size:21px;font-weight:800;color:#a6d8ff;text-shadow:0 0 12px rgba(87,200,255,.35);
+  font-variant-numeric:tabular-nums}
+.mk-btcpx .chg{font-size:14px;font-weight:700}
+.mk-bsub{color:var(--dim);font-size:13px;margin-top:4px;line-height:1.55}
+.mk-age{font-size:12px;color:var(--dim);letter-spacing:.4px}
+.mk-winbar{margin-top:14px}
+.mk-winbar .labels{display:flex;justify-content:space-between;align-items:baseline;font-size:16px;
+  font-weight:700;letter-spacing:.6px;gap:8px;flex-wrap:wrap}
+.mk-winbar .labels b{font-variant-numeric:tabular-nums}
+.mk-winbar .bears{color:var(--red);text-shadow:0 0 10px rgba(255,77,94,.35)}
+.mk-winbar .bulls{color:var(--green);text-shadow:0 0 10px rgba(46,230,107,.35)}
+.mk-winbar .midlab{color:var(--dim);font-size:13.5px;font-weight:400}
+.mk-winbar .track{height:20px;border-radius:10px;margin-top:7px;position:relative;
+  background:linear-gradient(90deg,#5d1d1d,#8a3324 30%,#6b5a33 50%,#2e6b34 70%,#1d5d2e);
+  border:1px solid #2a3a48;overflow:hidden;
+  box-shadow:0 0 14px rgba(87,200,255,.10), inset 0 0 10px rgba(0,0,0,.5)}
+.mk-winbar .pos{position:absolute;top:-2px;width:5px;height:24px;background:#fff;border-radius:2px;
+  box-shadow:0 0 10px #fff;transition:left .8s ease}
+.mk-winbar .fillb{position:absolute;left:0;top:0;bottom:0;background:rgba(255,77,94,.30)}
+.mk-winbar .fillg{position:absolute;right:0;top:0;bottom:0;background:rgba(46,230,107,.25)}
+.mk-bgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:16px}
+@media(max-width:900px){.mk-bgrid{grid-template-columns:1fr}}
+.mk-panel{background:#0d141b;border:1px solid var(--line);border-radius:8px;padding:14px 16px;
+  box-shadow:inset 0 0 18px rgba(87,200,255,.03)}
+.mk-panel h3{margin:0 0 10px;font-size:13px;letter-spacing:2px;color:var(--ice);font-weight:800;
+  border-bottom:1px solid #1c2833;padding-bottom:7px}
+.mk-panel.mk-stale{opacity:.62}
+.mk-big{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15}
+.mk-rowline{display:flex;justify-content:space-between;gap:10px;font-size:14.5px;padding:4px 0;
+  font-variant-numeric:tabular-nums;align-items:baseline}
+.mk-rowline .k{color:var(--dim)}
+.mk-delta{font-size:12px;font-weight:700;padding:2px 7px;border-radius:4px}
+.mk-delta.up{color:var(--green);border:1px solid var(--green);background:rgba(46,230,107,.08)}
+.mk-delta.dn{color:var(--red);border:1px solid var(--red);background:rgba(255,77,94,.08)}
+.mk-splitbar{height:12px;border-radius:6px;overflow:hidden;display:flex;margin:9px 0 5px;border:1px solid #2a3a48}
+.mk-splitbar .b{background:linear-gradient(180deg,#3df57e,var(--green))}
+.mk-splitbar .a{background:linear-gradient(180deg,#ff6473,var(--red))}
+.mk-feedlist{max-height:330px;overflow-y:auto;font-size:13.5px;
+  scrollbar-width:thin;scrollbar-color:var(--ice-dim) #0d141b}
+.mk-feedlist::-webkit-scrollbar{width:8px}
+.mk-feedlist::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+.mk-feedrow{display:flex;gap:9px;align-items:baseline;padding:5px 2px;border-bottom:1px dashed #1c2833;
+  font-variant-numeric:tabular-nums}
+.mk-feedrow .t{color:var(--dim);white-space:nowrap}
+.mk-feedrow .amt{margin-left:auto;font-weight:800;white-space:nowrap;font-size:14px}
+.mk-feedrow .px{color:var(--dim);white-space:nowrap}
+.mk-tag{font-size:11px;font-weight:800;letter-spacing:.8px;border-radius:4px;padding:2px 7px;white-space:nowrap}
+.mk-tag.long{color:#06150c;background:var(--green)}
+.mk-tag.short{color:#20060a;background:var(--red)}
+.mk-tag.liq{color:#241a02;background:var(--amber);animation:mkBlink 1.4s infinite}
+@keyframes mkBlink{0%,100%{opacity:1}50%{opacity:.25}}
+.mk-offline{color:var(--amber);font-weight:800;letter-spacing:.6px;padding:7px 2px}
+.mk-read{margin-top:16px;font-size:14.5px;line-height:1.6;background:rgba(87,200,255,.05);
+  border-left:3px solid var(--ice);padding:10px 12px;border-radius:0 6px 6px 0}
+@media (prefers-reduced-motion: reduce){ .mk-tag.liq{animation:none} }
 </style>
 </head>
 <body>
@@ -340,6 +450,100 @@
       <div class="soundrow"><button id="soundBtn" type="button">🔊 SOUND ON</button> <button id="podiumBtn" type="button" class="ctlbtn">📣 PODIUM CALL</button> <button id="settingsBtn" type="button" class="ctlbtn">⚙ SETTINGS</button><span id="soundHint" class="soundhint">👆 TAP ANYWHERE FOR SOUND</span></div>
     </div>
   </header>
+
+  <!-- ===== MARKET MIRROR · Nov 11, 2026 — the War Cove battlefield's market
+       layer rides this page too (the Warlord's mirror order): THE MARKET vs
+       THE ARMY duel strip + the certified BTC battlefield readings, read
+       from the SAME battlefield.json the battlefield page's own engine
+       publishes — one source, so the two pages can never disagree. The
+       game layer below is untouched, and this layer draws NO trades on any
+       chart: the board's Heikin-Ashi chart stays clean. ===== -->
+  <section id="wcMarket">
+    <div class="mk-duel" id="mkDuel">
+      <h2>⚔ THE WAR ON ONE SCREEN — MARKET TRUTH vs THE COVE'S OWN BOOK</h2>
+      <div class="mk-bars">
+        <div>
+          <div class="mk-barlab">
+            <span class="nm">🌐 THE MARKET</span>
+            <span><span class="bears">← BEARS WIN <b id="mkMkBears">—</b></span>
+            · <span class="bulls"><b id="mkMkBulls">—</b> BULLS WIN →</span></span>
+          </div>
+          <div class="mk-track"><div class="fillb" id="mkMkFillB"></div><div class="fillg" id="mkMkFillG"></div><div class="pos" id="mkMkPos" style="left:50%"></div></div>
+          <div class="mk-barmeta" id="mkMkMeta">the certified win race off the War Cove engine's BTC board — real market money only, never touched by the game</div>
+        </div>
+        <div>
+          <div class="mk-barlab">
+            <span class="nm">⚔️ THE ARMY</span>
+            <span class="mk-scope" id="mkArmyScope">
+              <button type="button" data-scope="ALL" class="on">ALL</button><button type="button" data-scope="LTC">LTC</button><button type="button" data-scope="BTC">BTC</button><button type="button" data-scope="ETH">ETH</button>
+            </span>
+            <span><span class="bulls">🟢 <b id="mkArLong">—</b></span>
+            · <span class="bears"><b id="mkArShort">—</b> 🔴</span></span>
+          </div>
+          <div class="mk-track split"><div class="fl" id="mkArFillG" style="width:50%"></div><div class="fr" id="mkArFillR" style="width:50%"></div></div>
+          <div class="mk-barmeta" id="mkArMeta">the Cove's paper book — virtual sats in open trades, from the game relay · the army's lean, kept apart from the market bar by law</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mk-tools" id="mkTools">
+      <h2>BTC BATTLEFIELD — WAR COVE ENGINE <span class="mk-badge ok" id="mkBadge">CERTIFIED</span></h2>
+      <div class="mk-btcrow">
+        <span class="mk-btcpx">BTC <b id="mkBtcPrice">—</b> <span class="chg" id="mkBtcChg"></span></span>
+        <span style="letter-spacing:1.2px">BOARD STATUS: <b id="mkStatus">—</b></span>
+      </div>
+      <div class="mk-bsub">Bitcoin board — the market-wide read, labeled BTC because its certified source is a Bitcoin board. Figures computed by the War Cove's own engine from public Bitunix + OKX exchange data, checked against the live Bitunix tape. <span class="mk-age" id="mkAge"></span></div>
+
+      <div class="mk-winbar">
+        <div class="labels">
+          <span class="bears">← BEARS WIN <b id="mkWbBears">—</b></span>
+          <span class="midlab" id="mkWbLabel">—</span>
+          <span class="bulls"><b id="mkWbBulls">—</b> BULLS WIN →</span>
+        </div>
+        <div class="track"><div class="fillb" id="mkWbFillB"></div><div class="fillg" id="mkWbFillG"></div><div class="pos" id="mkWbPos" style="left:50%"></div></div>
+      </div>
+
+      <div class="mk-bgrid">
+        <div class="mk-panel" id="mkPArmy">
+          <h3>WIN RACE — THE MARKET · BTC BOARD</h3>
+          <div class="mk-big" id="mkRacePct">—</div>
+          <div class="mk-splitbar"><div class="b" id="mkRaceBarG" style="width:50%"></div><div class="a" id="mkRaceBarR" style="width:50%"></div></div>
+          <div class="mk-rowline"><span class="k">Bulls to win</span><b id="mkBullsWin" style="color:var(--green)">—</b></div>
+          <div class="mk-rowline"><span class="k">Bears to win</span><b id="mkBearsWin" style="color:var(--red)">—</b></div>
+          <div class="mk-rowline"><span class="k">Field holder</span><b id="mkHolder">—</b></div>
+          <div class="mk-age" id="mkRaceAge"></div>
+        </div>
+
+        <div class="mk-panel" id="mkPLiq">
+          <h3>LIQUIDITY — AGGREGATED BOOK</h3>
+          <div class="mk-rowline"><span class="k">BID LIQUIDITY</span><span><b class="mk-big" style="color:var(--green);font-size:25px" id="mkLiqBid">—</b> <span class="mk-delta" id="mkLiqBidD" style="display:none"></span></span></div>
+          <div class="mk-rowline"><span class="k">ASK LIQUIDITY</span><span><b class="mk-big" style="color:var(--red);font-size:25px" id="mkLiqAsk">—</b> <span class="mk-delta" id="mkLiqAskD" style="display:none"></span></span></div>
+          <div class="mk-splitbar"><div class="b" id="mkLiqBarG" style="width:50%"></div><div class="a" id="mkLiqBarR" style="width:50%"></div></div>
+          <div class="mk-rowline"><span class="k">Biggest bid wall</span><b id="mkWallBid">—</b></div>
+          <div class="mk-rowline"><span class="k">Biggest ask wall</span><b id="mkWallAsk">—</b></div>
+          <div class="mk-rowline"><span class="k">BID RESERVES (behind the wall)</span><b id="mkResBid">—</b></div>
+          <div class="mk-rowline"><span class="k">ASK RESERVES (behind the wall)</span><b id="mkResAsk">—</b></div>
+          <div class="mk-rowline" id="mkOutlierRow" style="display:none"><span class="k">Outlier walls</span><b id="mkOutlierTxt">—</b></div>
+          <div class="mk-age" id="mkLiqAge"></div>
+        </div>
+
+        <div class="mk-panel" id="mkPClusters">
+          <h3>LIQUIDATION CLUSTERS — BTC</h3>
+          <div class="mk-rowline"><span class="k">Liquidations (tracker total)</span><b id="mkLiqTotal">—</b></div>
+          <div id="mkClusterList"></div>
+          <div class="mk-age" id="mkClusterAge">nearest recent liquidation print clusters · OKX prints</div>
+        </div>
+
+        <div class="mk-panel" id="mkPFeed" style="grid-column:1/-1">
+          <h3>MARKET FEED — LONGS · SHORTS · LIQUIDATIONS</h3>
+          <div class="mk-feedlist" id="mkFeedList"><div class="mk-offline">FEED — WAITING FOR FIRST READ…</div></div>
+          <div class="mk-age" id="mkFeedAge"></div>
+        </div>
+      </div>
+
+      <div class="mk-read" id="mkRead">BTC battlefield read: —</div>
+    </div>
+  </section>
   <div class="enity-host"><div class="enity-fig" id="enityFig" title="The Enity — runs the books">
     <svg viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Enity, blue energy form">
       <defs>
@@ -1462,6 +1666,249 @@ setInterval(refresh, 2000);
       setTimeout(playPodium, 3200);
     }
   }, 2000);
+})();
+</script>
+<script>
+/* ===== MARKET MIRROR — battlefield market layer on the paper-game board
+   (the Warlord's mirror order, Nov 11, 2026). Read-only: this layer NEVER
+   writes game state and NEVER draws trades on a chart.
+   THE MARKET reads the SAME file the battlefield page's engine publishes —
+   battlefield.json on the War Cove battlefield site — so this page and the
+   battlefield page show the same certified numbers at the same moment.
+   THE ARMY reads the game relay's state.json from this page's own origin,
+   exactly like the game layer below does. The two bars never blend. ===== */
+(function(){
+  'use strict';
+  var BF_URL = 'https://longshotwolf.github.io/war-cove-battlefield/battlefield.json';
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* formatters — the battlefield page's own (fmt$ / fmtP) and the combined
+     page's game formatters (gFmtUsd / gFmtInt / gFmtSats), unchanged */
+  function mkFmt$(v){ if(v==null||isNaN(v)) return '—'; var a=Math.abs(v);
+    if(a>=1e9) return '$'+(v/1e9).toFixed(2)+'B'; if(a>=1e6) return '$'+(v/1e6).toFixed(1)+'M';
+    if(a>=1e3) return '$'+(v/1e3).toFixed(1)+'K'; return '$'+v.toFixed(2); }
+  function mkFmtP(v,d){ if(v==null||isNaN(v)) return '—';
+    var dec=(d!=null)?d:(Math.abs(v)>=1?2:4);
+    return v.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}); }
+  function mkFmtUsd(v){ if(v==null||isNaN(v)) return '—';
+    return '$' + Number(v).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function mkFmtInt(n){ if(n==null||isNaN(n)) return '—';
+    return Math.round(n).toLocaleString('en-US'); }
+  function mkFmtSats(n){ if(n==null||isNaN(n)) return '—';
+    return (n>0?'+':'') + Math.round(n).toLocaleString('en-US') + ' sats'; }
+  function mkEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function mkAgeStr(ts){ if(!ts) return '—'; var s=Math.max(0,Math.round((Date.now()-ts)/1000));
+    if(s<90) return s+'s old'; if(s<5400) return Math.round(s/60)+'m old'; return (s/3600).toFixed(1)+'h old'; }
+  function mkSetDelta(el,val){ if(val==null||isNaN(val)){ el.style.display='none'; return; }
+    el.style.display='inline-block'; el.className='mk-delta '+(val>=0?'up':'dn');
+    el.textContent=(val>=0?'▲ +':'▼ ')+val.toFixed(2)+'% vs last read'; }
+
+  var MK = { bt: null, btFetchedAt: 0, state: null, armyScope: 'ALL' };
+
+  /* ================= THE MARKET — battlefield.json ================= */
+  async function mkLoadBattlefield(){
+    try{
+      var r = await fetch(BF_URL + '?t=' + Date.now(), {cache:'no-store'});
+      if(!r.ok) throw new Error('http ' + r.status);
+      MK.bt = await r.json(); MK.btFetchedAt = Date.now();
+      mkRenderMarket();
+    }catch(e){
+      var b = $('mkBadge');
+      b.className = 'mk-badge stale'; b.textContent = 'FEED OFFLINE';
+      $('mkAge').textContent = 'battlefield.json unreachable from this page — panels hold their last state';
+    }
+  }
+
+  function mkRenderMarket(){
+    var d = MK.bt; if(!d) return;
+    var srcTs = d.source_fetched_at ? Date.parse(d.source_fetched_at) : null;
+    var armyAge = d.army && d.army.age_s != null
+      ? d.army.age_s + Math.round((Date.now() - MK.btFetchedAt)/1000) : null;
+    var srcStale = !srcTs || (Date.now() - srcTs > 10*60*1000);
+    var stale = d.stale || !d.certified || srcStale;
+    var badge = $('mkBadge');
+    badge.className = 'mk-badge ' + (stale ? 'stale' : 'ok');
+    badge.textContent = stale ? 'STALE' : 'CERTIFIED ✓';
+    $('mkStatus').textContent = (d.status ? String(d.status).toUpperCase() : '—')
+      + (stale ? ' · LAST CERTIFIED READ HELD' : '');
+    $('mkAge').textContent = 'source read ' + (srcTs ? mkAgeStr(srcTs) : '—')
+      + (d.diff_pct != null ? ' · page vs Bitunix tape diff ' + d.diff_pct + '%' : '')
+      + (stale && d.stale_reason ? ' · ' + d.stale_reason : '')
+      + (stale && !d.certified && d.diff_pct != null ? ' · UNCERTIFIED — price mismatch over 0.5%' : '');
+    ['mkPArmy','mkPLiq','mkPClusters','mkPFeed'].forEach(function(pid){
+      $(pid).classList.toggle('mk-stale', !!stale); });
+    /* BTC price + 24h change */
+    var btc = d.btc || {};
+    var px = btc.price != null ? btc.price : d.nh_price;
+    $('mkBtcPrice').textContent = px != null ? '$' + mkFmtP(px) : '—';
+    var chg = $('mkBtcChg');
+    if(btc.change_24h != null && !isNaN(btc.change_24h)){
+      chg.textContent = '(' + (btc.change_24h >= 0 ? '+' : '') + Number(btc.change_24h).toFixed(2) + '% 24h)';
+      chg.className = 'chg ' + (btc.change_24h >= 0 ? 'mk-up' : 'mk-dn');
+    } else { chg.textContent = ''; }
+    /* win bar */
+    var wb = d.win_bar || {}, army = d.army || {};
+    $('mkWbBears').textContent = wb.bears_win ? '$' + mkFmtP(wb.bears_win) : '—';
+    $('mkWbBulls').textContent = wb.bulls_win ? '$' + mkFmtP(wb.bulls_win) : '—';
+    $('mkWbLabel').textContent = wb.depth_label || '—';
+    var prog = army.progress_pct;
+    if(prog == null && wb.bears_win && wb.bulls_win && d.nh_price)
+      prog = (d.nh_price - wb.bears_win) / (wb.bulls_win - wb.bears_win) * 100;
+    if(prog != null){ prog = Math.max(0, Math.min(100, prog));
+      $('mkWbPos').style.left = 'calc(' + prog.toFixed(1) + '% - 2px)';
+      $('mkWbFillB').style.width = (100 - prog).toFixed(1) + '%';
+      $('mkWbFillG').style.width = prog.toFixed(1) + '%'; }
+    /* win race panel */
+    $('mkRacePct').textContent = prog != null ? ('BULLS ' + prog.toFixed(0) + '% ACROSS THE RANGE') : '—';
+    if(prog != null){ $('mkRaceBarG').style.width = prog + '%'; $('mkRaceBarR').style.width = (100 - prog) + '%'; }
+    $('mkBullsWin').textContent = army.bulls_to_win != null ? mkFmt$(army.bulls_to_win) : '—';
+    $('mkBearsWin').textContent = army.bears_to_win != null ? mkFmt$(army.bears_to_win) : '—';
+    var holder = army.holder;
+    $('mkHolder').innerHTML = holder
+      ? ('<span style="color:var(--' + (holder === 'GREEN' ? 'green' : holder === 'RED' ? 'red' : 'gold') + ')">'
+         + mkEsc(holder) + (holder === 'DEAD HEAT' ? '' : ' ARMY') + '</span>') : '—';
+    $('mkRaceAge').textContent = 'win race from the War Cove engine · '
+      + (armyAge != null ? mkAgeStr(Date.now() - armyAge*1000) : '—') + (army.stale ? ' · STALE' : '');
+    /* liquidity */
+    var L = d.liquidity || {};
+    $('mkLiqBid').textContent = mkFmt$(L.bid_usd); $('mkLiqAsk').textContent = mkFmt$(L.ask_usd);
+    mkSetDelta($('mkLiqBidD'), L.bid_delta_pct); mkSetDelta($('mkLiqAskD'), L.ask_delta_pct);
+    if(L.bid_split_pct != null){ $('mkLiqBarG').style.width = L.bid_split_pct + '%';
+      $('mkLiqBarR').style.width = (100 - L.bid_split_pct) + '%'; }
+    function wall(w){ return !w || w.notional == null ? '—'
+      : (mkFmt$(w.notional) + ' @ $' + mkFmtP(w.price) + (w.source ? ' · ' + mkEsc(w.source) : '')); }
+    $('mkWallBid').innerHTML = wall(L.bid_wall); $('mkWallAsk').innerHTML = wall(L.ask_wall);
+    $('mkResBid').textContent = L.bid_reserves_behind_wall != null ? '≈ ' + mkFmt$(L.bid_reserves_behind_wall) : '—';
+    $('mkResAsk').textContent = L.ask_reserves_behind_wall != null ? '≈ ' + mkFmt$(L.ask_reserves_behind_wall) : '—';
+    var outs = [];
+    if(L.bid_outlier) outs.push('bid ' + mkFmt$(L.bid_outlier.notional) + ' @ $' + mkFmtP(L.bid_outlier.price));
+    if(L.ask_outlier) outs.push('ask ' + mkFmt$(L.ask_outlier.notional) + ' @ $' + mkFmtP(L.ask_outlier.price));
+    $('mkOutlierRow').style.display = outs.length ? 'flex' : 'none';
+    $('mkOutlierTxt').textContent = outs.join(' · ');
+    $('mkLiqAge').textContent = (L.book_source_label || 'Aggregated spot')
+      + ' order book · source read ' + (srcTs ? mkAgeStr(srcTs) : '—');
+    /* liquidation clusters */
+    var liq = d.liquidations || {};
+    $('mkLiqTotal').textContent = liq.volume_usd != null
+      ? (mkFmt$(liq.volume_usd) + ' · ' + (liq.count != null ? liq.count + ' events' : '—')) : '—';
+    var cl = liq.clusters || [];
+    $('mkClusterList').innerHTML = cl.length ? cl.map(function(c){
+      return '<div class="mk-rowline"><span><span class="mk-tag ' + (c.side === 'longs' ? 'short' : 'long') + '">'
+        + (c.side === 'longs' ? 'LONGS LIQ' : 'SHORTS LIQ') + '</span> $' + mkFmtP(c.price)
+        + ' <span style="color:var(--dim)">(' + (c.dist_pct >= 0 ? '+' : '') + c.dist_pct + '%)</span></span><b>'
+        + mkFmt$(c.usd) + ' · ' + c.count + ' prints</b></div>'; }).join('')
+      : '<div class="mk-rowline"><span class="k">No liquidation clusters in the current print window</span></div>';
+    $('mkClusterAge').textContent = 'OKX prints lane ' + (liq.okx_lane ? 'live' : 'OFFLINE')
+      + ' · OKX trades lane ' + (liq.binance_lane ? 'live' : 'OFFLINE')
+      + (liq.source ? ' · tracker: ' + mkEsc(liq.source) : '');
+    /* market feed */
+    var feed = d.feed || [];
+    var liqLaneOff = !liq.okx_lane && !liq.binance_lane;
+    var html = feed.map(function(f){
+      var tag = f.kind === 'liquidation' ? '<span class="mk-tag liq">LIQUIDATION</span>'
+        : f.kind === 'long' ? '<span class="mk-tag long">LONG</span>' : '<span class="mk-tag short">SHORT</span>';
+      var t = f.ts ? new Date(f.ts).toLocaleTimeString('en-GB') : '—';
+      var coinChip = f.coin === 'LTC' ? '<span class="mk-tag" style="background:#1d2a36;color:var(--gold)">Ł LTC</span>' : '';
+      return '<div class="mk-feedrow"><span class="t">' + t + '</span>' + tag + coinChip + '<span>' + mkEsc(f.label)
+        + (f.exchange ? ' <span style="color:var(--dim)">' + mkEsc(f.exchange) + '</span>' : '') + '</span>'
+        + (f.price ? '<span class="px">@ $' + mkFmtP(f.price) + '</span>' : '')
+        + '<span class="amt">' + (f.notional != null ? mkFmt$(f.notional) : '—') + '</span></div>';
+    }).join('');
+    if(liqLaneOff) html = '<div class="mk-offline">LIQUIDATIONS — FEED OFFLINE (both print lanes down)</div>' + html;
+    if(!feed.length && !liqLaneOff) html = '<div class="mk-offline">FEED — NO EVENTS IN THE CURRENT READ</div>';
+    $('mkFeedList').innerHTML = html;
+    $('mkFeedAge').textContent = 'lanes: OKX large trades · OKX BTC + LTC liquidation prints · War Cove engine — public exchange data only · source read '
+      + (srcTs ? mkAgeStr(srcTs) : '—');
+    if(d.read) $('mkRead').innerHTML = d.read;
+    mkRenderDuelMarket(d, prog, stale);
+  }
+
+  /* duel strip — THE MARKET side (the combined page's gRenderMarket) */
+  function mkRenderDuelMarket(d, prog, stale){
+    if(!d || !d.win_bar){ $('mkMkMeta').textContent =
+      'waiting for the engine’s first certified read…'; return; }
+    var wb = d.win_bar || {}, army = d.army || {};
+    $('mkMkBears').textContent = wb.bears_win ? mkFmtUsd(wb.bears_win) : '—';
+    $('mkMkBulls').textContent = wb.bulls_win ? mkFmtUsd(wb.bulls_win) : '—';
+    if(prog != null){
+      $('mkMkPos').style.left = 'calc(' + prog.toFixed(1) + '% - 2px)';
+      $('mkMkFillB').style.width = (100 - prog).toFixed(1) + '%';
+      $('mkMkFillG').style.width = prog.toFixed(1) + '%';
+    }
+    $('mkMkMeta').innerHTML =
+      'BTC board · bulls ' + (prog != null ? prog.toFixed(0) : '—') + '% across the range · '
+      + (army.holder ? mkEsc(army.holder) + ' holds the field · ' : '')
+      + 'bulls ' + (army.bulls_to_win != null ? mkFmtUsd(army.bulls_to_win) : '—')
+      + ' to win · bears ' + (army.bears_to_win != null ? mkFmtUsd(army.bears_to_win) : '—')
+      + ' to win · ' + (stale ? '<span class="mk-stale">STALE — last certified read held</span>'
+                              : 'CERTIFIED ✓ vs the Bitunix tape');
+  }
+
+  /* ================= THE ARMY — the Cove's paper book ================= */
+  function mkPositions(s){
+    if(!s) return [];
+    if(Array.isArray(s.open_positions)) return s.open_positions;
+    var out = [];                     /* defensive: raw slot-dict shape */
+    var pos = s.positions || {};
+    Object.keys(pos).forEach(function(u){
+      ['long','short'].forEach(function(side){
+        var p = pos[u] && pos[u][side];
+        if(p) out.push({user: u, side: side, coin: p.coin || 'LTC',
+                        margin: p.margin, upnl: p.upnl || 0});
+      });
+    });
+    return out;
+  }
+  function mkRenderArmy(){
+    var s = MK.state; if(!s) return;
+    var margin = s.margin_sats || 10000;
+    var scope = MK.armyScope;
+    var Lg = {sats:0, n:0, upnl:0}, Sh = {sats:0, n:0, upnl:0};
+    mkPositions(s).forEach(function(p){
+      if(scope !== 'ALL' && (p.coin || 'LTC') !== scope) return;
+      var m = p.margin != null ? p.margin : margin;
+      var b = p.side === 'long' ? Lg : Sh;
+      b.sats += m; b.n += 1; b.upnl += (p.upnl || 0);
+    });
+    var tot = Lg.sats + Sh.sats;
+    var lp = tot > 0 ? Lg.sats / tot * 100 : 50;
+    $('mkArFillG').style.width = lp.toFixed(1) + '%';
+    $('mkArFillR').style.width = (100 - lp).toFixed(1) + '%';
+    $('mkArLong').textContent = mkFmtInt(Lg.sats) + ' sats LONG';
+    $('mkArShort').textContent = mkFmtInt(Sh.sats) + ' sats SHORT';
+    var a = s.armies || {};
+    $('mkArMeta').innerHTML =
+      (scope === 'ALL' ? 'all coins' : scope + ' only') + ' · '
+      + Lg.n + ' soldiers long · ' + Sh.n + ' short · open uPnL longs '
+      + mkFmtSats(Lg.upnl) + ' · shorts ' + mkFmtSats(Sh.upnl)
+      + (a.green && a.red ? ' · settled — GREEN ARMY ' + mkFmtSats(a.green.realized)
+          + ' · RED ARMY ' + mkFmtSats(a.red.realized) : '')
+      + (tot === 0 ? ' · no open trades — the field is quiet' : '')
+      + (s.stalled ? ' · <span class="mk-stale">⏸ GAME FEED STALLED</span>' : '');
+  }
+  async function mkLoadState(){
+    try{
+      var r = await fetch('state.json?t=' + Date.now(), {cache:'no-store'});
+      if(!r.ok) return;
+      MK.state = await r.json();
+      mkRenderArmy();
+    }catch(e){ /* relay momentarily unreachable — next tick retries */ }
+  }
+  $('mkArmyScope').addEventListener('click', function(ev){
+    var b = ev.target && ev.target.closest ? ev.target.closest('button[data-scope]') : null;
+    if(!b) return;
+    MK.armyScope = b.getAttribute('data-scope');
+    var btns = this.querySelectorAll('button');
+    for(var i = 0; i < btns.length; i++) btns[i].classList.toggle('on', btns[i] === b);
+    mkRenderArmy();
+  });
+
+  mkLoadBattlefield();
+  setInterval(mkLoadBattlefield, 30000);
+  setInterval(function(){ if(MK.bt) mkRenderMarket(); }, 20000);
+  mkLoadState();
+  setInterval(mkLoadState, 10000);
 })();
 </script>
 </body>
