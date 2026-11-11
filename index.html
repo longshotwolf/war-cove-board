@@ -54,7 +54,19 @@
   table{width:100%; border-collapse:collapse; font-size:14px;}
   td, th{padding:4px 6px; text-align:left;}
   th{color:var(--dim); font-size:11px; letter-spacing:1px;}
-  tr.top1 td{color:#ffd75e; font-weight:700;}
+  /* Podium finishes - the Warlord's order, Nov 11, 2026 (corrected):
+     #1 DIAMOND - #2 24K GOLD - #3 PLATINUM. Supersedes '#1 row is gold'.
+     Finishes paint on the TR; the win/loss flash animations run on the
+     TDs above them, so flashes read at full strength over the metal
+     and the finish shows again the moment a flash ends. */
+  tr.pod1{background:radial-gradient(circle at 12% 22%,rgba(255,255,255,.95) 0 1.6px,rgba(255,255,255,0) 3px),radial-gradient(circle at 33% 74%,rgba(255,255,255,.85) 0 1.2px,rgba(255,255,255,0) 2.6px),radial-gradient(circle at 57% 28%,rgba(255,255,255,.92) 0 1.8px,rgba(255,255,255,0) 3.2px),radial-gradient(circle at 78% 66%,rgba(255,255,255,.82) 0 1.3px,rgba(255,255,255,0) 2.8px),radial-gradient(circle at 93% 24%,rgba(255,255,255,.9) 0 1.5px,rgba(255,255,255,0) 3px),linear-gradient(112deg,#9fd3f7 0%,#eaf8ff 24%,#bfe7ff 41%,#ffffff 54%,#d8f1ff 68%,#a9d6f8 84%,#eaf8ff 100%)}
+  tr.pod1 td{color:#0a2e44; font-weight:700;}
+  tr.pod2{background:linear-gradient(105deg,#7a4d00 0%,#c8912a 20%,#f6c453 38%,#ffe89a 50%,#e9b83a 62%,#a86f00 82%,#7a4d00 100%)}
+  tr.pod2 td{color:#2a1a00; font-weight:700;}
+  tr.pod3{background:linear-gradient(105deg,#7e868c 0%,#cfd6da 22%,#f7fafb 40%,#aeb7bc 58%,#e9edee 76%,#8b949a 100%)}
+  tr.pod3 td{color:#1d2327; font-weight:700;}
+  .fin{font-size:9px; font-weight:800; letter-spacing:1.5px; padding:1px 6px; border-radius:4px; margin-left:7px; vertical-align:2px; background:rgba(6,18,28,.72); white-space:nowrap;}
+  .fin-d{color:#cfeeff;} .fin-g{color:#ffd75e;} .fin-p{color:#f2f5f7;}
   .pos{color:var(--green);} .neg{color:var(--red);}
   .side-long{color:var(--green); font-weight:700;}
   .side-short{color:var(--red); font-weight:700;}
@@ -1466,7 +1478,7 @@ async function refresh(){
       r.open + " soldiers in · uPnL " + fmtSats(r.unrealized);
 
     document.getElementById("board").innerHTML = (s.leaderboard_top100 || s.leaderboard).map((row,i)=>
-      `<tr class="${i===0?'top1':''}${wcFlashCls(row.display)}"><td>${i+1}</td><td>${row.display}<span class="badges">${(row.badges||[]).join("")}</span>${row.title?`<span class="ptitle">${row.title}</span>`:""}</td>` +
+      `<tr class="${i===0?'pod1':i===1?'pod2':i===2?'pod3':''}${wcFlashCls(row.display)}"><td>${i+1}</td><td>${row.display}${i===0?'<span class="fin fin-d">◆ DIAMOND</span>':i===1?'<span class="fin fin-g">◆ 24K GOLD</span>':i===2?'<span class="fin fin-p">◆ PLATINUM</span>':''}<span class="badges">${(row.badges||[]).join("")}</span>${row.title?`<span class="ptitle">${row.title}</span>`:""}</td>` +
       `<td>${(row.balance ?? 0).toLocaleString("en-US")} sats</td>` +
       `<td class="${cls(row.realized)}">${fmtSats(row.realized)}</td>` +
       `<td>${row.wins}–${row.losses}</td><td>${row.busts ?? 0}</td><td>${row.liqs}</td></tr>`).join("")
