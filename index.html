@@ -1144,9 +1144,10 @@ function wcFindPlayer(s, name){
     out.display = WC_SHARD_HIT.row.display;
   }
   var op = s.open_positions || [];
+  out.poss = [];
   for(var j = 0; j < op.length; j++){
     if((op[j].user || "").toLowerCase() === q){
-      out.pos = op[j]; out.display = op[j].user;
+      out.pos = op[j]; out.poss.push(op[j]); out.display = op[j].user;
     }
   }
   return (out.row || out.pos) ? out : null;
@@ -1194,13 +1195,18 @@ function wcRenderBalance(){
   document.getElementById("balBusts").textContent =
     f.row ? (f.row.busts || 0) : 0;
   var posEl = document.getElementById("balPos");
-  if(f.pos){
-    var p = f.pos;
-    posEl.innerHTML = "🎯 OPEN NOW: <span class='side-" + p.side + "'>" +
-      p.side.toUpperCase() + " " + p.lev + "x</span> · " +
-      (p.coin || "LTC") + " @ " + fmtUsd(p.entry) + " · uPnL " +
-      "<span class='" + cls(p.upnl) + "'>" + fmtSats(p.upnl) + "</span>" +
-      " — type <span class='cmd'>!close</span> in chat to bank it";
+  if(f.poss && f.poss.length){
+    var bits = f.poss.map(function(p){
+      return "<span class='side-" + p.side + "'>" +
+        p.side.toUpperCase() + " " + p.lev + "x</span> · " +
+        (p.coin || "LTC") + " @ " + fmtUsd(p.entry) + " · uPnL " +
+        "<span class='" + cls(p.upnl) + "'>" + fmtSats(p.upnl) + "</span>";
+    });
+    posEl.innerHTML = "🎯 OPEN NOW: " + bits.join(" &nbsp;+&nbsp; ") +
+      (f.poss.length > 1
+        ? " — type <span class='cmd'>!close long</span> or " +
+          "<span class='cmd'>!close short</span> in chat to bank one"
+        : " — type <span class='cmd'>!close</span> in chat to bank it");
   }else{
     posEl.innerHTML = "No open position — fire a call above and " +
       "paste it in the chat.";
