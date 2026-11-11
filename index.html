@@ -441,7 +441,7 @@
 <div class="wc-frame" aria-hidden="true"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i><span class="wc-title" data-text="WAR COVE PAPER TRADING GAME">WAR COVE PAPER TRADING GAME</span></div>
 <div class="wrap">
   <header>
-    <h1>⚔️ WAR COVE<small>PAPER TRADING GAME · VIRTUAL SATS ONLY · NO REAL MONEY</small></h1>
+    <h1>⚔️ WAR COVE<small>PAPER TRADING GAME · VIRTUAL SATS ONLY · NO REAL MONEY</small></h1><span id="wcWatch" style="display:inline-block;margin:2px 0 2px 10px;font-size:12px;letter-spacing:2px;color:#57c8ff;border:1px solid #2e6f8e;border-radius:6px;padding:3px 9px;white-space:nowrap;vertical-align:middle">👁 — WATCHING THE GAME</span>
     <div class="price">
       <div class="ltc"><span id="ltcPrice">LTC $—</span> <span class="home">★ HOME COIN</span></div>
       <div class="alts"><span class="alt" id="btcPrice">BTC $—</span><span class="alt" id="ethPrice">ETH $—</span></div>
@@ -1909,6 +1909,48 @@ setInterval(refresh, 2000);
   setInterval(function(){ if(MK.bt) mkRenderMarket(); }, 20000);
   mkLoadState();
   setInterval(mkLoadState, 10000);
+})();
+</script>
+
+<script>
+/* War Cove watcher counter (display-only). Reads presence.json from
+   this origin for the current counter endpoint, pings it every 20s
+   with a random per-tab id, and shows how many game pages are open.
+   Any failure shows a dash - the number is never faked or stale. */
+(function(){
+  var el=document.getElementById('wcWatch');
+  if(!el) return;
+  var id='';
+  try{ id=sessionStorage.getItem('wcWatchId')||''; }catch(e){}
+  if(!id){
+    id='w'+Math.random().toString(36).slice(2)+Date.now().toString(36);
+    try{ sessionStorage.setItem('wcWatchId',id); }catch(e){}
+  }
+  var ep='';
+  function show(n){
+    el.textContent=(typeof n==='number')
+      ?('👁 '+n+' WATCHING THE GAME')
+      :'👁 — WATCHING THE GAME';
+  }
+  function ping(){
+    if(!ep) return;
+    fetch(ep+'/ping?id='+encodeURIComponent(id),{cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function(j){ show(j.watching); })
+      .catch(function(){ show(null); });
+  }
+  function loadEp(){
+    return fetch('presence.json?t='+Date.now(),{cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function(j){
+        var n=((j&&j.endpoint)||'').replace(/\/+$/,'');
+        if(n){ var changed=(n!==ep); ep=n; if(changed) ping(); }
+      })
+      .catch(function(){ show(null); });
+  }
+  loadEp();
+  setInterval(ping,20000);
+  setInterval(loadEp,600000);
 })();
 </script>
 </body>
