@@ -1409,8 +1409,7 @@ function wcRenderBalance(){
     });
     posEl.innerHTML = "🎯 OPEN NOW: " + bits.join(" &nbsp;+&nbsp; ") +
       (f.poss.length > 1
-        ? " — type <span class='cmd'>!close long</span> or " +
-          "<span class='cmd'>!close short</span> in chat to bank one"
+        ? " — type <span class='cmd'>!close long LTC</span> — side + coin — in chat to bank one"
         : " — type <span class='cmd'>!close</span> in chat to bank it");
   }else{
     posEl.innerHTML = "No open position — fire a call above and " +
