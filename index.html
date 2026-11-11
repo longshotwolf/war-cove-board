@@ -476,7 +476,7 @@
     </div>
     <div class="box">
       <h3>🎯 OPEN POSITIONS</h3>
-      <table><thead><tr><th>SOLDIER</th><th>SIDE</th><th>COIN</th><th>ENTRY</th><th>uPnL</th></tr></thead>
+      <table><thead><tr><th>SOLDIER</th><th>SIDE</th><th>COIN</th><th>ENTRY</th><th>LIQ</th><th>uPnL</th></tr></thead>
       <tbody id="positions"></tbody></table>
     </div>
   </div>
@@ -1199,7 +1199,8 @@ function wcRenderBalance(){
     var bits = f.poss.map(function(p){
       return "<span class='side-" + p.side + "'>" +
         p.side.toUpperCase() + " " + p.lev + "x</span> · " +
-        (p.coin || "LTC") + " @ " + fmtUsd(p.entry) + " · uPnL " +
+        (p.coin || "LTC") + " @ " + fmtUsd(p.entry) +
+        (p.liq == null ? "" : " · LIQ " + fmtUsd(p.liq)) + " · uPnL " +
         "<span class='" + cls(p.upnl) + "'>" + fmtSats(p.upnl) + "</span>";
     });
     posEl.innerHTML = "🎯 OPEN NOW: " + bits.join(" &nbsp;+&nbsp; ") +
@@ -1273,8 +1274,9 @@ async function refresh(){
       `<td class="side-${p.side}">${p.side.toUpperCase()} ${p.lev}x</td>` +
       `<td>${p.coin || "BTC"}</td>` +
       `<td>${fmtUsd(p.entry)}</td>` +
+      `<td>${p.liq == null ? "—" : "LIQ " + fmtUsd(p.liq)}</td>` +
       `<td class="${cls(p.upnl)}">${fmtSats(p.upnl)}</td></tr>`).join("")
-      || '<tr><td colspan="5" style="color:var(--dim)">No open positions.</td></tr>';
+      || '<tr><td colspan="6" style="color:var(--dim)">No open positions.</td></tr>';
 
     document.getElementById("events").innerHTML =
       s.events.map(e=>`<li>${e.text}</li>`).join("")
