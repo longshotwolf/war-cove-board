@@ -128,7 +128,8 @@ tr.pos-row-t.selected{background:#171a12;box-shadow:inset 3px 0 0 var(--gold)}
 .seg button{border:0;background:transparent;color:var(--muted);padding:6px 11px;border-radius:999px;font-weight:800;font-size:12px;min-height:32px}
 .seg button.active{background:#fff;color:#0a0d12}
 .chart-wrap{padding:10px 10px 4px;background:radial-gradient(600px 220px at 20% 0%,rgba(200,162,77,.08),transparent 60%),var(--panel3)}
-#chart{width:100%;height:300px;display:block;cursor:grab;touch-action:none}
+#chart{width:100%;height:300px;display:block;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.chart-wrap{touch-action:none}
 #chart:active{cursor:grabbing}
 .chart-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;border-top:1px solid var(--line);background:var(--panel3)}
 .chart-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
@@ -223,7 +224,7 @@ input[type=range].lev-slider::-moz-range-thumb{width:22px;height:22px;border-rad
 .ticker{margin-top:12px;background:#0c0f16;border:1px solid var(--line);border-radius:999px;overflow:hidden;display:flex;align-items:center}
 .ticker-label{background:var(--gold);color:#111;font-weight:900;letter-spacing:.1em;font-size:11px;padding:10px 12px;white-space:nowrap}
 .ticker-track{white-space:nowrap;overflow:hidden;flex:1}
-.ticker-inner{display:inline-block;padding-left:100%;animation:tick 28s linear infinite;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}
+.ticker-inner{display:inline-block;padding-left:100%;animation:tick 300s linear infinite;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}
 .ticker-inner b{color:var(--text)}
 .ticker-kick{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;background:#0f241a;border-left:1px solid #1f4d33;color:#7be8a8;padding:10px 14px;font-size:11px;font-weight:900;letter-spacing:.1em;text-decoration:none;white-space:nowrap}
 .ticker-kick i{width:8px;height:8px;background:var(--green);border-radius:50%;display:block;box-shadow:0 0 0 4px rgba(47,214,122,.15)}
@@ -420,6 +421,17 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
 .market-badge.closed i{background:#ff4d5e;box-shadow:0 0 0 4px rgba(255,77,94,.20),0 0 12px rgba(255,77,94,.85)}
 @media(max-width:640px){.market-badge{white-space:normal;text-align:left}.market-badge .mkt-clock{display:none}}
 
+/* COMMANDS LIBRARY — tap a command, pick coin/stock + leverage, copy it,
+   paste it into Kick chat yourself. Builds and copies only. */
+.cmd-rows{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.cmd-row{border:1px solid rgba(0,170,255,.35);background:rgba(4,20,42,.9);color:var(--text);border-radius:10px;padding:12px 14px;text-align:left;min-height:64px}
+.cmd-row b{display:block;font-family:"IBM Plex Mono",monospace;font-size:17px;color:var(--gold2)}
+.cmd-row span{display:block;font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+.cmd-row.active{border-color:var(--cyan);background:linear-gradient(180deg, rgba(0,90,160,.5), rgba(3,16,34,.97));box-shadow:0 0 16px rgba(0,190,255,.4)}
+.cmd-pick-label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--muted);margin:14px 0 2px}
+.cmd-inst-note{font-size:11.5px;color:var(--muted);margin-top:2px}
+@media(max-width:720px){.cmd-rows{grid-template-columns:1fr 1fr}}
+
 /* LIVE CONSOLE additions — game event flashes + sound pulse (the live pages' cues) */
 .wc-flash-g{animation:wcFlashG 1.1s ease-in-out 3}
 .wc-flash-r{animation:wcFlashR 1.1s ease-in-out 3}
@@ -427,6 +439,11 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
 @keyframes wcFlashR{50%{background-color:rgba(255,77,94,.28);box-shadow:0 0 18px rgba(255,77,94,.55)}}
 #wcSndBtn.pulse{animation:wcPulse 1s ease-in-out infinite}
 @keyframes wcPulse{50%{box-shadow:0 0 16px rgba(0,229,255,.85)}}
+/* Field Radar ticker pace — the Warlord's order (Nov 11 night): the 28s pass
+   ran ~224 px/s, unreadable. 315s lands ~20 px/s, a gentle crawl he can read
+   comfortably; longhand only, so the prefers-reduced-motion rule above still
+   stops the scroll entirely for anyone who asks for that. */
+.ticker-inner{animation-duration:315s}
 .ticker-stocks{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:11.5px;font-weight:900;letter-spacing:.06em;border:1.5px solid;white-space:nowrap}
 .ticker-stocks .ts-note{font-weight:700;letter-spacing:.01em;text-transform:none;font-size:11px;opacity:.92}
 .ticker-stocks.open{background:rgba(6,52,32,.92);border-color:#2fd67a;color:#a7f3c5;box-shadow:0 0 12px rgba(47,214,122,.35)}
@@ -618,6 +635,35 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
       <div class="cmd-box"><div class="cmd-code" id="buildCmd">!push LTC SHORT 50x</div><button class="copy-btn" id="buildCopyBtn" onclick="copyBuildCmd()">Copy Command</button></div>
       <a class="kick-btn" href="https://kick.com/longshotwolf" target="_blank" rel="noopener">Send it on Kick — Open kick.com/longshotwolf ↗</a>
       <p class="lev-note">Also works as <span class="mono" id="buildAlt">!LTC push 50x</span> in chat. Send it <strong style="color:var(--text)">from your own Kick account</strong> — trades fire only from Kick chat, never from this page.</p>
+    </div>
+  </section>
+
+  <!-- COMMANDS LIBRARY — every game command, tap to build + copy -->
+  <section class="panel builder" aria-label="Commands library">
+    <div class="panel-head"><div><h3>📖 COMMANDS — The Full Playbook</h3><p>Tap the command you want, pick your coin or stock and leverage where it needs them, then copy the ready-made command and paste it into Kick chat yourself. This page builds and copies — it never fires a trade.</p></div><span class="badge green">COPY &amp; PASTE</span></div>
+    <div class="builder-body">
+      <div class="cmd-rows" id="cmdRows"></div>
+      <p style="margin:0;font-size:13px;color:var(--muted)" id="cmdLibDesc">Open a LONG — bet the price goes UP.</p>
+      <div id="cmdInstWrap">
+        <label class="cmd-pick-label">Coin / Stock</label>
+        <div class="lev-chips" id="cmdInstChips" style="margin:6px 0 2px"></div>
+        <div class="cmd-inst-note" id="cmdInstNote">LTC · Litecoin — crypto, trades 24/7</div>
+      </div>
+      <div id="cmdLevWrap">
+        <label class="cmd-pick-label">Leverage</label>
+        <div class="builder-lev" style="margin-top:6px">
+          <button class="lev-btn" onclick="stepCmdLev(-5)" aria-label="Lower command leverage">−</button>
+          <input type="range" class="lev-slider" id="cmdSlider" min="5" max="100" step="1" value="50" aria-label="Command leverage 5 to 100">
+          <button class="lev-btn" onclick="stepCmdLev(5)" aria-label="Raise command leverage">+</button>
+          <div class="big"><span id="cmdLevVal">50</span><small style="font-size:16px;color:var(--muted)">x</small></div>
+        </div>
+        <div class="lev-scale"><span>5x SAFER</span><span>25x</span><span>50x</span><span>75x</span><span>100x MAX RISK</span></div>
+        <div class="lev-chips" id="cmdLevChips"><button data-lev="5">5x</button><button data-lev="10">10x</button><button data-lev="25">25x</button><button data-lev="50" class="active">50x</button><button data-lev="75">75x</button><button data-lev="100">100x</button></div>
+      </div>
+      <label class="cmd-pick-label">Your ready-made command</label>
+      <div class="cmd-box"><div class="cmd-code" id="cmdLibCode">!long LTC 50x</div><button class="copy-btn" id="cmdLibCopyBtn" onclick="copyCmdLib()">Copy Command</button></div>
+      <a class="kick-btn" href="https://kick.com/longshotwolf" target="_blank" rel="noopener">Paste it on Kick — Open kick.com/longshotwolf ↗</a>
+      <p class="lev-note" id="cmdLibAlt">Paste it in LongShotWolf's Kick chat <strong style="color:var(--text)">from your own Kick account</strong> — that's the only place a command fires.</p>
     </div>
   </section>
 
@@ -1336,16 +1382,25 @@ const chart = $('chart'), ctx = chart.getContext('2d');
 let crosshair = null;
 function priceInView(v) {
   const list = HIST[state.coin][state.tf] || [];
-  const end = clamp(list.length - state.view.endOff, 0, list.length);
-  const start = Math.max(0, end - state.view.count);
+  /* Virtual window — the approved preview's free-pan model: the window may
+     slide PAST both ends of the data. start can go negative and end can run
+     beyond the last candle; slots outside the data are empty hologram space.
+     That is what lets the Warlord pull the first candles to the CENTRE of
+     the screen and pull the live edge in from the right. (The first live
+     port clamped end to the data length and drew from slot 0, so panning
+     past the live edge rendered identically to the live edge — the chart
+     ate the drag — and candle 0 could never leave the left edge.) */
+  const end = list.length - state.view.endOff;
+  const start = end - state.view.count;
+  const realStart = Math.max(0, start), realEnd = Math.min(list.length, end);
   let lo = Infinity, hi = -Infinity;
-  for (let i = start; i < end; i++) { lo = Math.min(lo, list[i].l); hi = Math.max(hi, list[i].h); }
+  for (let i = realStart; i < realEnd; i++) { lo = Math.min(lo, list[i].l); hi = Math.max(hi, list[i].h); }
   POSITIONS.filter(p => p.coin === state.coin).forEach(p => { if (p.entry != null) { lo = Math.min(lo, p.entry); hi = Math.max(hi, p.entry); } });
   if (!isFinite(lo) || hi <= lo) return null;
   const pad = (hi - lo) * 0.12 + (hi * 0.0005);
   lo -= pad; hi += pad;
   const mid = (hi + lo) / 2, half = (hi - lo) / 2 * state.view.yScale;
-  return {min: mid - half, max: mid + half, start, end};
+  return {min: mid - half, max: mid + half, start, end, realStart, realEnd};
 }
 function drawChart() {
   const list = HIST[state.coin][state.tf] || [];
@@ -1362,7 +1417,7 @@ function drawChart() {
   const view = priceInView();
   ctx.strokeStyle = 'rgba(87,200,255,.10)'; ctx.fillStyle = 'rgba(159,216,255,.75)';
   ctx.font = '10px "IBM Plex Mono", monospace'; ctx.lineWidth = 1;
-  if (!view || view.end <= view.start) {
+  if (!view || view.realEnd <= view.realStart) {
     ctx.fillStyle = 'rgba(200,231,255,.8)'; ctx.font = '13px Inter, sans-serif';
     ctx.fillText(CHART_MODE === 'game' ? 'Loading the game candles…' : 'Loading the tape…', 16, 28);
     $('chartViewInfo').textContent = '0 candles'; return;
@@ -1373,10 +1428,10 @@ function drawChart() {
     ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(plotW, yy); ctx.stroke();
     ctx.fillText(fmt(v, COINS[state.coin].dec), plotW + 7, yy + 3);
   }
-  const n = view.end - view.start, slot = plotW / Math.max(1, Math.min(state.view.count, n + Math.ceil(state.view.count * 0.55)));
+  const n = view.realEnd - view.realStart, slot = plotW / Math.max(1, state.view.count);
   const bw = Math.max(2, Math.min(26, slot * 0.62));
   const GREEN = '#2dff8f', RED = '#ff4d5e';
-  for (let i = view.start; i < view.end; i++) {
+  for (let i = view.realStart; i < view.realEnd; i++) {
     const c = list[i], x = (i - view.start + 0.5) * slot;
     if (x < -slot || x > plotW + slot) continue;
     const up = c.c >= c.o, col = up ? GREEN : RED;
@@ -1414,7 +1469,7 @@ function drawChart() {
   });
   if (crosshair && crosshair.x <= plotW) {
     const idx = view.start + Math.floor(crosshair.x / slot);
-    if (idx >= view.start && idx < view.end) {
+    if (idx >= view.realStart && idx < view.realEnd) {
       const c = list[idx];
       ctx.save();
       ctx.strokeStyle = 'rgba(200,231,255,.4)'; ctx.setLineDash([4, 4]);
@@ -1483,7 +1538,7 @@ function setTF(tf) {
 function toggleLive() { state.live = !state.live; $('pauseBtn').textContent = state.live ? 'Pause Feed' : 'Resume Feed'; if (state.live) { drawChart(); syncCoinUI(); } }
 function goLiveChart() { state.view.endOff = 0; state.following = true; drawChart(); }
 function zoomChart(f) { state.view.count = clamp(Math.round(state.view.count * f), 8, 240); drawChart(); }
-function stepPanChart(d) { const list = HIST[state.coin][state.tf] || []; state.view.endOff = clamp(state.view.endOff + d, 0, Math.max(0, list.length - 5)); state.following = state.view.endOff === 0; drawChart(); }
+function stepPanChart(d) { const list = HIST[state.coin][state.tf] || []; state.view.endOff = clamp(state.view.endOff + d, -Math.ceil(state.view.count * 0.55), Math.max(0, list.length - 5)); state.following = state.view.endOff === 0; drawChart(); }
 function centreStartChart() { const list = HIST[state.coin][state.tf] || []; state.view.endOff = Math.max(0, list.length - Math.ceil(state.view.count / 2)); state.following = false; drawChart(); }
 function resetChartView() { resetView(); drawChart(); }
 function toggleAutoScale() { state.autoScale = !state.autoScale; if (state.autoScale) state.view.yScale = 1; $('autoScaleBtn').classList.toggle('active', state.autoScale); drawChart(); }
