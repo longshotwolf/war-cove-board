@@ -1875,7 +1875,26 @@ function renderBuild() {
   $('buildAlt').textContent = '!push ' + k + ' ' + state.buildLev + 'x';
 }
 function copyText(t, okMsg) {
-  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => addLog(okMsg, 'note')).catch(() => addLog('Copy blocked by the browser — the command is on the panel to copy by hand.', 'note'));
+  const done = () => addLog(okMsg, 'note');
+  const blocked = () => {
+    addLog('Copy blocked by the browser — the command is on the panel to copy by hand.', 'note');
+    try {
+      const el = Array.from(document.querySelectorAll('.cmd-code')).find(e => e.textContent === t);
+      if (el) { const r = document.createRange(); r.selectNodeContents(el); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); el.scrollIntoView({ block: 'nearest' }); }
+    } catch (e) {}
+  };
+  const fallback = () => {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = t; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+      const okc = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (okc) done(); else blocked();
+    } catch (e) { blocked(); }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done).catch(fallback);
+  else fallback();
 }
 function copyBuildCmd() { copyText($('buildCmd').textContent, 'Opening command copied — paste it in Kick chat from your own account to fire it.'); }
 
