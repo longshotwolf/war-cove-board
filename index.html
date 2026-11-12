@@ -734,7 +734,11 @@ function cls(n){ return n>=0 ? "pos" : "neg"; }
      liquidated          -> "liq"  (one trade liquidated: harsh zap, red flash)
      account_liquidated  -> "bust" (account blown: the big boom, hard red flash)
      anything else (opens, ranks, legacy events without pnl) -> silence.
-   Sounds are synthesized live with WebAudio — no audio files to host.
+   Sounds were originally synthesized live with WebAudio. As of
+   Nov 11, 2026 the win / liq / bust cues play the Warlord's approved
+   recordings in sfx/ (win-ching.mp3, trade-liquidated-zap.mp3,
+   account-blown-doom.mp3 — auditioned and approved by the Warlord in
+   chat, "Use them"); the losing-close sting stays synthesized.
    Browsers keep audio locked until the first tap/click/keypress; the
    board just stays silent while locked and never lets a cue break it. */
 function wcSoundForEvent(e){
@@ -752,6 +756,20 @@ var WC_SND = {
   on: (function(){ try{ return localStorage.getItem("wc-sound") !== "off"; }
                    catch(e){ return true; } })(),
   ctx: null, master: null, unlocked: false,
+  /* Warlord-approved cue recordings (Nov 11, 2026), hosted in this
+     repo under sfx/. These three events play the files INSTEAD of the
+     synthesized sounds below; "lose" has no file and stays synth. */
+  files: { win: "sfx/win-ching.mp3",
+           liq: "sfx/trade-liquidated-zap.mp3",
+           bust: "sfx/account-blown-doom.mp3" },
+  playFile: function(path){
+    try{
+      var a = new Audio(path);
+      a.volume = 0.9;
+      var p = a.play();
+      if(p && p.catch) p.catch(function(){});
+    }catch(e){ /* a sound must never break the board */ }
+  },
   ensure: function(){
     if(this.ctx) return this.ctx;
     try{
@@ -802,6 +820,14 @@ var WC_SND = {
   },
   play: function(name){
     if(!this.on) return;
+    var file = this.files[name];
+    if(file){
+      var ac = this.ensure();
+      if(ac && ac.state === "suspended"){ ac.resume().catch(function(){}); }
+      if(ac && ac.state !== "running" && !this.unlocked) return; /* locked — stay silent */
+      this.playFile(file);
+      return;
+    }
     var c = this.ensure();
     if(!c) return;
     if(c.state === "suspended"){ c.resume().catch(function(){}); }
