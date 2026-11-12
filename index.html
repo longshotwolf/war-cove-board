@@ -224,7 +224,7 @@ input[type=range].lev-slider::-moz-range-thumb{width:22px;height:22px;border-rad
 .ticker{margin-top:12px;background:#0c0f16;border:1px solid var(--line);border-radius:999px;overflow:hidden;display:flex;align-items:center}
 .ticker-label{background:var(--gold);color:#111;font-weight:900;letter-spacing:.1em;font-size:11px;padding:10px 12px;white-space:nowrap}
 .ticker-track{white-space:nowrap;overflow:hidden;flex:1}
-.ticker-inner{display:inline-block;padding-left:100%;animation:tick 300s linear infinite;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}
+.ticker-inner{display:inline-block;padding-left:100%;animation:tick 135s linear infinite;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}
 .ticker-inner b{color:var(--text)}
 .ticker-kick{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;background:#0f241a;border-left:1px solid #1f4d33;color:#7be8a8;padding:10px 14px;font-size:11px;font-weight:900;letter-spacing:.1em;text-decoration:none;white-space:nowrap}
 .ticker-kick i{width:8px;height:8px;background:var(--green);border-radius:50%;display:block;box-shadow:0 0 0 4px rgba(47,214,122,.15)}
@@ -423,14 +423,28 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
 
 /* COMMANDS LIBRARY — tap a command, pick coin/stock + leverage, copy it,
    paste it into Kick chat yourself. Builds and copies only. */
-.cmd-rows{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
-.cmd-row{border:1px solid rgba(0,170,255,.35);background:rgba(4,20,42,.9);color:var(--text);border-radius:10px;padding:12px 14px;text-align:left;min-height:64px}
+.cmd-scroll-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cmd-scroll-head strong{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--text)}
+.cmd-scroll-head strong b{color:var(--gold2);font-family:"IBM Plex Mono",monospace}
+.cmd-scroll-btns{display:flex;gap:6px;align-items:center}
+.cmd-scroll-btn{border:1px solid rgba(0,190,255,.55);background:rgba(10,38,68,.92);color:var(--text);padding:8px 13px;border-radius:999px;font-weight:900;font-size:12px;min-height:38px}
+.cmd-scroll-btn:active{background:linear-gradient(180deg,#00c8ff,#0077e6);color:#02101f}
+.cmd-rows{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;max-height:182px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--cyan) rgba(3,14,30,.9);border:1px solid rgba(0,170,255,.42);border-radius:12px;background:rgba(2,12,28,.65);padding:8px;box-shadow:inset 0 0 22px rgba(0,120,255,.08)}
+.cmd-rows::-webkit-scrollbar{width:10px}
+.cmd-rows::-webkit-scrollbar-track{background:rgba(3,14,30,.9);border-radius:999px}
+.cmd-rows::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#00c8ff,#0077e6);border-radius:999px;border:2px solid rgba(3,14,30,.9)}
+.cmd-rows:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.cmd-scroll-hint{font-size:11.5px;color:var(--muted);line-height:1.5;margin:0 0 12px}
+.cmd-scroll-hint b{color:var(--gold2)}
+.cmd-row{border:1px solid rgba(0,170,255,.35);background:rgba(4,20,42,.9);color:var(--text);border-radius:10px;padding:12px 14px;text-align:left;min-height:64px;width:100%}
 .cmd-row b{display:block;font-family:"IBM Plex Mono",monospace;font-size:17px;color:var(--gold2)}
 .cmd-row span{display:block;font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.4}
 .cmd-row.active{border-color:var(--cyan);background:linear-gradient(180deg, rgba(0,90,160,.5), rgba(3,16,34,.97));box-shadow:0 0 16px rgba(0,190,255,.4)}
 .cmd-pick-label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--muted);margin:14px 0 2px}
 .cmd-inst-note{font-size:11.5px;color:var(--muted);margin-top:2px}
-@media(max-width:720px){.cmd-rows{grid-template-columns:1fr 1fr}}
+#cmdInstChips{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;scrollbar-width:thin;padding-bottom:6px;max-width:100%}
+#cmdInstChips button{flex:0 0 auto;white-space:nowrap}
+@media(max-width:720px){.cmd-rows{grid-template-columns:1fr 1fr;max-height:196px}.cmd-scroll-btns{flex:1;justify-content:flex-end}}
 
 /* LEADERBOARD PRECIOUS HIGHLIGHTS — Diamond · 24-Karat Gold · Platinum
    The top three on the Leading Dashboard must read as three different
@@ -474,6 +488,18 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
 @keyframes wcFlashR{50%{background-color:rgba(255,77,94,.28);box-shadow:0 0 18px rgba(255,77,94,.55)}}
 #wcSndBtn.pulse{animation:wcPulse 1s ease-in-out infinite}
 @keyframes wcPulse{50%{box-shadow:0 0 16px rgba(0,229,255,.85)}}
+/* ROUND 3 — The Enity host restored (the old board's figure, console-sized):
+   she stands at the head of the Leading Dashboard above the roll-call strip
+   and pulses while the podium call plays; the PODIUM CALL button pulses gold
+   when a fresh call lands before sound is unlocked (the old board's cue). */
+.enity-host{display:flex;align-items:center;gap:10px;padding:8px 14px 2px}
+.enity-fig{display:flex;align-items:center;gap:10px}
+.enity-fig svg{width:44px;height:66px;filter:drop-shadow(0 0 7px rgba(80,180,255,.75))}
+.enity-fig .enity-role{font-size:10px;font-weight:800;letter-spacing:.14em;color:#9fd8ff;line-height:1.5}
+.enity-fig.speaking svg{animation:enPulse .8s ease-in-out infinite alternate}
+@keyframes enPulse{from{filter:drop-shadow(0 0 5px rgba(80,180,255,.6))}to{filter:drop-shadow(0 0 16px rgba(120,210,255,1))}}
+#podiumBtn.pulse{animation:podPulse .9s ease-in-out infinite alternate;border-color:#ffc940;color:#ffc940}
+@keyframes podPulse{50%{box-shadow:0 0 14px rgba(255,201,64,.95)}}
 /* Field Radar ticker pace — the Warlord's order (Nov 11 night): the 28s pass
    ran ~224 px/s, unreadable. 315s lands ~20 px/s, a gentle crawl he can read
    comfortably; longhand only, so the prefers-reduced-motion rule above still
@@ -519,7 +545,7 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
       </div>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <span class="live-dot" id="liveBadge"><i></i> LIVE BOARD</span><span class="market-badge closed" id="marketBadge" role="status" aria-live="polite" title="US stock market hours: Monday–Friday, 9:30 AM – 4:00 PM Eastern (New York). Crypto — LTC · BTC · ETH — trades 24/7."><i></i><span id="marketBadgeText">STOCKS · MARKET CLOSED</span><span class="mkt-note" id="marketBadgeNote">— Opens 9:30 AM ET</span><span class="mkt-clock" id="marketBadgeClock"></span></span><span class="watch-pill" id="wcWatch" title="Watchers on the live board">👁 — WATCHING THE GAME</span><button class="btn" id="wcSndBtn" type="button">🔊 SOUND ON</button>
+      <span class="live-dot" id="liveBadge"><i></i> LIVE BOARD</span><span class="market-badge closed" id="marketBadge" role="status" aria-live="polite" title="US stock market hours: Monday–Friday, 9:30 AM – 4:00 PM Eastern (New York). Crypto — LTC · BTC · ETH — trades 24/7."><i></i><span id="marketBadgeText">STOCKS · MARKET CLOSED</span><span class="mkt-note" id="marketBadgeNote">— Opens 9:30 AM ET</span><span class="mkt-clock" id="marketBadgeClock"></span></span><span class="watch-pill" id="wcWatch" title="Watchers on the live board">👁 — WATCHING THE GAME</span><button class="btn" id="wcSndBtn" type="button">🔊 SOUND ON</button><button class="btn" id="podiumBtn" type="button">📣 PODIUM CALL</button>
       <a class="btn" href="https://kick.com/longshotwolf" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">▶ Watch on Kick</a>
     </div>
   </div>
@@ -563,7 +589,7 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
         <div class="army-stat"><label>🟢 Green Army</label><b id="armyGreenCount">—</b><div style="font-size:11px;color:var(--muted)" id="armyGreenSats">— sats</div></div>
         <div class="army-stat"><label>🔴 Red Army</label><b id="armyRedCount">—</b><div style="font-size:11px;color:var(--muted)" id="armyRedSats">— sats</div></div>
         <div class="army-stat"><label>Open positions</label><b id="armyOpen">3</b><div style="font-size:11px;color:var(--muted)">On the field right now</div></div>
-        <div class="army-stat"><label>Watching</label><b id="armyWatch">215</b><div style="font-size:11px;color:var(--muted)">Eyes on the board</div></div>
+        <div class="army-stat"><label>Watching</label><b id="armyWatch">—</b><div style="font-size:11px;color:var(--muted)">Eyes on the board</div></div>
       </div>
       <div style="padding:0 16px 6px;display:flex;justify-content:space-between;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase"><span>Army strength</span><span id="armyPctLabel">Green 50%</span></div>
       <div class="army-bar" style="margin-bottom:6px"><span id="armyGreenBar" style="width:50%;background:var(--green)"></span><span style="flex:1;background:var(--red)"></span></div>
@@ -593,14 +619,13 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
           <button class="btn" id="pauseBtn" onclick="toggleLive()">Pause Feed</button>
         </div>
       </div>
-      <div class="chart-wrap"><canvas id="chart" width="900" height="300" tabindex="0" aria-label="Clean Heikin-Ashi candle chart — candles and entry markers only. Drag to pan in any direction: pull the candles sideways through time and pull them up and down inside the chart, pixel for pixel with your hand. You can pull the very first candles to the centre of the screen and push them to either side, and pull the candles up or down to re-centre them vertically. Scroll or pinch to zoom, drag the price scale on the right to stretch the candles, arrow keys move the chart, double-click to reset."></canvas>
+      <div class="chart-wrap"><canvas id="chart" width="900" height="300" tabindex="0" aria-label="Clean Heikin-Ashi candle chart — candles and entry markers only. Drag to pan in any direction: pull the candles sideways through time and pull them up and down inside the chart, pixel for pixel with your hand. You can pull the very first candles to the centre of the screen and push them to either side, and pull the candles up or down to re-centre them vertically. Scroll or pinch to zoom — right in until a few candles fill the chart, big — drag the price scale on the right to stretch the candles taller, arrow keys move the chart, double-click to reset. The chart centres out automatically: the live candle sits in the middle of the chart with open space on both sides, and it stays centred as it updates."></canvas>
         <div class="crosshair-info" id="crosshairInfo" aria-hidden="true"></div>
-        <button class="live-jump" id="liveJump" onclick="goLiveChart()">● GO LIVE →</button>
       </div>
       <div class="chart-toolbar" aria-label="Chart controls">
         <div class="chart-tools">
           <button onclick="zoomChart(1.35)" aria-label="Zoom out — show more candles">− Zoom</button>
-          <button onclick="zoomChart(0.72)" aria-label="Zoom in — bigger candles">+ Zoom</button>
+          <button onclick="zoomChart(0.6)" aria-label="Zoom in — bigger candles, right down to a few candles filling the chart">+ Zoom</button>
           <button onclick="stepPanChart(-8)" aria-label="Pan chart back in time">◀ Older</button>
           <button onclick="stepPanChart(8)" aria-label="Pan chart forward in time">Newer ▶</button>
           <button onclick="stepPanVertical(-70)" aria-label="Move the candles up inside the chart">▲ Up</button>
@@ -612,7 +637,7 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
         <span class="chart-view-info" id="chartViewInfo">42 candles</span>
       </div>
       <div class="chart-resize" id="chartResize" tabindex="0" role="separator" aria-label="Resize chart height — drag down to make the chart taller"><span class="grip"></span><span>↕ CHART HEIGHT</span><span class="grip"></span></div>
-      <div class="chart-hint">Work the chart like Bitunix: <b style="color:var(--text)">drag in any direction</b> — pull sideways through time, pull the very first candles right to the <b style="color:var(--text)">centre of the screen</b> and push them to either side, and <b style="color:var(--text)">pull up or down inside the chart</b> to move the candles up and down with your hand, pixel for pixel (or use the ▲ Up / ▼ Down buttons) · <b style="color:var(--text)">scroll / pinch</b> to zoom · <b style="color:var(--text)">drag the price scale</b> on the right edge to stretch or squeeze the candles · <b style="color:var(--text)">double-click</b> to reset. Bid, ask, liquidity, spread and walls live in THE MARKET panel — the chart face stays clear so the candles can be read.</div>
+      <div class="chart-hint">Work the chart like Bitunix: <b style="color:var(--text)">drag in any direction</b> — pull sideways through time, pull the very first candles right to the <b style="color:var(--text)">centre of the screen</b> and push them to either side, and <b style="color:var(--text)">pull up or down inside the chart</b> to move the candles up and down with your hand, pixel for pixel (or use the ▲ Up / ▼ Down buttons) · <b style="color:var(--text)">scroll / pinch / + Zoom</b> to zoom right in — down to a few candles filling the whole chart, properly big · <b style="color:var(--text)">drag the price scale</b> on the right edge to stretch the candles taller or squeeze them down · the chart <b style="color:var(--text)">centres out automatically</b> — the live candle sits <b style="color:var(--text)">in the middle of the chart</b> with open field on both sides instead of running off the right edge, and it stays centred as it updates, no button needed — drag or pan to look around and it centres itself again on its own a few seconds later · <b style="color:var(--text)">double-click</b> to reset. Bid, ask, liquidity, spread and walls live in THE MARKET panel — the chart face stays clear so the candles can be read.</div>
       <div class="entry-legend" id="entryLegend" style="display:none">ENTRY MARKERS —</div>
       <div style="padding:0 16px 10px;font-size:11px;color:var(--muted)">Heikin-Ashi candles only on the chart face — thick green/red bodies with wicks • Blue-energy outline = live forming candle. Nothing else is plastered over the candles.</div>
       <div>
@@ -640,7 +665,25 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
             <button data-f="red">Red</button>
           </div>
         </div>
-        <div class="podium" id="podium" aria-label="Top three — Diamond, 24-karat gold and platinum"></div>
+        <div class="enity-host"><div class="enity-fig" id="enityFig" title="The Enity — runs the books">
+    <svg viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Enity, blue energy form">
+      <defs>
+        <radialGradient id="enCore" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#eaf9ff"/><stop offset="45%" stop-color="#6fd2ff"/>
+          <stop offset="100%" stop-color="#1e7fff" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="enBody" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#9fe4ff" stop-opacity=".95"/>
+          <stop offset="55%" stop-color="#3fa9ff" stop-opacity=".8"/>
+          <stop offset="100%" stop-color="#1663d9" stop-opacity=".25"/>
+        </linearGradient>
+      </defs>
+      <path fill="url(#enBody)" d="M50 6c7 0 12 5 13 12 3 1 6 4 7 9 6 3 10 9 11 17l3 30c.4 4-5 5-6 1l-4-24c-1 8-1 14 0 22 2 10 5 20 6 30 1 12 1 24-1 36-.5 3-6 3-7 0-2-13-4-26-8-38-3 12-5 25-7 38-.6 3-6.5 3-7 0-2-12-2-24-1-36 1-10 4-20 6-30 1-8 1-14 0-22l-4 24c-1 4-6.4 3-6-1l3-30c1-8 5-14 11-17 1-5 4-8 7-9 1-7 6-12 13-12z"/>
+      <circle cx="50" cy="52" r="10" fill="url(#enCore)"/>
+      <circle cx="50" cy="52" r="3.4" fill="#f2fcff"/>
+    </svg>
+    <div class="enity-role">THE ENITY<br>RUNS THE BOOKS</div>
+  </div></div><div class="podium" id="podium" aria-label="Top three — Diamond, 24-karat gold and platinum"></div>
         <div id="leaderList"></div>
         <div style="padding:12px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Total players tracked</span><strong style="color:var(--text)" id="playerCount">—</strong></div>
       </section>
@@ -663,9 +706,10 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
         <h3 style="margin:0 0 8px;font-size:13px;letter-spacing:.12em;text-transform:uppercase">Commander’s Read</h3>
         <p style="margin:0;color:var(--muted);font-size:13px;line-height:1.6" id="commanderRead">LTC is leading the board. Red holds at the low band on the 6H, but the 3M flipped Green and is slowing — watch for the squeeze. Short the top. Long the bottom.</p>
         <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-          <button class="btn primary" onclick="copyRead()">Copy the Read</button>
+          <button class="btn primary" id="postCallBtn" onclick="postCall()">Post Call</button>
           <a class="btn" href="https://kick.com/longshotwolf" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">Watch Live on Kick ↗</a>
         </div>
+        <p id="postCallStatus" role="status" aria-live="polite" style="display:none;margin:10px 0 0;font-size:12.5px;line-height:1.5;color:#7be8a8;font-weight:700"></p>
       </section>
     </aside>
   </div>
@@ -701,9 +745,17 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
 
   <!-- COMMANDS LIBRARY — every game command, tap to build + copy -->
   <section class="panel builder" aria-label="Commands library">
-    <div class="panel-head"><div><h3>📖 COMMANDS — The Full Playbook</h3><p>Tap the command you want, pick your coin or stock and leverage where it needs them, then copy the ready-made command and paste it into Kick chat yourself. This page builds and copies — it never fires a trade.</p></div><span class="badge green">COPY &amp; PASTE</span></div>
+    <div class="panel-head"><div><h3>📖 COMMANDS — The Full Playbook</h3><p>Scroll through every command in the box below, tap the one you want, pick your coin or stock and leverage where it needs them, then copy the ready-made command and paste it into Kick chat yourself. This page builds and copies — it never fires a trade.</p></div><span class="badge green">COPY &amp; PASTE</span></div>
     <div class="builder-body">
-      <div class="cmd-rows" id="cmdRows"></div>
+      <div class="cmd-scroll-head">
+        <strong>All commands · <b id="cmdCountLabel">6 commands</b></strong>
+        <div class="cmd-scroll-btns" aria-label="Scroll the command list">
+          <button type="button" class="cmd-scroll-btn" onclick="scrollCmdList(-1)" aria-label="Scroll commands up">▲ Up</button>
+          <button type="button" class="cmd-scroll-btn" onclick="scrollCmdList(1)" aria-label="Scroll commands down">▼ Down</button>
+        </div>
+      </div>
+      <div class="cmd-rows" id="cmdRows" tabindex="0" role="listbox" aria-label="All game commands — scroll up and down inside this box to see every command, then tap one to build it"></div>
+      <p class="cmd-scroll-hint"><b>Scroll inside the box</b> — swipe up or down, use the mouse wheel, the ▲ Up / ▼ Down buttons, or focus the box and press ↑ ↓ — to go through <b>every command</b>. Tap a command and it builds below, ready for the Copy Command button.</p>
       <p style="margin:0;font-size:13px;color:var(--muted)" id="cmdLibDesc">Open a LONG — bet the price goes UP.</p>
       <div id="cmdInstWrap">
         <label class="cmd-pick-label">Coin / Stock</label>
@@ -1065,7 +1117,7 @@ function renderCertLine() {
   const el = $('mktCertLine'); if (!el || !BFDATA) return;
   const b = BFDATA, w = b.win_bar || {}, a = b.army || {};
   const stale = b.stale_sec != null && b.stale_sec > 180;
-  el.innerHTML = `BTC board · bulls ${w.bulls_win != null ? w.bulls_win.toFixed(0) : '—'}% across the range${a.holder ? ' · ' + esc(a.holder) + ' holds the field' : ''} · bulls ${a.bulls_to_win != null ? fmtUsd(a.bulls_to_win) : '—'} to win · bears ${a.bears_to_win != null ? fmtUsd(a.bears_to_win) : '—'} to win · ${stale ? '<span style="color:var(--gold)">STALE — last certified read held</span>' : 'CERTIFIED ✓ vs the Bitunix tape'}`;
+  el.innerHTML = `BTC board · bulls ${a.progress_pct != null ? a.progress_pct : '—'}% across the range${a.holder ? ' · ' + esc(a.holder) + ' holds the field' : ''} · bulls ${a.bulls_to_win != null ? fmtUsd(a.bulls_to_win) : '—'} to win (target ${w.bulls_win != null ? fmtUsd(w.bulls_win) : '—'}) · bears ${a.bears_to_win != null ? fmtUsd(a.bears_to_win) : '—'} to win (target ${w.bears_win != null ? fmtUsd(w.bears_win) : '—'}) · ${stale ? '<span style="color:var(--gold)">STALE — last certified read held</span>' : 'CERTIFIED ✓ vs the Bitunix tape'}`;
 }
 async function fetchBF() {
   try {
@@ -1236,6 +1288,22 @@ function copyRead() {
   if (!t) return;
   (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => addLog('Commander’s Read copied — paste it wherever you post the call.', 'note')).catch(() => addLog('Copy blocked by the browser — the Read text is on the panel to copy by hand.', 'note'));
 }
+/* POST CALL — his preview ruling, ported: posts the actual Commander's Read
+   for the coin on show into the Battlefield Log (which also runs it through
+   the ticker), copies it for Kick chat, and confirms at the button with the
+   NYC time. The old live handler only copied, so a press looked dead. */
+function postCall() {
+  const el = $('commanderRead');
+  const read = el ? (el.textContent || '').trim() : '';
+  if (!read) return;
+  const t = new Date().toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York'}).toUpperCase() + ' NYC';
+  try { if (navigator.clipboard) navigator.clipboard.writeText(read).catch(() => {}); } catch(e) {}
+  addLog('📣 Commander call — ' + state.coin + ': ' + read, 'gold');
+  const st = $('postCallStatus');
+  if (st) { st.style.display = 'block'; st.textContent = '✓ Posted to the Battlefield Log & the Field Radar bar — ' + t + '. Copied too — paste it straight into Kick chat.'; }
+  const btn = $('postCallBtn');
+  if (btn) { const base = btn.textContent; btn.textContent = 'Posted ✓ · ' + t; setTimeout(() => { btn.textContent = base; }, 2600); }
+}
 
 /* ================= game relay state poll =================================== */
 async function fetchState() {
@@ -1265,13 +1333,16 @@ async function fetchState() {
     const age = s.price_ts ? Math.max(0, Math.round(Date.now() / 1000 - s.price_ts)) : null;
     $('sourceLine').textContent = s.stalled ? '⏸ GAME FEED STALLED — opens locked on the stalled coin'
       : 'Game relay ' + (age != null ? age + 's old' : 'live') + ' · ' + (s.counts ? s.counts.players : '—') + ' soldiers on the books · ' + POSITIONS.length + ' positions riding · Source: War Cove game relay + ' + (CHART_MODE === 'okx' ? 'OKX tape' : 'game tape');
+    const smo = s.stock_market_open;
+    const smoOpen = typeof smo === 'boolean' ? smo
+      : (smo && typeof smo === 'object' ? Object.keys(smo).some(k => smo[k] === true) : null);
     const mb = $('marketBadge');
-    if (mb && typeof s.stock_market_open === 'boolean') {
-      mb.className = 'market-badge ' + (s.stock_market_open ? 'open' : 'closed');
-      $('marketBadgeText').textContent = s.stock_market_open ? 'STOCKS · MARKET OPEN' : 'STOCKS · MARKET CLOSED';
-      $('marketBadgeNote').textContent = s.stock_market_open ? '— Closes 4:00 PM ET' : '— Opens 9:30 AM ET';
+    if (mb && smoOpen != null) {
+      mb.className = 'market-badge ' + (smoOpen ? 'open' : 'closed');
+      $('marketBadgeText').textContent = smoOpen ? 'STOCKS · MARKET OPEN' : 'STOCKS · MARKET CLOSED';
+      $('marketBadgeNote').textContent = smoOpen ? '— Closes 4:00 PM ET' : '— Opens 9:30 AM ET';
     }
-    if (typeof s.stock_market_open === 'boolean') { STOCK_SRC = 'game'; renderStocksSign(s.stock_market_open, 'game'); }
+    if (smoOpen != null) { STOCK_SRC = 'game'; renderStocksSign(smoOpen, 'game'); }
     buildTicker();
   } catch(e) {
     const sl = $('sourceLine'); if (sl) sl.textContent = 'Game relay unreachable — the books hold their last state, retrying…';
@@ -1339,7 +1410,23 @@ function sndSting() {
   } catch(e) {}
 }
 function noteFlash(user, cls, ms) { if (user) FLASH[String(user).toLowerCase()] = {cls, until: Date.now() + (ms || 6000)}; }
-let seenEventKeys = null, podiumSeen = 0;
+let seenEventKeys = null, podiumSeen = 0, podiumAudio = null;
+/* The podium call — The Enity's voice reading the roll (podium.mp3, the
+   TruthTeller call the game renders). The old board's PODIUM CALL button
+   played it on demand and auto-played it on a fresh call; the console port
+   dropped the button. Restored: the header button plays it any time (a tap
+   is the consent), the Enity figure beside the roll-call strip pulses
+   while she speaks, and a new call still auto-plays under the sound law. */
+function playPodium() {
+  const fig = $('enityFig'); if (fig) fig.classList.add('speaking');
+  const done = () => { if (fig) fig.classList.remove('speaking'); };
+  try { if (podiumAudio) podiumAudio.pause(); } catch(e) {}
+  try {
+    podiumAudio = new Audio(GAME_BASE + 'podium.mp3?t=' + Date.now());
+    podiumAudio.onended = done; podiumAudio.onerror = done;
+    const p = podiumAudio.play(); if (p && p.catch) p.catch(done);
+  } catch(e) { done(); }
+}
 function processGameEvents(s) {
   if (!s) return;
   if (s.podium && s.podium.version) {
@@ -1347,8 +1434,8 @@ function processGameEvents(s) {
     if (!podiumSeen) podiumSeen = v;
     else if (v !== podiumSeen) {
       podiumSeen = v;
-      if (SND.unlocked && SND.on) { try { const a = new Audio(GAME_BASE + 'podium.mp3?t=' + Date.now()); const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch(e) {} }
-      else { const b = $('wcSndBtn'); if (b) b.classList.add('pulse'); }
+      if (SND.unlocked && SND.on) playPodium();
+      else { const b = $('podiumBtn') || $('wcSndBtn'); if (b) b.classList.add('pulse'); }
     }
   }
   const evs = s.events || [];
@@ -1550,7 +1637,7 @@ function drawChart() {
       info.innerHTML = `<b>${new Date(c.t).toLocaleString('en-US', {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'})}</b><br>O ${priceFmt(c.o)} · H ${priceFmt(c.h)}<br>L ${priceFmt(c.l)} · C ${priceFmt(c.c)}<br><span style="color:var(--muted)">Crosshair price ${priceFmt(hv)}</span>`;
     }
   } else { $('crosshairInfo').style.display = 'none'; }
-  $('liveJump').classList.toggle('show', !(state.following && state.view.endOff === 0));
+  const lj = $('liveJump'); if (lj) lj.classList.toggle('show', !(state.following && state.view.endOff === 0));
   $('chartViewInfo').textContent = n + ' candles · ' + state.tf + ' Heikin-Ashi' + (state.following && state.view.endOff === 0 ? ' · LIVE' : ' · viewing history');
   renderEntryLegend();
 }
@@ -1756,6 +1843,90 @@ let CHART_H = window.innerWidth < 900 ? 260 : 340;
   handle.addEventListener('dblclick', () => { CHART_H = window.innerWidth < 900 ? 260 : 340; drawChart(); });
 })();
 
+
+/* ================= COMMANDS library — every game command, one picker ======
+   Transplanted from the approved console design (where it was built and the
+   Warlord approved it) — the live port carried the panel's markup but never
+   wired its script, so the rows never rendered. Tap a command, pick the
+   coin/stock and leverage it needs, one-tap COPY the ready-made command and
+   paste it into Kick chat yourself. Kick-only trading: this page never
+   fires a trade. Stocks clamp to the game's 5–20x (crypto 5–100x). */
+const INSTRUMENTS = [
+  {sym: 'LTC', name: 'Litecoin', kind: 'crypto'}, {sym: 'BTC', name: 'Bitcoin', kind: 'crypto'}, {sym: 'ETH', name: 'Ethereum', kind: 'crypto'},
+  {sym: 'NVDA', name: 'NVIDIA', kind: 'stock'}, {sym: 'GOOGL', name: 'Alphabet', kind: 'stock'}, {sym: 'MSTR', name: 'MicroStrategy', kind: 'stock'},
+  {sym: 'TSLA', name: 'Tesla', kind: 'stock'}, {sym: 'META', name: 'Meta', kind: 'stock'}, {sym: 'PLTR', name: 'Palantir', kind: 'stock'}, {sym: 'COIN', name: 'Coinbase', kind: 'stock'}
+];
+const CMD_DEFS = [
+  {key: 'long', label: '!long', desc: 'Open a LONG — bet the price goes UP.', inst: true, lev: true, build: (i, l) => '!long ' + i + ' ' + l + 'x'},
+  {key: 'short', label: '!short', desc: 'Open a SHORT — bet the price goes DOWN.', inst: true, lev: true, build: (i, l) => '!short ' + i + ' ' + l + 'x'},
+  {key: 'push', label: '!push', desc: 'Adjust the leverage on your open position — locks P&L at the adjust, liquidation reprices.', inst: true, lev: true, build: (i, l) => '!push ' + i + ' ' + l + 'x', alt: (i, l) => 'Also works as !' + i + ' push ' + l + 'x in chat.'},
+  {key: 'close', label: '!close', desc: 'Close your open position on that coin or stock.', inst: true, lev: false, build: (i) => '!close ' + i},
+  {key: 'rank', label: '!rank', desc: 'See your rank, balance and record on the Leading Dashboard.', inst: false, lev: false, build: () => '!rank'},
+  {key: 'positions', label: '!positions', desc: 'List your open positions — entries, leverage and liquidation prices.', inst: false, lev: false, build: () => '!positions'}
+];
+const cmdLibState = {cmd: 'long', inst: 'LTC', lev: 50};
+function cmdDef() { return CMD_DEFS.find(d => d.key === cmdLibState.cmd) || CMD_DEFS[0]; }
+function cmdInst() { return INSTRUMENTS.find(x => x.sym === cmdLibState.inst) || INSTRUMENTS[0]; }
+function cmdLev() { const x = cmdInst(); return x.kind === 'stock' ? clamp(cmdLibState.lev, 5, 20) : clamp(cmdLibState.lev, 5, 100); }
+function scrollCmdList(dir) { const rows = $('cmdRows'); if (!rows) return; if (rows.scrollBy) rows.scrollBy({top: dir * 96, behavior: 'smooth'}); else rows.scrollTop += dir * 96; }
+function ensureCmdVisible() {
+  const rows = $('cmdRows'); if (!rows) return;
+  const active = rows.querySelector('.cmd-row.active'); if (!active) return;
+  const r = active.getBoundingClientRect(), c = rows.getBoundingClientRect();
+  if (r.top < c.top + 4) rows.scrollTop -= (c.top - r.top) + 8;
+  else if (r.bottom > c.bottom - 4) rows.scrollTop += (r.bottom - c.bottom) + 8;
+}
+function renderCmdLib() {
+  const rows = $('cmdRows'); if (!rows) return;
+  const savedTop = rows.scrollTop || 0;
+  rows.innerHTML = CMD_DEFS.map(d => `<button type="button" role="option" aria-selected="${d.key === cmdLibState.cmd}" class="cmd-row${d.key === cmdLibState.cmd ? ' active' : ''}" onclick="selectCmd('${d.key}')" aria-pressed="${d.key === cmdLibState.cmd}"><b>${d.label}</b><span>${d.desc}</span></button>`).join('');
+  rows.scrollTop = savedTop;
+  const count = $('cmdCountLabel'); if (count) count.textContent = CMD_DEFS.length + ' commands';
+  if (!rows._scrollBound) {
+    rows._scrollBound = true;
+    rows.addEventListener('keydown', e => {
+      let idx = 0; CMD_DEFS.forEach((d, i) => { if (d.key === cmdLibState.cmd) idx = i; });
+      if (e.key === 'ArrowDown') { e.preventDefault(); selectCmd(CMD_DEFS[Math.min(CMD_DEFS.length - 1, idx + 1)].key); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); selectCmd(CMD_DEFS[Math.max(0, idx - 1)].key); }
+      else if (e.key === 'PageDown') { e.preventDefault(); scrollCmdList(1); }
+      else if (e.key === 'PageUp') { e.preventDefault(); scrollCmdList(-1); }
+      else if (e.key === 'Home') { e.preventDefault(); selectCmd(CMD_DEFS[0].key); }
+      else if (e.key === 'End') { e.preventDefault(); selectCmd(CMD_DEFS[CMD_DEFS.length - 1].key); }
+    });
+  }
+  const chips = $('cmdInstChips');
+  if (chips) { const sl2 = chips.scrollLeft || 0; chips.innerHTML = INSTRUMENTS.map(x => `<button type="button" data-inst="${x.sym}" class="${x.sym === cmdLibState.inst ? 'active' : ''}" onclick="selectCmdInst('${x.sym}')">${x.sym}${x.kind === 'stock' ? ' · STOCK' : ''}</button>`).join(''); chips.scrollLeft = sl2; }
+  const sl = $('cmdSlider');
+  if (sl && !sl._bound) { sl._bound = true; sl.addEventListener('input', e => { cmdLibState.lev = parseInt(e.target.value, 10); updateCmdLib(); }); }
+  document.querySelectorAll('#cmdLevChips button').forEach(b => { if (!b._bound) { b._bound = true; b.addEventListener('click', () => { cmdLibState.lev = parseInt(b.dataset.lev, 10); updateCmdLib(); }); } });
+  updateCmdLib();
+}
+function selectCmd(key) { cmdLibState.cmd = key; renderCmdLib(); ensureCmdVisible(); }
+function selectCmdInst(sym) { cmdLibState.inst = sym; renderCmdLib(); }
+function stepCmdLev(d) { cmdLibState.lev = clamp(cmdLibState.lev + d, 5, 100); updateCmdLib(); }
+function updateCmdLib() {
+  const d = cmdDef(); if (!$('cmdLibCode')) return;
+  const lev = cmdLev(), inst = cmdInst();
+  document.querySelectorAll('#cmdRows .cmd-row').forEach((r, i) => { r.classList.toggle('active', CMD_DEFS[i] && CMD_DEFS[i].key === d.key); r.setAttribute('aria-pressed', CMD_DEFS[i] && CMD_DEFS[i].key === d.key ? 'true' : 'false'); });
+  document.querySelectorAll('#cmdInstChips button').forEach(b => b.classList.toggle('active', b.dataset.inst === cmdLibState.inst));
+  const iw = $('cmdInstWrap'); if (iw) iw.style.display = d.inst ? '' : 'none';
+  const lw = $('cmdLevWrap'); if (lw) lw.style.display = d.lev ? '' : 'none';
+  const note = $('cmdInstNote');
+  if (note) note.textContent = inst.sym + ' · ' + inst.name + (inst.kind === 'crypto' ? ' — crypto, trades 24/7 · leverage 5–100x' : ' — stock, US market hours (see the sign in the top bar) · leverage 5–20x');
+  const sl = $('cmdSlider'); if (sl) sl.value = cmdLibState.lev;
+  const lv = $('cmdLevVal'); if (lv) lv.textContent = lev;
+  document.querySelectorAll('#cmdLevChips button').forEach(b => b.classList.toggle('active', parseInt(b.dataset.lev, 10) === lev));
+  const desc = $('cmdLibDesc'); if (desc) desc.textContent = d.desc;
+  const code = $('cmdLibCode'); if (code) code.textContent = d.build(cmdLibState.inst, lev);
+  const alt = $('cmdLibAlt');
+  if (alt) alt.innerHTML = (d.alt ? d.alt(cmdLibState.inst, lev) + ' ' : '') + 'Paste it in LongShotWolf\'s Kick chat <strong style="color:var(--text)">from your own Kick account</strong> — that\'s the only place a command fires.';
+}
+function copyCmdLib() {
+  const code = $('cmdLibCode'); if (!code) return;
+  copyText(code.textContent, 'Command built from the COMMANDS library — ' + code.textContent + '. Waiting to be pasted into Kick chat.');
+  const btn = $('cmdLibCopyBtn'); if (btn) { btn.textContent = 'Copied ✓'; setTimeout(() => { btn.textContent = 'Copy Command'; }, 1800); }
+}
+
 /* ================= wiring + init =========================================== */
 $('tfSeg').addEventListener('click', e => { const b = e.target.closest('button[data-tf]'); if (b) setTF(b.dataset.tf); });
 $('armyFilter').addEventListener('click', e => { const b = e.target.closest('button[data-f]'); if (!b) return; state.armyFilter = b.dataset.f; document.querySelectorAll('#armyFilter button').forEach(x => x.classList.toggle('active', x === b)); renderLeaders(); });
@@ -1767,10 +1938,11 @@ $('buildChips').addEventListener('click', e => { const b = e.target.closest('but
 $('levSlider').addEventListener('input', e => setLev(+e.target.value));
 $('levChips').addEventListener('click', e => { const b = e.target.closest('button[data-lev]'); if (b) setLev(+b.dataset.lev); });
 $('wcSndBtn').addEventListener('click', () => { SND.on = !SND.on; try { localStorage.setItem('wc-sound', SND.on ? 'on' : 'off'); } catch(e) {} sndBtnSync(); });
+{ const pb = $('podiumBtn'); if (pb) pb.addEventListener('click', () => { SND.unlocked = true; pb.classList.remove('pulse'); playPodium(); }); }
 window.addEventListener('pointerdown', () => {
   if (!SND.unlocked) { SND.unlocked = true; try { SND.ctx = SND.ctx || new (window.AudioContext || window.webkitAudioContext)(); if (SND.ctx.state === 'suspended') SND.ctx.resume(); } catch(e) {} const b = $('wcSndBtn'); if (b) b.classList.remove('pulse'); }
 }, {once: false});
-setInterval(() => { const el = $('wcWatch'); if (el) { const m = /([0-9]+) WATCHING/.exec(el.textContent || ''); if (m) $('armyWatch').textContent = m[1]; } }, 4000);
+setInterval(() => { const el = $('wcWatch'), aw = $('armyWatch'); if (el && aw) { const m = /([0-9]+) WATCHING/.exec(el.textContent || ''); aw.textContent = m ? m[1] : '—'; } }, 4000);
 setInterval(() => { const c = $('marketBadgeClock'); if (c) { try { c.textContent = '· ' + new Date().toLocaleTimeString('en-US', {timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit'}) + ' ET'; } catch(e) {} } }, 1000);
 
 arrangeDesk();
@@ -1781,9 +1953,16 @@ sndBtnSync();
 setBuildLev(25);
 if (CHART_MODE === 'okx') {
   COIN_KEYS.forEach(k => loadSeries(k).then(() => { renderCoins(); if (k === state.coin) { drawChart(); syncCoinUI(); } }));
-  wsConnect(); fetchBook();
-  setInterval(fetchBook, 30000);
+  wsConnect();
 }
+/* THE MARKET's book lane runs on BOTH pages (round-3 fix): the port gated
+   fetchBook behind the battlefield page's OKX chart mode, so on the board
+   page bid/ask, spread, liquidity and both walls stood at — forever. The
+   book is the same OKX public book either way; the board page's chart
+   stays on the game's own candles, untouched by this lane. */
+fetchBook();
+setInterval(fetchBook, 30000);
+renderCmdLib();
 fetchState();
 setInterval(fetchState, STATE_POLL_MS);
 fetchBF();
