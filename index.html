@@ -557,7 +557,6 @@ html.streamview .foot,
 html.streamview .player-panel,
 html.streamview .panel.builder,
 html.streamview section.panel:has(#leaderList),
-html.streamview section.panel:has(#battleLog),
 html.streamview section.panel:has(#postCallBtn),
 html.streamview .resize-handle,
 html.streamview .chart-resize,
@@ -606,7 +605,7 @@ html.streamview .stream-board{order:2;flex:0 0 auto;display:grid;grid-template-c
 html.streamview .desk>section.panel{order:3}
 html.streamview section.panel:has(#posList){order:4}
 html.streamview .ticker{order:5}
-html.streamview #chart{height:480px}
+html.streamview #chart{height:262px}
 html.streamview .panel-head{padding:6px 14px}
 html.streamview .chart-wrap{padding:4px 10px 2px}
 html.streamview .coin-strip{margin-bottom:6px}
@@ -665,6 +664,31 @@ html.streamview .sa-side b{font-size:15px}
 html.streamview .sa-bar{flex:1 1 auto;height:10px;border-radius:999px;background:var(--red);overflow:hidden;min-width:120px;box-shadow:0 0 10px rgba(0,180,255,.25)}
 html.streamview .sa-fill{display:block;height:100%;background:var(--green)}
 html.streamview .sa-pct{font-weight:900;color:#fff;letter-spacing:.03em}
+</style>
+<style>
+/* ================= STREAM VIEW v3 (?view=stream) =================
+   THE PLAYERS BOARD ON THE STREAM SCREEN (the Warlord's order): the
+   Battlefield Log Players Board panel itself - the same panel, the
+   same title, rows and record fields as the full view and as the
+   paper game page - stands in the stream column under the open
+   positions. It used to be hidden on this screen; the scoreboard
+   band alone was never the board. Rows run one-line at the SAME
+   font sizes so all seven soldiers fit the 1920x1080 screen with
+   the chart and the open positions kept. Never clearable, same as
+   everywhere: renderLog() only ever rewrites the rows with fresher
+   numbers, and a failed or empty poll keeps the last good rows. */
+html.streamview section.panel:has(#battleLog){order:5;flex:0 0 auto;height:auto !important}
+html.streamview .ticker{order:6;margin-top:4px}
+html.streamview section.panel:has(#battleLog) .panel-head{padding:3px 14px}
+html.streamview section.panel:has(#battleLog) .panel-head p{display:none}
+html.streamview #battleLog{max-height:none;overflow:visible;flex:0 0 auto}
+html.streamview .pb-row{display:flex;align-items:baseline;gap:12px;padding:2px 14px}
+html.streamview .pb-top{display:contents}
+html.streamview .pb-bal{margin-left:0}
+html.streamview .pb-stats{margin:0 0 0 auto;flex:0 1 auto;gap:16px}
+html.streamview .wrap{gap:4px}
+html.streamview .coin-strip{margin-bottom:2px}
+html.streamview .stream-board{margin-bottom:2px}
 </style>
 <style>
 /* THE PLAYERS BOARD - the Battlefield Log panel's content (the Warlord's
@@ -729,7 +753,7 @@ html.streamview .sa-pct{font-weight:900;color:#fff;letter-spacing:.03em}
 (function(){try{
   if(new URLSearchParams(location.search).get('view')!=='stream')return;
   document.addEventListener('DOMContentLoaded',function(){
-    try{if(typeof CHART_H!=='undefined')CHART_H=480;}catch(e){}
+    try{if(typeof CHART_H!=='undefined')CHART_H=262;}catch(e){}
     try{if(typeof drawChart==='function')drawChart();}catch(e){}
     var cs=document.getElementById('coinStrip');
     if(!cs||document.getElementById('streamBoard'))return;
