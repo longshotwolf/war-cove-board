@@ -806,6 +806,20 @@ html.streamview .stream-board{margin-bottom:2px}
   });
 }catch(e){}})();
 </script>
+
+/* WC ADD-ONS (Nov 12 2026): reaction bar + settings gear — additive only, locked layout untouched */
+.wc-react{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 2px;padding:8px 12px;background:#0d1320;border:1px solid var(--line,#232a3a);border-radius:12px}
+.wc-react .wc-react-label{font-size:10.5px;font-weight:900;letter-spacing:.12em;color:var(--muted,#9aa3b5)}
+.wc-react button{display:inline-flex;align-items:center;gap:6px;background:#121a2c;border:1px solid var(--line2,#2d364d);color:var(--text,#eef1f6);border-radius:999px;padding:5px 11px;font-size:15px;cursor:pointer;line-height:1}
+.wc-react button b{font-size:12.5px;font-weight:800}
+.wc-react button:active{transform:scale(1.18)}
+.wc-react button.pop{border-color:var(--gold,#c8a24d)}
+.wc-set-wrap{position:relative;display:inline-block}
+.wc-set-panel{position:absolute;right:0;top:calc(100% + 8px);z-index:60;min-width:230px;background:#0d1524;border:1px solid var(--line2,#2d364d);border-radius:12px;padding:12px 14px;box-shadow:0 12px 32px rgba(0,0,0,.55);text-align:left}
+.wc-set-panel h4{margin:0 0 8px;font-size:11px;letter-spacing:.14em;color:var(--muted,#9aa3b5)}
+.wc-set-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:6px 0;font-size:13px;font-weight:700;color:var(--text,#eef1f6)}
+.wc-set-row button{background:#121a2c;border:1px solid var(--line2,#2d364d);color:var(--text,#eef1f6);border-radius:8px;padding:5px 10px;font-weight:800;cursor:pointer}
+html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-panel{display:none!important}
 </head>
 <body>
 <header class="topbar">
@@ -818,13 +832,14 @@ html.streamview .stream-board{margin-bottom:2px}
       </div>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <span class="live-dot" id="liveBadge"><i></i> LIVE BOARD</span><span class="market-badge closed" id="marketBadge" role="status" aria-live="polite" title="US stock market hours: Monday–Friday, 9:30 AM – 4:00 PM Eastern (New York). Crypto — LTC · BTC · ETH — trades 24/7."><i></i><span id="marketBadgeText">STOCKS · MARKET CLOSED</span><span class="mkt-note" id="marketBadgeNote">— Opens 9:30 AM ET</span><span class="mkt-clock" id="marketBadgeClock"></span></span><span class="watch-pill" id="wcWatch" title="Watchers on the live board">👁 — WATCHING THE GAME</span><button class="btn" id="wcSndBtn" type="button">🔊 SOUND ON</button><button class="btn" id="podiumBtn" type="button">📣 PODIUM CALL</button>
+      <span class="live-dot" id="liveBadge"><i></i> LIVE BOARD</span><span class="market-badge closed" id="marketBadge" role="status" aria-live="polite" title="US stock market hours: Monday–Friday, 9:30 AM – 4:00 PM Eastern (New York). Crypto — LTC · BTC · ETH — trades 24/7."><i></i><span id="marketBadgeText">STOCKS · MARKET CLOSED</span><span class="mkt-note" id="marketBadgeNote">— Opens 9:30 AM ET</span><span class="mkt-clock" id="marketBadgeClock"></span></span><span class="watch-pill" id="wcWatch" title="Watchers on the live board">👁 — WATCHING THE GAME</span><button class="btn" id="wcSndBtn" type="button">🔊 SOUND ON</button><button class="btn" id="podiumBtn" type="button">📣 PODIUM CALL</button><span class="wc-set-wrap"><button class="btn" id="wcGearBtn" type="button" aria-label="Settings" aria-haspopup="true">⚙️ SETTINGS</button><span class="wc-set-panel" id="wcSetPanel" hidden><h4>SETTINGS</h4><div class="wc-set-row"><span>Sound</span><button id="wcSetSnd" type="button">🔊 ON</button></div><div class="wc-set-row"><span>Podium call</span><button id="wcSetPod" type="button">📣 PLAY</button></div></span></span>
       <a class="btn" href="https://kick.com/longshotwolf" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">▶ Watch on Kick</a>
     </div>
   </div>
 </header>
 
 <main class="wrap">
+<div class="wc-react" id="wcReact" role="group" aria-label="Reactions — tap to react"><span class="wc-react-label">REACT</span><button type="button" data-r="fire" aria-label="Fire reaction">🔥 <b>0</b></button><button type="button" data-r="green" aria-label="Green army reaction">🟢 <b>0</b></button><button type="button" data-r="red" aria-label="Red army reaction">🔴 <b>0</b></button><button type="button" data-r="swords" aria-label="Battle reaction">⚔️ <b>0</b></button><button type="button" data-r="skull" aria-label="Liquidated reaction">💀 <b>0</b></button><button type="button" data-r="trophy" aria-label="Trophy reaction">🏆 <b>0</b></button><button type="button" data-r="wolf" aria-label="Wolf reaction">🐺 <b>0</b></button></div>
   <div class="intro">
     <div>
       <h2>WAR COVE <em>PAPER GAME</em></h2>
@@ -2534,5 +2549,37 @@ drawChart(); syncCoinUI();
 .sym-picker{flex-wrap:wrap;border-radius:18px;margin:10px 16px 0;padding:4px}
 html.streamview .sym-picker{display:none!important}
 </style>
+
+<script>
+/* WC ADD-ONS (Nov 12 2026): reaction bar counts (this device) + settings gear wiring.
+   The gear's Sound toggle drives the page's own SND switch (same localStorage key
+   'wc-sound' the header sound button uses); Podium PLAY fires the PODIUM CALL button. */
+(function(){
+  var KEY='wc-reactions-v1', counts={};
+  try{ counts=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ counts={}; }
+  var bar=document.getElementById('wcReact');
+  if(bar){
+    var syncR=function(){ bar.querySelectorAll('button[data-r]').forEach(function(b){ var n=counts[b.dataset.r]||0; b.querySelector('b').textContent=n; b.classList.toggle('pop', n>0); }); };
+    bar.querySelectorAll('button[data-r]').forEach(function(b){ b.addEventListener('click', function(){ counts[b.dataset.r]=(counts[b.dataset.r]||0)+1; try{ localStorage.setItem(KEY, JSON.stringify(counts)); }catch(e){} syncR(); }); });
+    syncR();
+  }
+  var gear=document.getElementById('wcGearBtn'), panel=document.getElementById('wcSetPanel'), ss=document.getElementById('wcSetSnd');
+  function sndOn(){ try{ return (typeof SND!=='undefined'&&SND)? !!SND.on : (localStorage.getItem('wc-sound')!=='off'); }catch(e){ return true; } }
+  function sndLabel(){ if(ss) ss.textContent=sndOn()?'\uD83D\uDD0A ON':'\uD83D\uDD07 OFF'; }
+  if(gear&&panel){
+    gear.addEventListener('click', function(ev){ ev.stopPropagation(); panel.hidden=!panel.hidden; sndLabel(); });
+    document.addEventListener('click', function(ev){ if(!panel.hidden && !panel.contains(ev.target) && ev.target!==gear) panel.hidden=true; });
+  }
+  if(ss){ ss.addEventListener('click', function(){
+    var target=!sndOn();
+    try{ if(typeof SND!=='undefined'&&SND){ SND.on=target; } }catch(e){}
+    try{ localStorage.setItem('wc-sound', target?'on':'off'); }catch(e){}
+    try{ if(typeof sndBtnSync==='function') sndBtnSync(); else { var hb=document.getElementById('wcSndBtn'); if(hb) hb.textContent=target?'\uD83D\uDD0A SOUND ON':'\uD83D\uDD07 SOUND OFF'; } }catch(e){}
+    sndLabel();
+  }); sndLabel(); }
+  var pod=document.getElementById('wcSetPod');
+  if(pod){ pod.addEventListener('click', function(){ var pb=document.getElementById('podiumBtn'); if(pb) pb.click(); if(panel) panel.hidden=true; }); }
+})();
+</script>
 </body>
 </html>
