@@ -610,7 +610,7 @@ html.streamview #chart{height:480px}
 html.streamview .panel-head{padding:6px 14px}
 html.streamview .chart-wrap{padding:4px 10px 2px}
 html.streamview .coin-strip{margin-bottom:6px}
-html.streamview .sb-chip{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--line);border-radius:10px;padding:4px 10px 5px;min-width:0}
+html.streamview .sb-chip{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--line);border-radius:10px;padding:2px 10px 3px;min-width:0}
 html.streamview .sb-chip.m1{border-left-color:#bfe9ff;background-image:linear-gradient(90deg,rgba(140,210,255,.30),rgba(140,210,255,.05) 75%)}
 html.streamview .sb-chip.m2{border-left-color:#ffc940;background-image:linear-gradient(90deg,rgba(255,196,64,.30),rgba(255,196,64,.05) 75%)}
 html.streamview .sb-chip.m3{border-left-color:#e2e8f2;background-image:linear-gradient(90deg,rgba(216,222,232,.26),rgba(216,222,232,.04) 75%)}
@@ -618,14 +618,22 @@ html.streamview .sb-name{font-size:14.5px;font-weight:800;color:#fff;white-space
 html.streamview .sb-name .sb-rk{color:#9fd8ff;font-weight:900;margin-right:5px}
 html.streamview .sb-bal{font-size:16px;font-weight:900;color:#fff;line-height:1.25}
 html.streamview .sb-bal small{font-size:11px;font-weight:700;color:#b8c9dd}
-/* W-L record rides the balance row at the balance's own size/weight -
-   the Warlord could not read it small and muted on the P&L line.
-   Wins green, losses red, label kept. Same row height, no growth. */
+/* EVERY record field at the balance's own size/weight (the Warlord's
+   order): balance + P&L on one row, W-L on its own row, blown + liqs
+   on the last - all values 16px/900, wins green, losses red, blown
+   and liqs bright white. Nothing small, nothing muted, nothing dropped. */
 html.streamview .sb-balrow{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-html.streamview .sb-wl{font-size:16px;font-weight:900;color:#fff;line-height:1.25;white-space:nowrap}
+html.streamview .sb-wl{font-size:16px;font-weight:900;color:#fff;line-height:1.15;white-space:nowrap}
 html.streamview .sb-wl .cap{font-size:10.5px;font-weight:800;color:#8fa9c4;letter-spacing:.05em;vertical-align:2px}
 html.streamview .sb-wl .wn{color:var(--green)}
 html.streamview .sb-wl .ln{color:var(--red)}
+html.streamview .sb-pnl{font-size:16px;font-weight:900;color:#fff;line-height:1.25;white-space:nowrap}
+html.streamview .sb-pnl .cap{font-size:10.5px;font-weight:800;color:#8fa9c4;letter-spacing:.05em;vertical-align:2px}
+html.streamview .sb-pnl b{font-size:16px;font-weight:900}
+html.streamview .sb-stat{display:flex;justify-content:space-between;align-items:baseline;gap:6px;line-height:1.15;white-space:nowrap}
+html.streamview .sb-stat .cap{font-size:10.5px;color:#8fa9c4;font-weight:800;letter-spacing:.05em;vertical-align:2px}
+html.streamview .sb-stat .fv{font-size:16px;font-weight:900;color:#fff}
+html.streamview .sb-stat .sb-metal{font-size:12.5px}
 html.streamview .sb-line{display:flex;justify-content:space-between;gap:6px;font-size:12.5px;line-height:1.3;color:#d7e6f5;font-weight:700;white-space:nowrap}
 html.streamview .sb-line .cap{color:#8fa9c4;font-weight:800;letter-spacing:.04em}
 html.streamview .sb-line b.pos{color:var(--green)}
@@ -657,6 +665,37 @@ html.streamview .sa-side b{font-size:15px}
 html.streamview .sa-bar{flex:1 1 auto;height:10px;border-radius:999px;background:var(--red);overflow:hidden;min-width:120px;box-shadow:0 0 10px rgba(0,180,255,.25)}
 html.streamview .sa-fill{display:block;height:100%;background:var(--green)}
 html.streamview .sa-pct{font-weight:900;color:#fff;letter-spacing:.03em}
+</style>
+<style>
+/* THE PLAYERS BOARD - the Battlefield Log panel's content (the Warlord's
+   order): one row per player with the full record - balance, P&L, W-L,
+   accounts blown, trades liquidated - at readable size, live from the
+   same LEADERS data as the leaderboard. The old event list no longer
+   renders here; game events still run through the bottom ticker. The
+   board is NEVER clearable: no clear/reset affordance exists, and a
+   failed or empty poll keeps the last good rows on screen. */
+.pb-row{padding:9px 16px 10px;border-bottom:1px solid var(--line)}
+.pb-row:last-child{border-bottom:0}
+.pb-row.m1{border-left:3px solid #bfe9ff;background-image:linear-gradient(90deg,rgba(140,210,255,.16),rgba(140,210,255,.02) 75%)}
+.pb-row.m2{border-left:3px solid #ffc940;background-image:linear-gradient(90deg,rgba(255,196,64,.16),rgba(255,196,64,.02) 75%)}
+.pb-row.m3{border-left:3px solid #e2e8f2;background-image:linear-gradient(90deg,rgba(216,222,232,.13),rgba(216,222,232,.02) 75%)}
+.pb-top{display:flex;align-items:baseline;gap:6px}
+.pb-rk{color:#9fd8ff;font-weight:900;font-size:14px;white-space:nowrap;flex:0 0 auto}
+.pb-name{font-size:15.5px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;min-width:0}
+.pb-bal{margin-left:auto;font-size:16px;font-weight:900;color:#fff;white-space:nowrap;flex:0 0 auto}
+.pb-bal small{font-size:11px;font-weight:700;color:#b8c9dd}
+.pb-stats{display:flex;justify-content:space-between;gap:10px;margin-top:3px;white-space:nowrap}
+.pb-f{font-size:15px;font-weight:700;color:#d7e6f5}
+.pb-f .cap{font-size:10.5px;color:#8fa9c4;font-weight:800;letter-spacing:.05em;vertical-align:2px}
+.pb-f b{font-size:15.5px;font-weight:900}
+.pb-f .fv{color:#fff}
+.pb-f .wn{color:var(--green)}
+.pb-f .ln{color:var(--red)}
+.pb-metal{font-weight:900;color:#ffe9a8;font-size:13px;white-space:nowrap;flex:0 0 auto}
+.pb-row.m1 .pb-metal{color:#dff3ff}
+.pb-row.m3 .pb-metal{color:#f4f7fb}
+.log-note{padding:8px 16px;border-bottom:1px solid var(--line);font-size:12.5px;line-height:1.45;color:var(--gold2)}
+.log-note .log-t{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--gold);margin-right:8px;letter-spacing:.06em}
 </style>
 <style>
 /* SIGN-COLOR LAW (BOTH views - the Warlord's order): every P&L number -
@@ -729,9 +768,9 @@ html.streamview .sa-pct{font-weight:900;color:#fff;letter-spacing:.03em}
           var m=METALS[i];
           return '<div class="sb-chip'+(m?' '+m[0]:'')+'">'
             +'<div class="sb-name"><span class="sb-rk">'+(m?m[1]:('#'+(i+1)))+'</span>'+esc(L.name)+'</div>'
-            +'<div class="sb-balrow"><span class="sb-bal">'+fi(L.sats)+' <small>sats</small></span>'+wlHtml(L.wl)+'</div>'
-            +'<div class="sb-line"><span><span class="cap">P&amp;L</span> <b class="'+(L.pnl>=0?'pos':'neg')+'">'+fs2(L.pnl)+'</b></span></div>'
-            +'<div class="sb-line"><span><span class="cap">BLOWN</span> '+fi(L.busts)+'</span><span><span class="cap">LIQS</span> '+fi(L.liqs)+'</span>'+(m?'<span class="sb-metal">'+m[2]+'</span>':'')+'</div>'
+            +'<div class="sb-balrow"><span class="sb-bal">'+fi(L.sats)+' <small>sats</small></span><span class="sb-pnl"><span class="cap">P&amp;L</span> <b class="'+(L.pnl>=0?'pos':'neg')+'">'+fs2(L.pnl)+'</b></span></div>'
+            +'<div class="sb-stat">'+wlHtml(L.wl)+'</div>'
+            +'<div class="sb-stat"><span><span class="cap">BLOWN</span> <span class="fv">'+fi(L.busts)+'</span></span><span><span class="cap">LIQS</span> <span class="fv">'+fi(L.liqs)+'</span></span>'+(m?'<span class="sb-metal">'+m[2]+'</span>':'')+'</div>'
             +'</div>';
         }).join('');
       }catch(e){}
@@ -1044,8 +1083,7 @@ html.streamview .sa-pct{font-weight:900;color:#fff;letter-spacing:.03em}
 
     <section class="panel">
       <div class="panel-head">
-        <div><h3>📜 THE BATTLEFIELD LOG</h3><p>Battle log • Latest moves — newest on top</p></div>
-        <button class="btn" onclick="clearLog()" style="padding:7px 11px;font-size:12px">Clear</button>
+        <div><h3>📜 BATTLEFIELD LOG PLAYERS BOARD</h3><p>The players board • Every soldier's record — live</p></div>
       </div>
       <div class="log" id="battleLog"></div>
     </section>
@@ -1470,14 +1508,31 @@ function renderPositions() {
       <span class="pos-num"><label>uPnL</label><b class="${(p.pnl || 0) >= 0 ? 'pos' : 'neg'}">${p.pnl == null ? '—' : fmtSats(p.pnl)}</b></span>
     </div>`).join('') || '<div style="padding:14px 16px;color:var(--muted);font-size:13px">No open positions — the field is quiet.</div>';
 }
+let LOG_BOARD_HTML = '', LOG_BOARD_ROWS = '';
+function pbWl(wl) { const p = String(wl == null ? '' : wl).split(/[–—-]/); const w = (p[0] || '0').trim() || '0', l = (p.length > 1 ? (p[1] || '0').trim() : '0') || '0';
+  return '<b><span class="wn">' + esc(w) + '</span>–<span class="ln">' + esc(l) + '</span></b>'; }
 function renderLog() {
-  const evs = (GAME && GAME.events ? GAME.events : []).filter(e => (e.ts || 0) > LOG_CLEARED_BEFORE);
-  const items = LOCAL_NOTES.concat(evs.map(e => ({time: nycTime(e.ts) + ' NYC', text: e.text, kind: e.kind})));
-  $('battleLog').innerHTML = items.slice(0, 40).map(x => `<div class="log-item ${x.kind === 'bust' || x.kind === 'liq' ? 'red' : x.kind === 'close' ? 'green' : x.kind === 'open' ? 'gold' : ''}"><span class="log-t">${esc(x.time || '')}</span><span>${esc(x.text || '')}</span></div>`).join('')
-    || '<div class="log-item"><span class="log-t">—</span><span>Standing by for the first order…</span></div>';
+  /* BATTLEFIELD LOG PLAYERS BOARD (the Warlord's order): this panel is
+     the players board now - one row per soldier with the full record,
+     live from LEADERS. The old event list no longer renders here; game
+     events still flow through the bottom ticker. NEVER CLEARABLE: no
+     clear/reset path exists, refresh only updates the numbers, and if
+     a poll fails or comes back empty the last good rows stay on screen
+     (LOG_BOARD_ROWS) - the record never blanks. Local notes (copy
+     feedback, commander's calls) still land above the rows. */
+  const METALS = [['m1', '💎 #1', 'DIAMOND'], ['m2', '🥇 #2', '24K GOLD'], ['m3', '🤍 #3', 'PLATINUM']];
+  if (typeof LEADERS !== 'undefined' && LEADERS.length) {
+    LOG_BOARD_ROWS = LEADERS.map((L, i) => { const m = METALS[i]; return `<div class="pb-row${m ? ' ' + m[0] : ''}">
+      <div class="pb-top"><span class="pb-rk">${m ? m[1] : '#' + (i + 1)}</span><span class="pb-name">${esc(L.name)}</span>${m ? '<span class="pb-metal">' + m[2] + '</span>' : ''}<span class="pb-bal">${fmtInt(L.sats)} <small>sats</small></span></div>
+      <div class="pb-stats"><span class="pb-f"><span class="cap">P&amp;L</span> <b class="${L.pnl >= 0 ? 'pos' : 'neg'}">${fmtSigned(L.pnl)}</b></span><span class="pb-f"><span class="cap">W–L</span> ${pbWl(L.wl)}</span><span class="pb-f"><span class="cap">BLOWN</span> <b class="fv">${fmtInt(L.busts)}</b></span><span class="pb-f"><span class="cap">LIQS</span> <b class="fv">${fmtInt(L.liqs)}</b></span></div>
+    </div>`; }).join('');
+  }
+  const notes = LOCAL_NOTES.map(n => `<div class="log-note"><span class="log-t">${esc(n.time || '')}</span>${esc(n.text || '')}</div>`).join('');
+  const html = notes + (LOG_BOARD_ROWS || '<div class="log-item"><span class="log-t">—</span><span>Standing by for the first soldier…</span></div>');
+  if (html === LOG_BOARD_HTML) return; LOG_BOARD_HTML = html;
+  $('battleLog').innerHTML = html;
 }
 function addLog(text, kind) { LOCAL_NOTES.unshift({time: 'now', text, kind}); if (LOCAL_NOTES.length > 6) LOCAL_NOTES.pop(); renderLog(); }
-function clearLog() { LOG_CLEARED_BEFORE = GAME && GAME.events && GAME.events.length ? GAME.events[0].ts || 0 : 0; LOCAL_NOTES = []; renderLog(); }
 function selectPlayer(name) {
   state.selectedPlayer = name;
   document.querySelectorAll('#leaderList .leader-row').forEach(r => r.classList.toggle('selected', r.dataset.player === name));
