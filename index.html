@@ -432,6 +432,41 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
 .cmd-inst-note{font-size:11.5px;color:var(--muted);margin-top:2px}
 @media(max-width:720px){.cmd-rows{grid-template-columns:1fr 1fr}}
 
+/* LEADERBOARD PRECIOUS HIGHLIGHTS — Diamond · 24-Karat Gold · Platinum
+   The top three on the Leading Dashboard must read as three different
+   precious materials, not three shades of blue. Diamond is icy white-blue,
+   24-karat gold is warm rich gold, platinum is bright silvery white.
+   These rules come last so the blue-energy theme cannot wash them out. */
+.board-table tr.rank1 td{background:linear-gradient(90deg,rgba(168,229,255,.30),rgba(110,195,255,.12) 58%,rgba(168,229,255,.06))}
+.board-table tr.rank2 td{background:linear-gradient(90deg,rgba(255,205,64,.34),rgba(212,160,23,.14) 58%,rgba(255,205,64,.06))}
+.board-table tr.rank3 td{background:linear-gradient(90deg,rgba(238,242,247,.26),rgba(185,194,206,.12) 58%,rgba(238,242,247,.05))}
+.board-table tr.rank1 td{border-top:1px solid rgba(169,231,255,.75);border-bottom:1px solid rgba(169,231,255,.45)}
+.board-table tr.rank2 td{border-top:1px solid rgba(255,214,92,.85);border-bottom:1px solid rgba(255,214,92,.5)}
+.board-table tr.rank3 td{border-top:1px solid rgba(240,244,249,.7);border-bottom:1px solid rgba(240,244,249,.42)}
+.board-table tr.rank1 .rank-num,.board-table tr.rank2 .rank-num,.board-table tr.rank3 .rank-num{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;font-size:14px}
+.board-table tr.rank1 .rank-num{color:#06283f;background:linear-gradient(180deg,#ffffff,#9fdcff);border:1px solid #e8f9ff;box-shadow:0 0 14px rgba(140,220,255,.85)}
+.board-table tr.rank2 .rank-num{color:#2b1d00;background:linear-gradient(180deg,#fff3b0,#e9b949 55%,#b8860b);border:1px solid #ffeaa0;box-shadow:0 0 14px rgba(255,196,48,.85)}
+.board-table tr.rank3 .rank-num{color:#171d26;background:linear-gradient(180deg,#ffffff,#d7dde6 55%,#aeb7c3);border:1px solid #ffffff;box-shadow:0 0 14px rgba(225,233,242,.75)}
+.board-table tr.rank1 .soldier-cell b{color:#e6f8ff;text-shadow:0 0 10px rgba(140,220,255,.65)}
+.board-table tr.rank2 .soldier-cell b{color:#ffeaa0;text-shadow:0 0 10px rgba(255,196,48,.55)}
+.board-table tr.rank3 .soldier-cell b{color:#ffffff;text-shadow:0 0 10px rgba(225,233,242,.5)}
+.tag.diamond{color:#06283f;border-color:#e8f9ff;background:linear-gradient(180deg,#ffffff,#9fdcff);box-shadow:0 0 12px rgba(140,220,255,.7);font-weight:900}
+.tag.gold24{color:#2b1d00;border-color:#ffeaa0;background:linear-gradient(180deg,#fff3b0,#e9b949 55%,#c99612);box-shadow:0 0 12px rgba(255,196,48,.65);font-weight:900}
+.tag.platinum{color:#171d26;border-color:#ffffff;background:linear-gradient(180deg,#ffffff,#d7dde6 55%,#b3bcc9);box-shadow:0 0 12px rgba(225,233,242,.6);font-weight:900}
+.podium-card.diamond{border-color:#a9e7ff;background:linear-gradient(180deg,rgba(190,238,255,.42),rgba(8,34,58,.97));color:#eaf9ff;box-shadow:0 0 18px rgba(140,220,255,.45),inset 0 0 18px rgba(140,220,255,.14)}
+.podium-card.diamond small{color:#a9e7ff}
+.podium-card.gold24{border-color:#ffd65c;background:linear-gradient(180deg,rgba(255,205,64,.42),rgba(42,29,2,.97));color:#ffefa8;box-shadow:0 0 18px rgba(255,196,48,.5),inset 0 0 18px rgba(255,196,48,.14)}
+.podium-card.gold24 small{color:#ffd65c}
+.podium-card.platinum{border-color:#eef2f7;background:linear-gradient(180deg,rgba(238,242,247,.36),rgba(24,30,40,.97));color:#ffffff;box-shadow:0 0 18px rgba(225,233,242,.42),inset 0 0 18px rgba(225,233,242,.12)}
+.podium-card.platinum small{color:#e6ebf2}
+.podium-card span{color:var(--muted)}
+@media(max-width:720px){
+  .board-table tr.rank1,.board-table tr.rank2,.board-table tr.rank3{border-radius:8px}
+  .board-table tr.rank1{box-shadow:inset 0 0 0 1px rgba(169,231,255,.6),0 0 16px rgba(140,220,255,.22)}
+  .board-table tr.rank2{box-shadow:inset 0 0 0 1px rgba(255,214,92,.7),0 0 16px rgba(255,196,48,.25)}
+  .board-table tr.rank3{box-shadow:inset 0 0 0 1px rgba(240,244,249,.55),0 0 16px rgba(225,233,242,.2)}
+}
+
 /* LIVE CONSOLE additions — game event flashes + sound pulse (the live pages' cues) */
 .wc-flash-g{animation:wcFlashG 1.1s ease-in-out 3}
 .wc-flash-r{animation:wcFlashR 1.1s ease-in-out 3}
@@ -448,6 +483,29 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
 .ticker-stocks .ts-note{font-weight:700;letter-spacing:.01em;text-transform:none;font-size:11px;opacity:.92}
 .ticker-stocks.open{background:rgba(6,52,32,.92);border-color:#2fd67a;color:#a7f3c5;box-shadow:0 0 12px rgba(47,214,122,.35)}
 .ticker-stocks.closed{background:rgba(58,16,24,.92);border-color:#ff4d5e;color:#ffc2c8;box-shadow:0 0 12px rgba(255,77,94,.3)}
+/* ROUND 2 — podium metals on THE LEADING DASHBOARD (the Warlord, Nov 11
+   night): the top-3 rows carry their metal across the WHOLE row — #1
+   DIAMOND, #2 24-KARAT GOLD, #3 PLATINUM — not just a tag. The metal is a
+   background-IMAGE gradient so the deep-green winning-close flash (a
+   background-COLOR animation in .wc-flash-g) pulses UNDER the metal
+   instead of washing it out, and the gold tag/card colors below restore
+   real gold where the hologram pass had blued them. */
+.leader-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.leader-row .rk{font-size:16px;width:26px;text-align:center;flex:0 0 auto}
+.leader-row.metal-1{background-image:linear-gradient(90deg,rgba(140,210,255,.42),rgba(140,210,255,.10) 72%);border-left:4px solid #bfe9ff;box-shadow:inset 0 0 26px rgba(159,216,255,.22)}
+.leader-row.metal-2{background-image:linear-gradient(90deg,rgba(255,196,64,.44),rgba(255,196,64,.10) 72%);border-left:4px solid #ffc940;box-shadow:inset 0 0 26px rgba(255,201,64,.24)}
+.leader-row.metal-3{background-image:linear-gradient(90deg,rgba(216,222,232,.38),rgba(216,222,232,.09) 72%);border-left:4px solid #e2e8f2;box-shadow:inset 0 0 26px rgba(224,232,244,.20)}
+.leader-row.metal-1 .leader-main b,.leader-row.metal-2 .leader-main b,.leader-row.metal-3 .leader-main b{color:#ffffff}
+.leader-row.metal-1 .leader-main small{color:#cfeaff}
+.leader-row.metal-2 .leader-main small{color:#ffeec2}
+.leader-row.metal-3 .leader-main small{color:#eef1f6}
+.leader-row .tag.diamond{color:#dff3ff;border-color:#bfe9ff;background:#162636}
+.leader-row .tag.gold24{color:#ffe9a8;border-color:#ffc940;background:#2a2110}
+.leader-row .tag.platinum{color:#f4f7fb;border-color:#e2e8f2;background:#23262c}
+.podium-card.diamond{background-image:linear-gradient(180deg,rgba(140,210,255,.45),rgba(8,22,38,.94));border-color:#bfe9ff;color:#f2faff}
+.podium-card.gold24{background-image:linear-gradient(180deg,rgba(255,196,64,.50),rgba(32,23,4,.95));border-color:#ffc940;color:#fff3cf}
+.podium-card.platinum{background-image:linear-gradient(180deg,rgba(216,222,232,.42),rgba(16,20,27,.95));border-color:#e2e8f2;color:#f7fafc}
+.podium-card.diamond span,.podium-card.gold24 span,.podium-card.platinum span{color:inherit;opacity:.85}
 </style>
 </head>
 <body>
@@ -535,7 +593,7 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
           <button class="btn" id="pauseBtn" onclick="toggleLive()">Pause Feed</button>
         </div>
       </div>
-      <div class="chart-wrap"><canvas id="chart" width="900" height="300" tabindex="0" aria-label="Clean Heikin-Ashi candle chart — candles and entry markers only. Drag to pan: you can pull the very first candles to the centre of the screen and push them to either side. Scroll or pinch to zoom, drag the price scale on the right to stretch the candles, double-click to reset."></canvas>
+      <div class="chart-wrap"><canvas id="chart" width="900" height="300" tabindex="0" aria-label="Clean Heikin-Ashi candle chart — candles and entry markers only. Drag to pan in any direction: pull the candles sideways through time and pull them up and down inside the chart, pixel for pixel with your hand. You can pull the very first candles to the centre of the screen and push them to either side, and pull the candles up or down to re-centre them vertically. Scroll or pinch to zoom, drag the price scale on the right to stretch the candles, arrow keys move the chart, double-click to reset."></canvas>
         <div class="crosshair-info" id="crosshairInfo" aria-hidden="true"></div>
         <button class="live-jump" id="liveJump" onclick="goLiveChart()">● GO LIVE →</button>
       </div>
@@ -545,6 +603,8 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
           <button onclick="zoomChart(0.72)" aria-label="Zoom in — bigger candles">+ Zoom</button>
           <button onclick="stepPanChart(-8)" aria-label="Pan chart back in time">◀ Older</button>
           <button onclick="stepPanChart(8)" aria-label="Pan chart forward in time">Newer ▶</button>
+          <button onclick="stepPanVertical(-70)" aria-label="Move the candles up inside the chart">▲ Up</button>
+          <button onclick="stepPanVertical(70)" aria-label="Move the candles down inside the chart">▼ Down</button>
           <button onclick="centreStartChart()" aria-label="Pull the beginning of the chart to the centre of the screen">⊙ Centre Start</button>
           <button onclick="resetChartView()">⟲ Reset View</button>
           <button id="autoScaleBtn" class="active" onclick="toggleAutoScale()">Auto Scale</button>
@@ -552,7 +612,7 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
         <span class="chart-view-info" id="chartViewInfo">42 candles</span>
       </div>
       <div class="chart-resize" id="chartResize" tabindex="0" role="separator" aria-label="Resize chart height — drag down to make the chart taller"><span class="grip"></span><span>↕ CHART HEIGHT</span><span class="grip"></span></div>
-      <div class="chart-hint">Work the chart like Bitunix: <b style="color:var(--text)">drag</b> to pan through time — pull the very first candles right to the <b style="color:var(--text)">centre of the screen</b> and push them to either side · <b style="color:var(--text)">scroll / pinch</b> to zoom · <b style="color:var(--text)">drag the price scale</b> on the right edge to stretch or squeeze the candles · <b style="color:var(--text)">double-click</b> to reset. Bid, ask, liquidity, spread and walls live in THE MARKET panel — the chart face stays clear so the candles can be read.</div>
+      <div class="chart-hint">Work the chart like Bitunix: <b style="color:var(--text)">drag in any direction</b> — pull sideways through time, pull the very first candles right to the <b style="color:var(--text)">centre of the screen</b> and push them to either side, and <b style="color:var(--text)">pull up or down inside the chart</b> to move the candles up and down with your hand, pixel for pixel (or use the ▲ Up / ▼ Down buttons) · <b style="color:var(--text)">scroll / pinch</b> to zoom · <b style="color:var(--text)">drag the price scale</b> on the right edge to stretch or squeeze the candles · <b style="color:var(--text)">double-click</b> to reset. Bid, ask, liquidity, spread and walls live in THE MARKET panel — the chart face stays clear so the candles can be read.</div>
       <div class="entry-legend" id="entryLegend" style="display:none">ENTRY MARKERS —</div>
       <div style="padding:0 16px 10px;font-size:11px;color:var(--muted)">Heikin-Ashi candles only on the chart face — thick green/red bodies with wicks • Blue-energy outline = live forming candle. Nothing else is plastered over the candles.</div>
       <div>
@@ -580,6 +640,7 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
             <button data-f="red">Red</button>
           </div>
         </div>
+        <div class="podium" id="podium" aria-label="Top three — Diamond, 24-karat gold and platinum"></div>
         <div id="leaderList"></div>
         <div style="padding:12px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Total players tracked</span><strong style="color:var(--text)" id="playerCount">—</strong></div>
       </section>
@@ -780,7 +841,7 @@ const GAME_TF_KEY = {'3M': '3m', '1H': '1h', '6H': '6h'};
 
 const state = {
   coin: 'LTC', tf: '6H', live: true, following: true, autoScale: true,
-  view: {count: 42, endOff: 0, yScale: 1}, selectedPlayer: null,
+  view: {count: 42, endOff: 0, yScale: 1, yOff: 0}, selectedPlayer: null,
   armyFilter: 'all', buildSide: 'LONG', buildLev: 25, levPos: -1, levVal: 25,
 };
 const RAW = {LTC: {}, BTC: {}, ETH: {}};   /* raw candles per coin/tf (okx mode) */
@@ -1104,11 +1165,12 @@ function buildLeaders(s) {
 }
 function renderLeaders() {
   const list = LEADERS.filter(L => state.armyFilter === 'all' || L.army === state.armyFilter);
+  const METAL_TAGS = [['diamond', '💎 #1 DIAMOND'], ['gold24', '🥇 #2 · 24-KARAT GOLD'], ['platinum', '🤍 #3 PLATINUM']];
   $('leaderList').innerHTML = list.slice(0, 100).map(L => {
     const i = LEADERS.indexOf(L);
-    return `<div class="leader-row${flashCls(L.name)}" data-player="${esc(L.name)}" role="button" tabindex="0" aria-label="Load ${esc(L.name)}">
+    return `<div class="leader-row${i >= 0 && i < 3 ? ' metal-' + (i + 1) : ''}${flashCls(L.name)}" data-player="${esc(L.name)}" role="button" tabindex="0" aria-label="Load ${esc(L.name)}">
       <span class="rk">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1)}</span>
-      <span class="leader-main"><b>${esc(L.name)} ${L.army === 'green' || L.army === 'red' ? `<span class="dot ${L.army === 'green' ? 'g' : 'r'}"></span>` : ''}</b><small>${esc(L.note || '')}</small></span>
+      <span class="leader-main"><b>${esc(L.name)} ${L.army === 'green' || L.army === 'red' ? `<span class="dot ${L.army === 'green' ? 'g' : 'r'}"></span>` : ''}${i >= 0 && i < 3 ? `<span class="tag ${METAL_TAGS[i][0]}">${METAL_TAGS[i][1]}</span>` : ''}</b><small>${esc(L.note || '')}</small></span>
       <span class="leader-nums"><b>${fmtInt(L.sats)}</b><small class="${L.pnl >= 0 ? 'pos' : 'neg'}">${fmtSigned(L.pnl)}</small></span></div>`;
   }).join('') || '<div style="padding:14px 16px;color:var(--muted);font-size:13px">No soldiers on the board yet.</div>';
   $('playerCount').textContent = GAME && GAME.counts ? fmtInt(GAME.counts.ranked || LEADERS.length) : fmtInt(LEADERS.length);
@@ -1400,7 +1462,11 @@ function priceInView(v) {
   const pad = (hi - lo) * 0.12 + (hi * 0.0005);
   lo -= pad; hi += pad;
   const mid = (hi + lo) / 2, half = (hi - lo) / 2 * state.view.yScale;
-  return {min: mid - half, max: mid + half, start, end, realStart, realEnd};
+  /* Vertical pan offset (price units) — dragging on the candles themselves
+     slides the price window up/down (state.view.yOff). 0 = fitted view;
+     Auto Scale and GO LIVE reset it to 0. */
+  const yOff = state.view.yOff || 0;
+  return {min: mid - half + yOff, max: mid + half + yOff, start, end, realStart, realEnd};
 }
 function drawChart() {
   const list = HIST[state.coin][state.tf] || [];
@@ -1505,7 +1571,7 @@ function syncCoinUI() {
   $('statPvc').textContent = r ? fmtPvc(r.pvc) : '—';
   renderBuild(); renderWinBar();
 }
-function resetView() { state.view = {count: 42, endOff: 0, yScale: 1}; state.following = true; }
+function resetView() { state.view = {count: 42, endOff: 0, yScale: 1, yOff: 0}; state.following = true; }
 function setCoin(k) {
   if (!COINS[k] || state.coin === k) { if (COINS[k]) {} else return; if (state.coin === k) return; }
   const prev = state.coin; state.coin = k;
@@ -1536,12 +1602,12 @@ function setTF(tf) {
   drawChart(); syncCoinUI(); renderCoins();
 }
 function toggleLive() { state.live = !state.live; $('pauseBtn').textContent = state.live ? 'Pause Feed' : 'Resume Feed'; if (state.live) { drawChart(); syncCoinUI(); } }
-function goLiveChart() { state.view.endOff = 0; state.following = true; drawChart(); }
+function goLiveChart() { state.view.endOff = 0; state.view.yOff = 0; state.following = true; drawChart(); }
 function zoomChart(f) { state.view.count = clamp(Math.round(state.view.count * f), 8, 240); drawChart(); }
 function stepPanChart(d) { const list = HIST[state.coin][state.tf] || []; state.view.endOff = clamp(state.view.endOff + d, -Math.ceil(state.view.count * 0.55), Math.max(0, list.length - 5)); state.following = state.view.endOff === 0; drawChart(); }
 function centreStartChart() { const list = HIST[state.coin][state.tf] || []; state.view.endOff = Math.max(0, list.length - Math.ceil(state.view.count / 2)); state.following = false; drawChart(); }
 function resetChartView() { resetView(); drawChart(); }
-function toggleAutoScale() { state.autoScale = !state.autoScale; if (state.autoScale) state.view.yScale = 1; $('autoScaleBtn').classList.toggle('active', state.autoScale); drawChart(); }
+function toggleAutoScale() { state.autoScale = !state.autoScale; if (state.autoScale) { state.view.yScale = 1; state.view.yOff = 0; } $('autoScaleBtn').classList.toggle('active', state.autoScale); drawChart(); }
 /* pointer work: drag pan (free — past both ends), wheel/pinch zoom, scale drag */
 (function wireChart() {
   let drag = null;
@@ -1549,7 +1615,9 @@ function toggleAutoScale() { state.autoScale = !state.autoScale; if (state.autoS
   chart.addEventListener('pointerdown', e => {
     chart.setPointerCapture(e.pointerId);
     const p = pos(e);
-    drag = {x: p.x, y: p.y, endOff: state.view.endOff, yScale: state.view.yScale, mode: p.x > p.w - 64 ? 'scale' : 'pan', moved: false};
+    const v0 = priceInView();
+    drag = {x: p.x, y: p.y, endOff: state.view.endOff, yScale: state.view.yScale, yOff: state.view.yOff || 0,
+      range: v0 ? (v0.max - v0.min) : 0, mode: p.x > p.w - 64 ? 'scale' : 'pan', moved: false};
   });
   chart.addEventListener('pointermove', e => {
     const p = pos(e);
@@ -1561,6 +1629,15 @@ function toggleAutoScale() { state.autoScale = !state.autoScale; if (state.autoS
       state.view.endOff = clamp(drag.endOff + dx, -Math.ceil(state.view.count * 0.55), Math.max(0, list.length - 5));
       state.following = state.view.endOff === 0;
       if (Math.abs(dx) > 0) drag.moved = true;
+      /* vertical pan: dragging on the candles slides the price window with
+         the hand — drag down and the candles follow down (higher prices
+         roll in at the top). dy px -> price via the drag-start range. */
+      const dy = e.clientY - (drag.y + chart.getBoundingClientRect().top);
+      if (drag.range > 0 && dy !== 0) {
+        state.view.yOff = clamp(drag.yOff + dy * drag.range / CHART_H, -3 * drag.range, 3 * drag.range);
+        drag.moved = true;
+        if (state.autoScale && Math.abs(dy) > 2) { state.autoScale = false; $('autoScaleBtn').classList.remove('active'); }
+      }
     } else {
       const dy = e.clientY - (drag.y + chart.getBoundingClientRect().top);
       state.view.yScale = clamp(drag.yScale * (1 + dy / 220), 0.35, 4);
