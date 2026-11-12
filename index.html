@@ -500,11 +500,13 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
 @keyframes enPulse{from{filter:drop-shadow(0 0 5px rgba(80,180,255,.6))}to{filter:drop-shadow(0 0 16px rgba(120,210,255,1))}}
 #podiumBtn.pulse{animation:podPulse .9s ease-in-out infinite alternate;border-color:#ffc940;color:#ffc940}
 @keyframes podPulse{50%{box-shadow:0 0 14px rgba(255,201,64,.95)}}
-/* Field Radar ticker pace — the Warlord's order (Nov 11 night): the 28s pass
-   ran ~224 px/s, unreadable. 315s lands ~20 px/s, a gentle crawl he can read
-   comfortably; longhand only, so the prefers-reduced-motion rule above still
-   stops the scroll entirely for anyone who asks for that. */
-.ticker-inner{animation-duration:315s}
+/* Field Radar ticker pace — the Warlord's orders (Nov 11 night): the 28s pass
+   ran ~224 px/s, unreadable; the 315s settle (~23 px/s) he then reversed as
+   TOO SLOW ("speed it up faster than that") — 140s lands ≈45 px/s, clearly
+   faster and still readable, matching the preview's settled pace. Longhand
+   only, so the prefers-reduced-motion rule above still stops the scroll
+   entirely for anyone who asks for that. */
+.ticker-inner{animation-duration:140s}
 .ticker-stocks{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:11.5px;font-weight:900;letter-spacing:.06em;border:1.5px solid;white-space:nowrap}
 .ticker-stocks .ts-note{font-weight:700;letter-spacing:.01em;text-transform:none;font-size:11px;opacity:.92}
 .ticker-stocks.open{background:rgba(6,52,32,.92);border-color:#2fd67a;color:#a7f3c5;box-shadow:0 0 12px rgba(47,214,122,.35)}
@@ -892,7 +894,7 @@ const TF_MS  = {'1M': 6e4, '3M': 18e4, '1H': 36e5, '4H': 144e5, '6H': 216e5, '1D
 const GAME_TF_KEY = {'3M': '3m', '1H': '1h', '6H': '6h'};
 
 const state = {
-  coin: 'LTC', tf: '6H', live: true, following: true, autoScale: true,
+  coin: 'LTC', tf: '6H', live: true, following: true, autoScale: true, autoCentre: true, lastManual: 0,
   view: {count: 42, endOff: 0, yScale: 1, yOff: 0}, selectedPlayer: null,
   armyFilter: 'all', buildSide: 'LONG', buildLev: 25, levPos: -1, levVal: 25,
 };
@@ -1007,6 +1009,7 @@ function candleIntoSeries(k, tf, row) {
   else return;
   recomputeTail(k, tf); computeRead(k, tf);
 }
+let lastTickAt = 0;
 let drawQueued = false;
 function queueDraw() {
   if (drawQueued) return; drawQueued = true;
@@ -1015,7 +1018,11 @@ function queueDraw() {
 function wsSubscribe() {
   if (!okxWS || okxWS.readyState !== 1) return;
   const args = COIN_KEYS.map(k => ({channel: 'tickers', instId: k + '-USDT'}));
-  args.push({channel: 'candle' + TF_BAR[state.tf], instId: state.coin + '-USDT'});
+  /* Game mode takes tickers ONLY: its candles are the game's own and the
+     relay owns them — the socket just keeps the live price (and with it the
+     forming candle's close, drawn as an overlay) tracking the tape between
+     relay pushes instead of freezing for the whole relay cycle. */
+  if (CHART_MODE !== 'game') args.push({channel: 'candle' + TF_BAR[state.tf], instId: state.coin + '-USDT'});
   okxWS.send(JSON.stringify({op: 'subscribe', args}));
 }
 function wsConnect() {
@@ -1030,7 +1037,7 @@ function wsConnect() {
     if (m.arg.channel === 'tickers') {
       const d = m.data[0]; if (!d || !COIN_KEYS.includes(k)) return;
       const px = parseFloat(d.last); if (!isFinite(px)) return;
-      COINS[k].price = px;
+      COINS[k].price = px; lastTickAt = Date.now();
       if (d.bidPx) COINS[k].bid = parseFloat(d.bidPx);
       if (d.askPx) COINS[k].ask = parseFloat(d.askPx);
       const open = parseFloat(d.sodUtc8);
@@ -1292,6 +1299,32 @@ function copyRead() {
    for the coin on show into the Battlefield Log (which also runs it through
    the ticker), copies it for Kick chat, and confirms at the button with the
    NYC time. The old live handler only copied, so a press looked dead. */
+/* SPEAK THE READ — pressing POST CALL makes The Enity SAY the Commander's
+   Read aloud (his correction: 'I still don't hear shit' — posting text was
+   never the job). Runs inside the click, so the browser's user-gesture rule
+   is satisfied. Voice: a British English voice when the device offers one
+   (the Enity's voice on calls), else the device's English default. If the
+   device has no speech synthesis at all, the status line says so plainly —
+   the post + copy still land. */
+function speakRead(text) {
+  try {
+    if (!('speechSynthesis' in window)) return false;
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const vs = synth.getVoices() || [];
+    const pick = vs.find(v => /en[-_]GB/i.test(v.lang) && /female|sonia|kate|serena|hazel|susan/i.test(v.name))
+      || vs.find(v => /en[-_]GB/i.test(v.lang))
+      || vs.find(v => /^en/i.test(v.lang));
+    /* A quirky voice object must never kill the speech itself: if the
+       browser rejects the assignment, the read still goes out on the
+       device's default voice. */
+    if (pick) { try { u.voice = pick; u.lang = pick.lang; } catch(e) { u.lang = 'en-GB'; } } else u.lang = 'en-GB';
+    u.rate = 1.0; u.pitch = 1.0;
+    synth.speak(u);
+    return true;
+  } catch(e) { return false; }
+}
 function postCall() {
   const el = $('commanderRead');
   const read = el ? (el.textContent || '').trim() : '';
@@ -1299,8 +1332,9 @@ function postCall() {
   const t = new Date().toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York'}).toUpperCase() + ' NYC';
   try { if (navigator.clipboard) navigator.clipboard.writeText(read).catch(() => {}); } catch(e) {}
   addLog('📣 Commander call — ' + state.coin + ': ' + read, 'gold');
+  const spoke = speakRead(read);
   const st = $('postCallStatus');
-  if (st) { st.style.display = 'block'; st.textContent = '✓ Posted to the Battlefield Log & the Field Radar bar — ' + t + '. Copied too — paste it straight into Kick chat.'; }
+  if (st) { st.style.display = 'block'; st.textContent = '✓ Posted to the Battlefield Log & the Field Radar bar — ' + t + '. Copied too — paste it straight into Kick chat.' + (spoke ? ' 🔊 Speaking the read aloud now.' : ' (This device has no speech voice — the read posted as text.)'); }
   const btn = $('postCallBtn');
   if (btn) { const base = btn.textContent; btn.textContent = 'Posted ✓ · ' + t; setTimeout(() => { btn.textContent = base; }, 2600); }
 }
@@ -1527,10 +1561,26 @@ function renderLev() {
 function copyCmd() { copyText($('cmdCode').textContent, 'Command copied — paste it in Kick chat from your own account. Nothing changes until you send it there.'); }
 
 /* ================= the chart — Heikin-Ashi candles only ==================== */
+/* The list the chart actually draws. In game mode the candles are the
+   game's own (relay-owned, replaced wholesale on every poll — HIST is
+   never mutated here); between relay pushes the FORMING candle's close is
+   overlaid with the live tape price so the front candle keeps up instead
+   of freezing for the relay cycle (~40s measured). Settled candles are
+   drawn exactly as the game served them. */
+function chartList() {
+  const list = HIST[state.coin][state.tf] || [];
+  if (CHART_MODE !== 'game' || !list.length) return list;
+  const px = COINS[state.coin] ? COINS[state.coin].price : null;
+  if (px == null || !isFinite(px) || Date.now() - lastTickAt > 10000) return list;
+  const last = list[list.length - 1];
+  if (px === last.c) return list;
+  const clone = {t: last.t, o: last.o, h: Math.max(last.h, px), l: Math.min(last.l, px), c: px};
+  return list.slice(0, -1).concat([clone]);
+}
 const chart = $('chart'), ctx = chart.getContext('2d');
 let crosshair = null;
 function priceInView(v) {
-  const list = HIST[state.coin][state.tf] || [];
+  const list = chartList();
   /* Virtual window — the approved preview's free-pan model: the window may
      slide PAST both ends of the data. start can go negative and end can run
      beyond the last candle; slots outside the data are empty hologram space.
@@ -1553,10 +1603,27 @@ function priceInView(v) {
      slides the price window up/down (state.view.yOff). 0 = fitted view;
      Auto Scale and GO LIVE reset it to 0. */
   const yOff = state.view.yOff || 0;
+  /* AUTO-CENTRE (vertical): while engaged, the price window centres on the
+     forming candle's close, so the live action sits mid-chart and stays
+     there as ticks land — his order after the stream kept pinning the
+     action to an edge. Manual drags take over instantly; the idle timer
+     below re-engages on its own. */
+  if (state.autoCentre && list.length) {
+    const liveC = list[list.length - 1].c;
+    return {min: liveC - half, max: liveC + half, start, end, realStart, realEnd};
+  }
   return {min: mid - half + yOff, max: mid + half + yOff, start, end, realStart, realEnd};
 }
 function drawChart() {
-  const list = HIST[state.coin][state.tf] || [];
+  /* AUTO-CENTRE (horizontal): while engaged, the window anchors so the
+     forming candle rides mid-chart instead of pinned to the right edge —
+     the window reaches half a screen past the live edge into empty
+     hologram space, exactly like the approved preview's auto-centre. */
+  if (state.autoCentre) {
+    state.view.endOff = -(Math.round(state.view.count / 2) - 1);
+    state.following = true;
+  }
+  const list = chartList();
   const wrap = chart.parentElement;
   const W = wrap.clientWidth, H = CHART_H;
   if (!W || !H) return;
@@ -1582,7 +1649,7 @@ function drawChart() {
     ctx.fillText(fmt(v, COINS[state.coin].dec), plotW + 7, yy + 3);
   }
   const n = view.realEnd - view.realStart, slot = plotW / Math.max(1, state.view.count);
-  const bw = Math.max(2, Math.min(26, slot * 0.62));
+  const bw = Math.max(2, Math.min(96, slot * 0.62));
   const GREEN = '#2dff8f', RED = '#ff4d5e';
   for (let i = view.realStart; i < view.realEnd; i++) {
     const c = list[i], x = (i - view.start + 0.5) * slot;
@@ -1597,6 +1664,17 @@ function drawChart() {
     ctx.fillStyle = col; ctx.fillRect(x - bw / 2, top, bw, hgt);
     if (live) ctx.restore();
     if (live) { ctx.strokeStyle = 'rgba(125,211,252,.95)'; ctx.lineWidth = 1.4; ctx.strokeRect(x - bw / 2, top, bw, hgt); }
+    /* The floating LIVE tag — rides with the forming candle wherever it
+       moves (his order, from the preview: 'that first candle always got
+       live floating with it'). Drawn above the body, clamped to the plot. */
+    if (live) {
+      ctx.save();
+      ctx.fillStyle = '#7fe9ff'; ctx.font = 'bold 10px "IBM Plex Mono", monospace';
+      const tx = clamp(x - 15, 4, Math.max(4, plotW - 54)), ty = Math.max(12, top - 9);
+      ctx.shadowColor = 'rgba(0,229,255,.85)'; ctx.shadowBlur = 7;
+      ctx.fillText('◉ LIVE', tx, ty);
+      ctx.restore();
+    }
   }
   /* last price tag */
   const last = list[list.length - 1];
@@ -1638,7 +1716,7 @@ function drawChart() {
     }
   } else { $('crosshairInfo').style.display = 'none'; }
   const lj = $('liveJump'); if (lj) lj.classList.toggle('show', !(state.following && state.view.endOff === 0));
-  $('chartViewInfo').textContent = n + ' candles · ' + state.tf + ' Heikin-Ashi' + (state.following && state.view.endOff === 0 ? ' · LIVE' : ' · viewing history');
+  $('chartViewInfo').textContent = n + ' candles · ' + state.tf + ' Heikin-Ashi' + (state.autoCentre ? ' · ◉ AUTO-CENTRED' : state.following && state.view.endOff === 0 ? ' · LIVE' : ' · viewing history');
   renderEntryLegend();
 }
 function renderEntryLegend() {
@@ -1658,7 +1736,11 @@ function syncCoinUI() {
   $('statPvc').textContent = r ? fmtPvc(r.pvc) : '—';
   renderBuild(); renderWinBar();
 }
-function resetView() { state.view = {count: 42, endOff: 0, yScale: 1, yOff: 0}; state.following = true; }
+function resetView() { state.view = {count: 42, endOff: 0, yScale: 1, yOff: 0}; state.following = true; state.autoCentre = true; }
+function manualView() { state.autoCentre = false; state.lastManual = Date.now(); }
+setInterval(() => {
+  if (!state.autoCentre && state.lastManual && Date.now() - state.lastManual >= 5000) { state.autoCentre = true; drawChart(); }
+}, 1000);
 function setCoin(k) {
   if (!COINS[k] || state.coin === k) { if (COINS[k]) {} else return; if (state.coin === k) return; }
   const prev = state.coin; state.coin = k;
@@ -1689,10 +1771,10 @@ function setTF(tf) {
   drawChart(); syncCoinUI(); renderCoins();
 }
 function toggleLive() { state.live = !state.live; $('pauseBtn').textContent = state.live ? 'Pause Feed' : 'Resume Feed'; if (state.live) { drawChart(); syncCoinUI(); } }
-function goLiveChart() { state.view.endOff = 0; state.view.yOff = 0; state.following = true; drawChart(); }
-function zoomChart(f) { state.view.count = clamp(Math.round(state.view.count * f), 8, 240); drawChart(); }
-function stepPanChart(d) { const list = HIST[state.coin][state.tf] || []; state.view.endOff = clamp(state.view.endOff + d, -Math.ceil(state.view.count * 0.55), Math.max(0, list.length - 5)); state.following = state.view.endOff === 0; drawChart(); }
-function centreStartChart() { const list = HIST[state.coin][state.tf] || []; state.view.endOff = Math.max(0, list.length - Math.ceil(state.view.count / 2)); state.following = false; drawChart(); }
+function goLiveChart() { state.view.endOff = 0; state.view.yOff = 0; state.following = true; state.autoCentre = true; drawChart(); }
+function zoomChart(f) { manualView(); state.view.count = clamp(Math.round(state.view.count * f), 3, 300); drawChart(); }
+function stepPanChart(d) { manualView(); const list = HIST[state.coin][state.tf] || []; state.view.endOff = clamp(state.view.endOff + d, -Math.ceil(state.view.count * 0.55), Math.max(0, list.length - 5)); state.following = state.view.endOff === 0; drawChart(); }
+function centreStartChart() { manualView(); const list = HIST[state.coin][state.tf] || []; state.view.endOff = Math.max(0, list.length - Math.ceil(state.view.count / 2)); state.following = false; drawChart(); }
 function resetChartView() { resetView(); drawChart(); }
 function toggleAutoScale() { state.autoScale = !state.autoScale; if (state.autoScale) { state.view.yScale = 1; state.view.yOff = 0; } $('autoScaleBtn').classList.toggle('active', state.autoScale); drawChart(); }
 /* pointer work: drag pan (free — past both ends), wheel/pinch zoom, scale drag */
@@ -1715,19 +1797,19 @@ function toggleAutoScale() { state.autoScale = !state.autoScale; if (state.autoS
       const dx = Math.round((e.clientX - (drag.x + chart.getBoundingClientRect().left)) / slot);
       state.view.endOff = clamp(drag.endOff + dx, -Math.ceil(state.view.count * 0.55), Math.max(0, list.length - 5));
       state.following = state.view.endOff === 0;
-      if (Math.abs(dx) > 0) drag.moved = true;
+      if (Math.abs(dx) > 0) { drag.moved = true; manualView(); }
       /* vertical pan: dragging on the candles slides the price window with
          the hand — drag down and the candles follow down (higher prices
          roll in at the top). dy px -> price via the drag-start range. */
       const dy = e.clientY - (drag.y + chart.getBoundingClientRect().top);
       if (drag.range > 0 && dy !== 0) {
         state.view.yOff = clamp(drag.yOff + dy * drag.range / CHART_H, -3 * drag.range, 3 * drag.range);
-        drag.moved = true;
+        drag.moved = true; manualView();
         if (state.autoScale && Math.abs(dy) > 2) { state.autoScale = false; $('autoScaleBtn').classList.remove('active'); }
       }
     } else {
       const dy = e.clientY - (drag.y + chart.getBoundingClientRect().top);
-      state.view.yScale = clamp(drag.yScale * (1 + dy / 220), 0.35, 4);
+      state.view.yScale = clamp(drag.yScale * (1 + dy / 220), 0.0625, 16); manualView();
       if (state.autoScale && Math.abs(dy) > 2) { state.autoScale = false; $('autoScaleBtn').classList.remove('active'); }
     }
     crosshair = null; drawChart();
@@ -1739,7 +1821,7 @@ function toggleAutoScale() { state.autoScale = !state.autoScale; if (state.autoS
     e.preventDefault();
     const list = HIST[state.coin][state.tf] || [];
     const f = e.deltaY > 0 ? 1.13 : 0.885;
-    const newCount = clamp(Math.round(state.view.count * f), 8, 240);
+    const newCount = clamp(Math.round(state.view.count * f), 3, 300); manualView();
     const p = pos(e), slot = Math.max(1, (p.w - 64)) / state.view.count;
     const idxFloat = (list.length - state.view.endOff) - (p.x / slot);
     state.view.count = newCount;
@@ -1953,6 +2035,10 @@ sndBtnSync();
 setBuildLev(25);
 if (CHART_MODE === 'okx') {
   COIN_KEYS.forEach(k => loadSeries(k).then(() => { renderCoins(); if (k === state.coin) { drawChart(); syncCoinUI(); } }));
+  wsConnect();
+} else {
+  /* Game mode: tickers-only socket — the live price overlay that keeps the
+     forming candle tracking the tape between relay pushes (see chartList). */
   wsConnect();
 }
 /* THE MARKET's book lane runs on BOTH pages (round-3 fix): the port gated
