@@ -535,6 +535,78 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
 .podium-card.platinum{background-image:linear-gradient(180deg,rgba(216,222,232,.42),rgba(16,20,27,.95));border-color:#e2e8f2;color:#f7fafc}
 .podium-card.diamond span,.podium-card.gold24 span,.podium-card.platinum span{color:inherit;opacity:.85}
 </style>
+<style>
+/* ================= STREAM VIEW (?view=stream) =================
+   One exact 1920x1080 screen for the OBS browser source: slim top strip,
+   the chart big on top, OPEN POSITIONS full width under it, ticker at the
+   foot. The console's natural layout is ~4,200px tall, so a plain OBS
+   source only ever showed the top slice and the chart never appeared.
+   Additive only — without ?view=stream nothing here applies. */
+html.streamview, html.streamview body{height:100%}
+html.streamview body{display:flex;flex-direction:column;height:100vh;overflow:hidden;padding:0}
+html.streamview .topbar{flex:0 0 auto}
+html.streamview .topbar-inner{max-width:none;padding:4px 16px}
+html.streamview .wrap{flex:1 1 auto;min-height:0;max-width:none;width:100%;margin:0;padding:8px 12px;display:flex;flex-direction:column}
+/* flattened: the desk grid, the rail and the trio row dissolve so the chart
+   and the open-positions panel stack full width in the wrap's flex column */
+html.streamview .desk, html.streamview .rail, html.streamview .shot{display:contents}
+/* hidden in stream view */
+html.streamview .intro,
+html.streamview .market-army,
+html.streamview .foot,
+html.streamview .player-panel,
+html.streamview .panel.builder,
+html.streamview section.panel:has(#leaderList),
+html.streamview section.panel:has(#battleLog),
+html.streamview section.panel:has(#postCallBtn),
+html.streamview .resize-handle,
+html.streamview .chart-resize,
+html.streamview .chart-hint,
+html.streamview .chart-toolbar,
+html.streamview .chart-foot,
+html.streamview .entry-legend,
+html.streamview .desk .army-bar,
+html.streamview .desk .army-legend{display:none !important}
+/* order in the column: coin strip, chart, open positions, ticker */
+html.streamview .coin-strip{order:1;flex:0 0 auto;max-width:none;margin:0 0 8px;grid-template-columns:repeat(3,1fr)}
+html.streamview .desk>section.panel{order:2;flex:0 0 auto}
+html.streamview section.panel:has(#posList){order:3;flex:1 1 0%;min-height:0;height:auto !important}
+html.streamview .ticker{order:4;flex:0 0 auto;margin-top:8px}
+/* slim coin cards: price + badge only (the PVC grid stays in the full view) */
+html.streamview .coin-card{padding:5px 12px}
+html.streamview .coin-card .pvc-grid, html.streamview .coin-card .coin-sub{display:none}
+html.streamview .coin-price{font-size:20px;margin:2px 0 0}
+/* chart furniture slimmed; the canvas itself is sized by the live script's
+   CHART_H through its own drawChart() (see the activation script below) */
+html.streamview .panel-head{padding:8px 14px}
+html.streamview .chart-wrap{padding:6px 10px 2px}
+html.streamview #chart{height:566px}
+/* position rows tightened so all open positions fit inside the panel */
+html.streamview .pos-row{padding:6px 14px}
+/* coin cards go one-line: name + badge beside the price */
+html.streamview .coin-card{display:flex;align-items:center;gap:14px}
+html.streamview .coin-card h3{margin:0}
+html.streamview .coin-price{margin:0}
+/* the under-chart notes + win-race block stay in the full view only */
+html.streamview .entry-legend+div{display:none !important}
+html.streamview .desk>section.panel>div:has(#winRaceLabel){display:none !important}
+/* position rows go one-line so every open position fits the panel */
+html.streamview .pos-who small{display:inline;margin-left:6px}
+</style>
+<script>
+/* STREAM VIEW activation — additive. With ?view=stream, tag <html> before
+   first paint so the stream stylesheet applies from the first frame, then
+   size the chart through the page's own mechanism: CHART_H is the live
+   script's canvas-height variable and drawChart() re-renders at it. */
+(function(){try{
+  if(new URLSearchParams(location.search).get('view')!=='stream')return;
+  document.documentElement.classList.add('streamview');
+  document.addEventListener('DOMContentLoaded',function(){
+    try{if(typeof CHART_H!=='undefined')CHART_H=566;}catch(e){}
+    try{if(typeof drawChart==='function')drawChart();}catch(e){}
+  });
+}catch(e){}})();
+</script>
 </head>
 <body>
 <header class="topbar">
