@@ -1282,13 +1282,13 @@ async function okxGet(path) {
   return j.data;
 }
 async function loadSeries(k) {
-  for (const tf of TFS) {
+  await Promise.all(TFS.map(async (tf) => {
     try {
-      const rows = await okxGet('/market/history-candles?instId=' + k + '-USDT&bar=' + TF_BAR[tf] + '&limit=300');
+      const rows = await Promise.race([okxGet('/market/history-candles?instId=' + k + '-USDT&bar=' + TF_BAR[tf] + '&limit=300'), new Promise((_, rej) => setTimeout(() => rej(new Error('tf timeout')), 9000))]);
       const raw = rows.map(r => ({t: +r[0], o: +r[1], h: +r[2], l: +r[3], c: +r[4]})).reverse();
       RAW[k][tf] = raw; HIST[k][tf] = toHA(raw);
     } catch(e) { /* series stays empty; retried on the resync loop */ }
-  }
+  }));
   computeAllReads(k);
 }
 function bucketStart(tf, ts) {
