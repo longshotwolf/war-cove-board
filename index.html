@@ -448,8 +448,22 @@
   border-left:3px solid var(--ice);padding:10px 12px;border-radius:0 6px 6px 0}
 @media (prefers-reduced-motion: reduce){ .mk-tag.liq{animation:none} }
 </style>
+
+<style>
+/* ===== OBS BOOKS VIEW (?books) — the Warlord's order, Nov 11, 2026:
+   show ONLY the leaderboard, open positions, battle log and the footer
+   line, stacked like his screen photo, under the hologram frame title.
+   Everything above the books (market, armies, chart, balance) is hidden
+   in this view only; the normal board is untouched. ===== */
+body.books header, body.books #wcMarket, body.books .enity-host,
+body.books .armies, body.books #reactBar, body.books #chartBox,
+body.books #balBox, body.books #settingsPanel, body.books #reactFloat{
+  display:none !important;}
+body.books .cols{flex-direction:column;}
+</style>
 </head>
 <body>
+<script>if(/[?&](books|obs)([=&]|$)/.test(location.search)){document.body.classList.add("books");}</script>
 <div class="wc-frame" aria-hidden="true"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i><span class="wc-title" data-text="WAR COVE PAPER TRADING GAME">WAR COVE PAPER TRADING GAME</span></div>
 <div class="wrap">
   <header>
@@ -601,7 +615,7 @@
     <span class="reactstat" id="reactStat"></span>
   </div>
 
-  <div class="box" style="margin-bottom:12px;">
+  <div class="box" id="chartBox" style="margin-bottom:12px;">
     <h3>📈 THE GAME SCREEN — HEIKIN-ASHI · <span class="livedot">● LIVE</span></h3>
     <div class="charthead">
       <div>
@@ -655,7 +669,7 @@
     </div>
   </div>
 
-  <div class="box" style="margin-bottom:12px;">
+  <div class="box" id="balBox" style="margin-bottom:12px;">
     <h3>💰 YOUR BALANCE — YOUR MONEY · YOUR RECORD</h3>
     <div id="balAnon">
       <div class="armlabel" style="margin-top:0;">Type the name you use in the Kick chat and the board pulls up your balance and your record — straight from the live books, nothing typed in by hand.</div>
