@@ -1467,12 +1467,75 @@ function calcBook(bids, asks) {
   if (aW) for (const [px, usd] of aLv) if (px > aW.px) aRes += usd;
   return {mid, bid: parseFloat(bids[0][0]), ask: parseFloat(asks[0][0]), bT, aT, bW, aW, bRes, aRes};
 }
+/* ==== Aggregated spot book — Binance + Kraken + Coinbase ==================
+   THE MARKET liquidity + walls are built the way the big boards build them:
+   every level inside ±1% of mid across the three spot books, summed; the
+   wall is the biggest single level inside the band. A venue that fails
+   drops out of the sum; if the aggregate cannot be built, the OKX book
+   above stays in charge, and a failed fetch keeps the last book. */
+const AGG_PAIRS = {
+  BTC: {bn: 'BTCUSDT', kr: 'XBTUSD', cb: 'BTC-USD'},
+  ETH: {bn: 'ETHUSDT', kr: 'ETHUSD', cb: 'ETH-USD'},
+  LTC: {bn: 'LTCUSDT', kr: 'LTCUSD', cb: 'LTC-USD'},
+};
+async function jget(url) {
+  const r = await fetch(url, {cache: 'no-store'});
+  if (!r.ok) throw new Error('http ' + r.status);
+  return r.json();
+}
+/* Coinbase full book via REST level 3 (orders aggregated by price here).
+   The book is heavy, so it is cached ~45s — still fresher than the big
+   boards' own cache — while Binance + Kraken refresh every tick. */
+let CB_CACHE = {coin: null, at: 0, book: null};
+async function cbAggBook(k, P) {
+  if (CB_CACHE.coin === k && CB_CACHE.book && (Date.now() - CB_CACHE.at) < 45000) return CB_CACHE.book;
+  const d = await jget('https://api.exchange.coinbase.com/products/' + P.cb + '/book?level=3');
+  const agg = (rows) => { const m = new Map(); for (const row of (rows || [])) { const px = parseFloat(row[0]); m.set(px, (m.get(px) || 0) + parseFloat(row[1])); } return [...m.entries()].map(([p, s]) => [p, s]); };
+  const book = {bids: agg(d.bids).sort((a, b) => b[0] - a[0]), asks: agg(d.asks).sort((a, b) => a[0] - b[0])};
+  CB_CACHE = {coin: k, at: Date.now(), book};
+  return book;
+}
+function calcAggBook(books, mid) {
+  if (!(mid > 0)) return null;
+  const lo = mid * 0.99, hi = mid * 1.01;
+  let bT = 0, aT = 0, bW = null, aW = null; const bLv = [], aLv = [];
+  for (const bk of books) {
+    for (const row of bk.bids) { const px = parseFloat(row[0]), usd = px * parseFloat(row[1]); if (px < lo) break; bT += usd; bLv.push([px, usd]); if (!bW || usd > bW.usd) bW = {px, usd}; }
+    for (const row of bk.asks) { const px = parseFloat(row[0]), usd = px * parseFloat(row[1]); if (px > hi) break; aT += usd; aLv.push([px, usd]); if (!aW || usd > aW.usd) aW = {px, usd}; }
+  }
+  if (!bT && !aT) return null;
+  let bRes = 0, aRes = 0;
+  if (bW) for (const lv of bLv) if (lv[0] < bW.px) bRes += lv[1];
+  if (aW) for (const lv of aLv) if (lv[0] > aW.px) aRes += lv[1];
+  return {bT, aT, bW, aW, bRes, aRes};
+}
+async function fetchAggBook(k, mid) {
+  const P = AGG_PAIRS[k]; if (!P) return null;
+  const jobs = [
+    jget('https://data-api.binance.vision/api/v3/depth?symbol=' + P.bn + '&limit=1000')
+      .then(d => ({bids: d.bids || [], asks: d.asks || []})).catch(() => null),
+    jget('https://api.kraken.com/0/public/Depth?pair=' + P.kr + '&count=500')
+      .then(d => { const res = d && d.result ? d.result[Object.keys(d.result)[0]] : null; if (!res) throw new Error('kraken'); return {bids: res.bids || [], asks: res.asks || []}; }).catch(() => null),
+    cbAggBook(k, P).catch(() => null),
+  ];
+  const books = (await Promise.all(jobs)).filter(b => b && b.bids.length && b.asks.length);
+  if (books.length < 2) return null;
+  return calcAggBook(books, mid);
+}
+let bookFetchSeq = 0;
 async function fetchBook() {
-  const k = state.coin;
+  const k = state.coin, seq = ++bookFetchSeq;
   try {
     const data = await okxGet('/market/books?instId=' + k + '-USDT&sz=400');
     const c = calcBook(data[0].bids || [], data[0].asks || []);
-    if (c) { BOOK = c; renderBook(); }
+    if (c) {
+      if (AGG_PAIRS[k]) {
+        const agg = await fetchAggBook(k, c.mid);
+        if (agg) { c.bT = agg.bT; c.aT = agg.aT; c.bW = agg.bW; c.aW = agg.aW; c.bRes = agg.bRes; c.aRes = agg.aRes; }
+      }
+      if (seq !== bookFetchSeq || state.coin !== k) return;
+      BOOK = c; renderBook();
+    }
   } catch(e) { /* keep last book */ }
 }
 function renderBook() {
