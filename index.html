@@ -427,6 +427,10 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
 @keyframes wcFlashR{50%{background-color:rgba(255,77,94,.28);box-shadow:0 0 18px rgba(255,77,94,.55)}}
 #wcSndBtn.pulse{animation:wcPulse 1s ease-in-out infinite}
 @keyframes wcPulse{50%{box-shadow:0 0 16px rgba(0,229,255,.85)}}
+.ticker-stocks{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:11.5px;font-weight:900;letter-spacing:.06em;border:1.5px solid;white-space:nowrap}
+.ticker-stocks .ts-note{font-weight:700;letter-spacing:.01em;text-transform:none;font-size:11px;opacity:.92}
+.ticker-stocks.open{background:rgba(6,52,32,.92);border-color:#2fd67a;color:#a7f3c5;box-shadow:0 0 12px rgba(47,214,122,.35)}
+.ticker-stocks.closed{background:rgba(58,16,24,.92);border-color:#ff4d5e;color:#ffc2c8;box-shadow:0 0 12px rgba(255,77,94,.3)}
 </style>
 </head>
 <body>
@@ -679,7 +683,7 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
   </div>
 
   <div class="ticker" aria-label="Field Radar updates — all messages run through this bar">
-    <div class="ticker-label">FIELD RADAR UPDATES</div>
+    <div class="ticker-label">FIELD RADAR UPDATES</div><span class="ticker-stocks closed" id="tickerStocks" role="status">📈 STOCKS CLOSED <span class="ts-note">· Stocks trade 9:30 AM–4 PM ET</span></span>
     <div class="ticker-track"><div class="ticker-inner" id="tickerInner"></div></div>
     <a class="ticker-kick" href="https://kick.com/longshotwolf" target="_blank" rel="noopener"><i></i>LIVE ON KICK ↗</a>
   </div>
@@ -1159,11 +1163,39 @@ async function fetchState() {
       $('marketBadgeText').textContent = s.stock_market_open ? 'STOCKS · MARKET OPEN' : 'STOCKS · MARKET CLOSED';
       $('marketBadgeNote').textContent = s.stock_market_open ? '— Closes 4:00 PM ET' : '— Opens 9:30 AM ET';
     }
+    if (typeof s.stock_market_open === 'boolean') { STOCK_SRC = 'game'; renderStocksSign(s.stock_market_open, 'game'); }
     buildTicker();
   } catch(e) {
     const sl = $('sourceLine'); if (sl) sl.textContent = 'Game relay unreachable — the books hold their last state, retrying…';
   }
 }
+
+/* ================= stock-session sign in the ticker bar ====================
+   Driven by the game's own session state (stock_market_open in the relay
+   state — the same signal the game's stocks feed reports). Until the first
+   state poll lands, it falls back to the ET clock (Mon–Fri 9:30–16:00) and
+   says so — schedule-based, never dressed up as the game's word. */
+let STOCK_SRC = null;
+function etClockOpen() {
+  try {
+    const p = {};
+    new Intl.DateTimeFormat('en-US', {timeZone: 'America/New_York', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).formatToParts(new Date()).forEach(x => { p[x.type] = x.value; });
+    const wd = {Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6}[p.weekday];
+    const mins = (parseInt(p.hour, 10) % 24) * 60 + parseInt(p.minute, 10);
+    return wd >= 1 && wd <= 5 && mins >= 570 && mins < 960;
+  } catch(e) { return null; }
+}
+function renderStocksSign(open, src) {
+  const el = $('tickerStocks'); if (!el || open == null) return;
+  el.className = 'ticker-stocks ' + (open ? 'open' : 'closed');
+  el.innerHTML = open
+    ? '📈 STOCKS OPEN <span class="ts-note">· closes 4:00 PM ET</span>'
+    : '📈 STOCKS CLOSED <span class="ts-note">· Stocks trade 9:30 AM–4 PM ET</span>';
+  el.title = src === 'game'
+    ? 'Session state reported by the War Cove game’s stocks feed'
+    : 'Schedule-based — US market hours Mon–Fri, 9:30 AM–4:00 PM ET (game session state not loaded yet)';
+}
+setInterval(() => { if (STOCK_SRC !== 'game') { const o = etClockOpen(); if (o != null) renderStocksSign(o, 'clock'); } }, 30000);
 
 /* ================= bottom ticker — every Cove message runs through it ===== */
 function buildTicker() {
@@ -1613,6 +1645,7 @@ arrangeDesk();
 makePanelsAdjustable();
 buildCoinStrip();
 sndBtnSync();
+{ const o = etClockOpen(); if (o != null) renderStocksSign(o, 'clock'); }
 setBuildLev(25);
 if (CHART_MODE === 'okx') {
   COIN_KEYS.forEach(k => loadSeries(k).then(() => { renderCoins(); if (k === state.coin) { drawChart(); syncCoinUI(); } }));
