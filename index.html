@@ -1658,12 +1658,43 @@ function postCall() {
   if (btn) { const base = btn.textContent; btn.textContent = 'Posted ✓ · ' + t; setTimeout(() => { btn.textContent = base; }, 2600); }
 }
 
+/* War Cove direct state lane (Nov 12, 2026): read the books straight
+   off the game machine via the tunnel endpoint named in
+   state-endpoint.json on this origin, 2.5s timeout; on ANY failure the
+   relay fetch in wcStateJson runs exactly as before. The endpoint
+   rotates, so it is re-read every minute and after any direct failure. */
+let WC_EP = '', WC_EP_AT = 0;
+async function wcDirectState() {
+  if (!WC_EP || Date.now() - WC_EP_AT > 60000) {
+    WC_EP_AT = Date.now();
+    const er = await fetch('state-endpoint.json?t=' + Date.now(), {cache: 'no-store'});
+    if (!er.ok) throw new Error('endpoint http ' + er.status);
+    const ej = await er.json();
+    WC_EP = ((ej && ej.endpoint) || '').replace(/\/+$/, '');
+    if (!WC_EP) throw new Error('no endpoint');
+  }
+  const ctl = new AbortController();
+  const to = setTimeout(() => ctl.abort(), 2500);
+  try {
+    const r = await fetch(WC_EP + '/state.json?t=' + Date.now(), {cache: 'no-store', signal: ctl.signal});
+    if (!r.ok) throw new Error('direct http ' + r.status);
+    return await r.json();
+  } catch(e) { WC_EP = ''; WC_EP_AT = 0; throw e; }
+  finally { clearTimeout(to); }
+}
+async function wcStateJson() {
+  try { return await wcDirectState(); }
+  catch(e) {
+    const r = await fetch(GAME_BASE + 'state.json?t=' + Date.now(), {cache: 'no-store'});
+    if (!r.ok) throw new Error('http ' + r.status);
+    return await r.json();
+  }
+}
+
 /* ================= game relay state poll =================================== */
 async function fetchState() {
   try {
-    const r = await fetch(GAME_BASE + 'state.json?t=' + Date.now(), {cache: 'no-store'});
-    if (!r.ok) throw new Error('http ' + r.status);
-    const s = await r.json();
+    const s = await wcStateJson();
     GAME = s;
     processGameEvents(s);
     buildLeaders(s);
