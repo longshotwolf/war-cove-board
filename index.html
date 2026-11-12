@@ -892,6 +892,7 @@ html.streamview .stream-board{margin-bottom:2px}
           <button class="btn" id="pauseBtn" onclick="toggleLive()">Pause Feed</button>
         </div>
       </div>
+      <div class="seg sym-picker" id="symPicker" role="group" aria-label="Pick which coin or stock chart to show"></div>
       <div class="chart-wrap"><canvas id="chart" width="900" height="300" tabindex="0" aria-label="Clean Heikin-Ashi candle chart — candles and entry markers only. Drag to pan in any direction: pull the candles sideways through time and pull them up and down inside the chart, pixel for pixel with your hand. You can pull the very first candles to the centre of the screen and push them to either side, and pull the candles up or down to re-centre them vertically. Scroll or pinch to zoom — right in until a few candles fill the chart, big — drag the price scale on the right to stretch the candles taller, arrow keys move the chart, double-click to reset. The chart centres out automatically: the live candle sits in the middle of the chart with open space on both sides, and it stays centred as it updates."></canvas>
         <div class="crosshair-info" id="crosshairInfo" aria-hidden="true"></div>
       </div>
@@ -1159,6 +1160,21 @@ const COINS = {
   ETH: {name: 'Ethereum', dec: 2, price: null, chg: null, bid: null, ask: null},
 };
 const COIN_KEYS = ['LTC', 'BTC', 'ETH'];
+/* Chart instrument picker (the Warlord's order, Nov 12 2026): every
+   instrument we trade gets a button on the chart — the 3 coins plus
+   the 7 stocks. Stock Heikin-Ashi candles ride the game relay
+   (Yahoo tape) on both pages. */
+const STOCKS = {
+  NVDA: {name: 'NVIDIA', dec: 2, price: null},
+  GOOGL: {name: 'Alphabet', dec: 2, price: null},
+  MSTR: {name: 'MicroStrategy', dec: 2, price: null},
+  TSLA: {name: 'Tesla', dec: 2, price: null},
+  META: {name: 'Meta', dec: 2, price: null},
+  PLTR: {name: 'Palantir', dec: 2, price: null},
+  COIN: {name: 'Coinbase', dec: 2, price: null},
+};
+const STOCK_KEYS = Object.keys(STOCKS);
+const ALL_SYMS = COIN_KEYS.concat(STOCK_KEYS);
 const TFS = ['1M', '3M', '1H', '4H', '6H', '1D', '1W', '1MO'];
 /* OKX bar names + bucket sizes. OKX '1M' bar = monthly; key '1MO' keeps it apart from 1-minute. */
 const TF_BAR = {'1M': '1m', '3M': '3m', '1H': '1H', '4H': '4H', '6H': '6H', '1D': '1D', '1W': '1W', '1MO': '1M'};
@@ -1173,10 +1189,11 @@ const state = {
 const RAW = {LTC: {}, BTC: {}, ETH: {}};   /* raw candles per coin/tf (okx mode) */
 const HIST = {LTC: {}, BTC: {}, ETH: {}};  /* Heikin-Ashi candles {t,o,h,l,c} */
 const READS = {LTC: {}, BTC: {}, ETH: {}}; /* per coin/tf: {pvc, army, gas, momentum, spread, word} */
+STOCK_KEYS.forEach(k => { RAW[k] = {}; HIST[k] = {}; READS[k] = {}; });
 let LEADERS = [], POSITIONS = [], GAME = null, BFDATA = null, BOOK = null;
 let LOCAL_NOTES = [], LOG_CLEARED_BEFORE = 0;
 
-const priceFmt = v => fmt(v, COINS[state.coin].dec);
+const priceFmt = v => fmt(v, (COINS[state.coin] || STOCKS[state.coin] || {dec: 2}).dec);
 function fmtSpreadVal(k, v) {
   if (v == null || isNaN(v)) return '—';
   const s = v < 0 ? '−' : '+';
@@ -1325,6 +1342,7 @@ function wsConnect() {
 }
 setInterval(() => { /* resync the selected series + drifted reads every 60s */
   if (CHART_MODE !== 'okx') return;
+  if (!COINS[state.coin]) return;
   loadSeries(state.coin).then(() => { renderCoins(); drawChart(); syncCoinUI(); });
 }, 60000);
 
@@ -1347,6 +1365,15 @@ function buildCoinStrip() {
     card.addEventListener('click', () => setCoin(card.dataset.coin));
     card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCoin(card.dataset.coin); } });
   });
+}
+function buildSymPicker() {
+  const el = $('symPicker'); if (!el) return;
+  el.innerHTML = ALL_SYMS.map(k => `<button data-sym="${k}" aria-label="Show the ${k} Heikin-Ashi chart">${k}</button>`).join('');
+  el.querySelectorAll('button').forEach(b => b.addEventListener('click', () => setCoin(b.dataset.sym)));
+  renderPicker();
+}
+function renderPicker() {
+  document.querySelectorAll('#symPicker button').forEach(b => b.classList.toggle('active', b.dataset.sym === state.coin));
 }
 function renderCoins() {
   COIN_KEYS.forEach(k => {
@@ -1385,6 +1412,7 @@ function renderRace() {
   renderWinBar();
 }
 function renderWinBar() {
+  if (STOCKS[state.coin]) { $('winRaceLabel').textContent = 'WIN RACE — ' + state.coin + ' · STOCK (the race runs on the coins)'; return; }
   const r = raceOf(state.coin); if (!r) return;
   $('winRaceLabel').textContent = 'WIN RACE — ' + state.coin + ' 6H BATTLE RANGE';
   $('bullsPct').textContent = r.pct.toFixed(0) + '%';
@@ -1521,6 +1549,7 @@ function renderPodium() {
   const medals = [['diamond', '💎 #1 DIAMOND'], ['gold24', '🥇 #2 · 24-KARAT GOLD'], ['platinum', '🤍 #3 PLATINUM']];
   pd.innerHTML = LEADERS.slice(0, 3).map((L, i) => `<button class="podium-card ${medals[i][0]}" data-player="${esc(L.name)}"><small>${medals[i][1]}</small><b>${esc(L.name)}</b><span>${fmtInt(L.sats)} sats · ${L.wl.replace('\u2013', 'W-')}L</span></button>`).join('');
 }
+const posNow = p => { const m = COINS[p.coin] || STOCKS[p.coin]; return m && m.price != null ? m.price : (p.ref_price != null ? p.ref_price : null); };
 function renderPositions() {
   const net = POSITIONS.reduce((a, p) => a + (p.pnl || 0), 0);
   $('posSummary').textContent = POSITIONS.length + ' open • Net P&L calculated live' + (GAME && GAME.stalled ? ' • ⏸ FEED STALLED — opens locked on the stalled coin' : '');
@@ -1530,6 +1559,7 @@ function renderPositions() {
       <span class="pos-who"><b>${esc(p.trader)} ${p.coin === 'LTC' ? '<span style="color:var(--gold)">★</span>' : ''}</b><small>${p.coin} ${p.side.toUpperCase()} · tap to adjust leverage</small></span>
       <span class="pos-side ${p.side}">${p.side.toUpperCase()} ${p.lev}x</span>
       <span class="pos-num"><label>Entry</label><b>${fmtUsd(p.entry)}</b></span>
+      <span class="pos-num"><label>Now</label><b>${posNow(p) == null ? '—' : fmtUsd(posNow(p))}</b></span>
       <span class="pos-num"><label>Liq</label><b style="color:var(--red)">${p.liq == null ? '—' : fmtUsd(p.liq)}</b></span>
       <span class="pos-num"><label>uPnL</label><b class="${(p.pnl || 0) >= 0 ? 'pos' : 'neg'}">${p.pnl == null ? '—' : fmtSats(p.pnl)}</b></span>
     </div>`).join('') || '<div style="padding:14px 16px;color:var(--muted);font-size:13px">No open positions — the field is quiet.</div>';
@@ -1649,6 +1679,15 @@ async function fetchState() {
         computeAllReads(k);
       });
     }
+    STOCK_KEYS.forEach(k => {
+      if (s.prices && s.prices[k] != null) STOCKS[k].price = s.prices[k];
+      const perS = (s.candles || {})[k] || {};
+      Object.keys(GAME_TF_KEY).forEach(tf => {
+        const rows = perS[GAME_TF_KEY[tf]];
+        if (rows && rows.length) HIST[k][tf] = rows.map(a => ({t: a[0], o: a[1], h: a[2], l: a[3], c: a[4]}));
+      });
+    });
+    if (STOCKS[state.coin]) { drawChart(); syncCoinUI(); }
     renderArmy(); renderLeaders(); renderPositions(); renderLog(); renderPlayer(); renderCoins(); renderRace();
     if (CHART_MODE === 'game') { drawChart(); syncCoinUI(); }
     const badge = $('liveBadge');
@@ -1935,7 +1974,7 @@ function drawChart() {
   for (let i = 0; i <= 4; i++) {
     const v = view.min + (view.max - view.min) * i / 4, yy = y(v);
     ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(plotW, yy); ctx.stroke();
-    ctx.fillText(fmt(v, COINS[state.coin].dec), plotW + 7, yy + 3);
+    ctx.fillText(fmt(v, (COINS[state.coin] || STOCKS[state.coin] || {dec: 2}).dec), plotW + 7, yy + 3);
   }
   const n = view.realEnd - view.realStart, slot = plotW / Math.max(1, state.view.count);
   const bw = Math.max(2, Math.min(96, slot * 0.62));
@@ -1972,7 +2011,7 @@ function drawChart() {
     ctx.fillStyle = last.c >= last.o ? GREEN : RED;
     ctx.fillRect(plotW + 1, ly - 9, scaleW - 2, 18);
     ctx.fillStyle = '#04101f'; ctx.font = 'bold 10px "IBM Plex Mono", monospace';
-    ctx.fillText(fmt(last.c, COINS[state.coin].dec), plotW + 6, ly + 3.5);
+    ctx.fillText(fmt(last.c, (COINS[state.coin] || STOCKS[state.coin] || {dec: 2}).dec), plotW + 6, ly + 3.5);
   }
   /* entry markers — battlefield page only; the board page's charts stay clean */
   if (MARKERS_ON) POSITIONS.filter(p => p.coin === state.coin && p.entry != null).forEach(p => {
@@ -2016,6 +2055,15 @@ function renderEntryLegend() {
 }
 function syncCoinUI() {
   const k = state.coin, r = READS[k][state.tf];
+  if (STOCKS[k]) {
+    $('chartTitle').textContent = k + ' — ' + STOCKS[k].name + ' · STOCK — ' + (CHART_MODE === 'game' ? 'Game Chart' : 'Battlefield Chart');
+    const fS = (HIST[k][state.tf] || []).slice(-1)[0];
+    $('chartSub').textContent = 'Heikin-Ashi ' + state.tf + ' · Yahoo tape · ' + (STOCKS[k].price != null ? 'last $' + fmt(STOCKS[k].price) : 'loading the candles…') + ' · opens 9:30AM–4PM ET · closes any time';
+    if (fS) { $('statOpen').textContent = priceFmt(fS.o); $('statHigh').textContent = priceFmt(fS.h); $('statLow').textContent = priceFmt(fS.l); }
+    $('statSpread').textContent = '—'; $('statPvc').textContent = '—';
+    renderBuild(); renderWinBar();
+    return;
+  }
   $('chartTitle').textContent = k + ' / USDT — ' + (CHART_MODE === 'game' ? 'Game Chart' : 'Battlefield Chart');
   $('chartSub').textContent = r ? state.tf + ' spread ' + fmtSpreadVal(k, r.spread) + ' • ' + r.word + ' • ' + armyLabel(k, state.tf) + (state.live ? '' : ' • feed paused')
     : 'Loading the ' + state.tf + ' candles…';
@@ -2031,29 +2079,34 @@ setInterval(() => {
   if (!state.autoCentre && state.lastManual && Date.now() - state.lastManual >= 5000) { state.autoCentre = true; drawChart(); }
 }, 1000);
 function setCoin(k) {
-  if (!COINS[k] || state.coin === k) { if (COINS[k]) {} else return; if (state.coin === k) return; }
+  if (!(COINS[k] || STOCKS[k]) || state.coin === k) return;
   const prev = state.coin; state.coin = k;
+  if (STOCKS[k] && !GAME_TF_KEY[state.tf]) state.tf = '3M';
   document.querySelectorAll('#tfSeg button').forEach(b => b.classList.toggle('active', b.dataset.tf === state.tf));
-  renderCoins(); resetView();
-  if (CHART_MODE === 'okx') {
+  renderCoins(); renderPicker(); resetView();
+  if (CHART_MODE === 'okx' && COINS[k]) {
     if (okxWS && okxWS.readyState === 1) {
       okxWS.send(JSON.stringify({op: 'unsubscribe', args: [{channel: 'candle' + TF_BAR[state.tf], instId: prev + '-USDT'}]}));
       wsSubscribe();
     }
     BOOK = null; fetchBook();
+  } else if (CHART_MODE === 'okx' && COINS[prev] && okxWS && okxWS.readyState === 1) {
+    okxWS.send(JSON.stringify({op: 'unsubscribe', args: [{channel: 'candle' + TF_BAR[state.tf], instId: prev + '-USDT'}]}));
   }
   drawChart(); syncCoinUI();
 }
 function setTF(tf) {
   if (!TFS.includes(tf)) return;
-  if (CHART_MODE === 'game' && !GAME_TF_KEY[tf]) {
-    $('chartSub').textContent = 'Game candles run 3M · 1H · 6H — the ' + tf + ' tape rides the battlefield page. Staying on ' + state.tf + '.';
+  if ((CHART_MODE === 'game' || STOCKS[state.coin]) && !GAME_TF_KEY[tf]) {
+    $('chartSub').textContent = STOCKS[state.coin]
+      ? state.coin + ' candles run 3M · 1H · 6H. Staying on ' + state.tf + '.'
+      : 'Game candles run 3M · 1H · 6H — the ' + tf + ' tape rides the battlefield page. Staying on ' + state.tf + '.';
     return;
   }
   const prev = state.tf; state.tf = tf;
   document.querySelectorAll('#tfSeg button').forEach(b => b.classList.toggle('active', b.dataset.tf === tf));
   resetView();
-  if (CHART_MODE === 'okx' && okxWS && okxWS.readyState === 1) {
+  if (CHART_MODE === 'okx' && COINS[state.coin] && okxWS && okxWS.readyState === 1) {
     okxWS.send(JSON.stringify({op: 'unsubscribe', args: [{channel: 'candle' + TF_BAR[prev], instId: state.coin + '-USDT'}]}));
     wsSubscribe();
   }
@@ -2283,7 +2336,7 @@ function updateCmdLib() {
   const iw = $('cmdInstWrap'); if (iw) iw.style.display = d.inst ? '' : 'none';
   const lw = $('cmdLevWrap'); if (lw) lw.style.display = d.lev ? '' : 'none';
   const note = $('cmdInstNote');
-  if (note) note.textContent = inst.sym + ' · ' + inst.name + (inst.kind === 'crypto' ? ' — crypto, trades 24/7 · leverage 5–100x' : ' — stock, US market hours (see the sign in the top bar) · leverage 5–20x');
+  if (note) note.textContent = inst.sym + ' · ' + inst.name + (inst.kind === 'crypto' ? ' — crypto, trades 24/7 · leverage 5–100x' : ' — stock · opens 9:30AM–4PM ET only · closes ANY TIME, even after hours · leverage 5–20x');
   const sl = $('cmdSlider'); if (sl) sl.value = cmdLibState.lev;
   const lv = $('cmdLevVal'); if (lv) lv.textContent = lev;
   document.querySelectorAll('#cmdLevChips button').forEach(b => b.classList.toggle('active', parseInt(b.dataset.lev, 10) === lev));
@@ -2318,7 +2371,7 @@ setInterval(() => { const c = $('marketBadgeClock'); if (c) { try { c.textConten
 
 arrangeDesk();
 makePanelsAdjustable();
-buildCoinStrip();
+buildCoinStrip(); buildSymPicker();
 sndBtnSync();
 { const o = etClockOpen(); if (o != null) renderStocksSign(o, 'clock'); }
 setBuildLev(25);
@@ -2422,6 +2475,14 @@ drawChart(); syncCoinUI();
 @keyframes wcFlashMetalR{50%{box-shadow:inset 0 0 0 999px rgba(96,12,20,.90),0 0 18px rgba(255,77,94,.55)}}
 .leader-row.metal-1.wc-flash-g,.leader-row.metal-2.wc-flash-g,.leader-row.metal-3.wc-flash-g{animation:wcFlashMetalG 1.1s ease-in-out 3}
 .leader-row.metal-1.wc-flash-r,.leader-row.metal-2.wc-flash-r,.leader-row.metal-3.wc-flash-r{animation:wcFlashMetalR 1.1s ease-in-out 3}
+</style>
+
+<style>
+/* r7: chart instrument picker — pill row in the house .seg styling;
+   wraps under the timeframe row on narrow screens, and stays OUT of
+   the ?view=stream screen so the OBS fit never moves. */
+.sym-picker{flex-wrap:wrap;border-radius:18px;margin:10px 16px 0;padding:4px}
+html.streamview .sym-picker{display:none!important}
 </style>
 </body>
 </html>
