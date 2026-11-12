@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="data:,">
-<title>War Cove Paper Game</title>
+<title>War Cove Paper Game Tactical Chart</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -827,7 +827,7 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
     <div class="brand">
       <div class="crown">👑</div>
       <div>
-        <h1>WAR COVE <span>PAPER GAME</span></h1>
+        <h1>WAR COVE <span>PAPER GAME TACTICAL CHART</span></h1>
         <p>LTC • BTC • ETH — Live on Kick</p>
       </div>
     </div>
@@ -842,7 +842,7 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
 <div class="wc-react" id="wcReact" role="group" aria-label="Reactions — tap to react"><span class="wc-react-label">REACT</span><button type="button" data-r="fire" aria-label="Fire reaction">🔥 <b>0</b></button><button type="button" data-r="green" aria-label="Green army reaction">🟢 <b>0</b></button><button type="button" data-r="red" aria-label="Red army reaction">🔴 <b>0</b></button><button type="button" data-r="swords" aria-label="Battle reaction">⚔️ <b>0</b></button><button type="button" data-r="skull" aria-label="Liquidated reaction">💀 <b>0</b></button><button type="button" data-r="trophy" aria-label="Trophy reaction">🏆 <b>0</b></button><button type="button" data-r="wolf" aria-label="Wolf reaction">🐺 <b>0</b></button></div>
   <div class="intro">
     <div>
-      <h2>WAR COVE <em>PAPER GAME</em></h2>
+      <h2>WAR COVE <em>PAPER GAME TACTICAL CHART</em></h2>
     </div>
     <p>The Big 3 — LTC first, then BTC and ETH. Green Army vs Red Army for sats on the Leading Dashboard. Pick a coin, work the chart, build your LONG or SHORT here, and send it from your own Kick account in LongShotWolf's chat. Short the top. Long the bottom.</p>
   </div>
@@ -1138,14 +1138,14 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
   </div>
 
   <div class="foot">
-    <span id="footLine">WAR COVE PAPER GAME — live from the War Cove game relay.</span>
+    <span id="footLine">WAR COVE PAPER GAME TACTICAL CHART — live from the War Cove game relay.</span>
     <span>Short the top. Long the bottom.</span>
   </div>
 </main>
 
 <script>
 /* ============================================================================
-   WAR COVE PAPER GAME — LIVE CONSOLE (in-place update of the live pages)
+   WAR COVE PAPER GAME TACTICAL CHART — LIVE CONSOLE (in-place update of the live pages)
    The approved console design wired onto the SAME live data the pages have
    always consumed: the War Cove game relay state.json (books, positions,
    leaderboard, events — read-only; this page never trades), the certified
@@ -1790,12 +1790,12 @@ function buildTicker() {
   COIN_KEYS.forEach(k => { const r6 = READS[k]['6H']; if (COINS[k].price != null) seg.push(k + ' ' + fmtUsd(COINS[k].price) + (r6 ? ' · 6H ' + fmtSpreadVal(k, r6.spread) + ' ' + r6.word.replace(' the candle', '') : '')); });
   if (BFDATA && Array.isArray(BFDATA.feed)) BFDATA.feed.slice(0, 3).forEach(f => { if (f && f.text) seg.push(f.text); });
   if (GAME && GAME.events) GAME.events.slice(0, 3).forEach(e => { if (e.text) seg.push(e.text); });
-  seg.push('WAR COVE PAPER GAME — trades fire only from your own Kick account in LongShotWolf’s chat');
+  seg.push('WAR COVE PAPER GAME TACTICAL CHART — trades fire only from your own Kick account in LongShotWolf’s chat');
   seg.push('THE LEADING DASHBOARD IS LIVE — green longs vs red shorts for sats');
   const html = seg.map(t => `<span>${esc(t)}</span>`).join('<span class="tick-dot">◆</span>') + '<span class="tick-dot">◆</span>';
   const track = $('tickerInner'); if (track) track.innerHTML = html + html;
   const fl = $('footLine');
-  if (fl) fl.textContent = 'WAR COVE PAPER GAME — live from the War Cove game relay · ' + COIN_KEYS.map(k => k + ' ' + (COINS[k].price != null ? fmtUsd(COINS[k].price) : '—')).join(' · ') + ' · ' + new Date().toLocaleTimeString('en-US', {timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit'}) + ' NYC. Every Field Radar update, Survey, battle-log move and live-on-Kick notice runs through the Field Radar bar above. Trades fire only from your own Kick account in chat — this board builds the command, Kick sends it.';
+  if (fl) fl.textContent = 'WAR COVE PAPER GAME TACTICAL CHART — live from the War Cove game relay · ' + COIN_KEYS.map(k => k + ' ' + (COINS[k].price != null ? fmtUsd(COINS[k].price) : '—')).join(' · ') + ' · ' + new Date().toLocaleTimeString('en-US', {timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit'}) + ' NYC. Every Field Radar update, Survey, battle-log move and live-on-Kick notice runs through the Field Radar bar above. Trades fire only from your own Kick account in chat — this board builds the command, Kick sends it.';
 }
 
 /* ================= sounds + row flashes (the game's approved cues) ========= */
