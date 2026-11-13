@@ -1817,6 +1817,18 @@ async function fetchState() {
       $('marketBadgeNote').textContent = smoOpen ? '— Closes 4:00 PM ET' : '— Opens 9:30 AM ET';
     }
     if (smoOpen != null) { STOCK_SRC = 'game'; renderStocksSign(smoOpen, 'game'); }
+    /* Market bell (Nov 13, 2026 — the Warlord's order): the exchange
+       bell rings ONCE when the game's stock session flips — OPEN when
+       the market light comes on, CLOSE when it goes dark. Driven by
+       the same stock_market_open state that lights the badge above —
+       no separate clock. The first state poll primes in silence (the
+       same law as the event cues), and sndFile rides the sound toggle
+       and the browser's first-tap audio unlock exactly like the
+       win / liq / bust cues. */
+    if (smoOpen != null) {
+      if (SND.bellSeen === undefined) { SND.bellSeen = smoOpen; }
+      else if (smoOpen !== SND.bellSeen) { SND.bellSeen = smoOpen; sndFile('bell'); }
+    }
     buildTicker();
   } catch(e) {
     const sl = $('sourceLine'); if (sl) sl.textContent = 'Game relay unreachable — the books hold their last state, retrying…';
@@ -1869,7 +1881,7 @@ const FLASH = {};
 const SND = {
   on: (() => { try { return localStorage.getItem('wc-sound') !== 'off'; } catch(e) { return true; } })(),
   unlocked: false, ctx: null,
-  files: {win: 'sfx/win-ching.mp3', liq: 'sfx/trade-liquidated-zap.mp3', bust: 'sfx/account-blown-doom.mp3'},
+  files: {win: 'sfx/win-ching.mp3', liq: 'sfx/trade-liquidated-zap.mp3', bust: 'sfx/account-blown-doom.mp3', bell: 'sfx/market-bell.mp3'},
 };
 function sndFile(kind) {
   if (!SND.on) return;
