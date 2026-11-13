@@ -419,6 +419,9 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
 .market-badge.open i{background:#2dff8f;box-shadow:0 0 0 4px rgba(47,214,122,.22),0 0 12px rgba(47,214,122,.9)}
 .market-badge.closed{background:rgba(58,16,24,.96);border-color:#ff4d5e;color:#ffc2c8;box-shadow:0 0 18px rgba(255,77,94,.32), inset 0 0 14px rgba(255,77,94,.10)}
 .market-badge.closed i{background:#ff4d5e;box-shadow:0 0 0 4px rgba(255,77,94,.20),0 0 12px rgba(255,77,94,.85)}
+.market-badge.bell-missed{animation:bellMissed 1s ease-in-out 3}
+@keyframes bellMissed{50%{box-shadow:0 0 26px rgba(255,201,64,.95), inset 0 0 16px rgba(255,201,64,.35)}}
+#bellBtn{cursor:pointer;padding:8px 11px;font-size:14px;line-height:1}
 @media(max-width:640px){.market-badge{white-space:normal;text-align:left}.market-badge .mkt-clock{display:none}}
 
 /* COMMANDS LIBRARY — tap a command, pick coin/stock + leverage, copy it,
@@ -565,7 +568,8 @@ html.streamview .chart-toolbar,
 html.streamview .chart-foot,
 html.streamview .entry-legend,
 html.streamview .desk .army-bar,
-html.streamview .desk .army-legend{display:none !important}
+html.streamview .desk .army-legend,
+html.streamview #bellBtn{display:none !important}
 /* order in the column: coin strip, chart, open positions, ticker */
 html.streamview .coin-strip{order:1;flex:0 0 auto;max-width:none;margin:0 0 8px;grid-template-columns:repeat(3,1fr)}
 html.streamview .desk>section.panel{order:2;flex:0 0 auto}
@@ -835,7 +839,7 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
       </div>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <span class="live-dot" id="liveBadge"><i></i> LIVE BOARD</span><span class="market-badge closed" id="marketBadge" role="status" aria-live="polite" title="US stock market hours: Monday–Friday, 9:30 AM – 4:00 PM Eastern (New York). Crypto — LTC · BTC · ETH — trades 24/7."><i></i><span id="marketBadgeText">STOCKS · MARKET CLOSED</span><span class="mkt-note" id="marketBadgeNote">— Opens 9:30 AM ET</span><span class="mkt-clock" id="marketBadgeClock"></span></span><span class="watch-pill" id="wcWatch" title="Watchers on the live board">👁 — WATCHING THE GAME</span><button class="btn" id="wcSndBtn" type="button">🔊 SOUND ON</button><button class="btn" id="podiumBtn" type="button">📣 PODIUM CALL</button><span class="wc-set-wrap"><button class="btn" id="wcGearBtn" type="button" aria-label="Settings" aria-haspopup="true">⚙️ SETTINGS</button><span class="wc-set-panel" id="wcSetPanel" hidden><h4>SETTINGS</h4><div class="wc-set-row"><span>Sound</span><button id="wcSetSnd" type="button">🔊 ON</button></div><div class="wc-set-row"><span>Podium call</span><button id="wcSetPod" type="button">📣 PLAY</button></div></span></span>
+      <span class="live-dot" id="liveBadge"><i></i> LIVE BOARD</span><span class="market-badge closed" id="marketBadge" role="status" aria-live="polite" title="US stock market hours: Monday–Friday, 9:30 AM – 4:00 PM Eastern (New York). Crypto — LTC · BTC · ETH — trades 24/7."><i></i><span id="marketBadgeText">STOCKS · MARKET CLOSED</span><span class="mkt-note" id="marketBadgeNote">— Opens 9:30 AM ET</span><span class="mkt-clock" id="marketBadgeClock"></span></span><button class="btn" id="bellBtn" type="button" title="Ring the market bell — your own open / close ring" aria-label="Ring the market bell">🔔</button><span class="watch-pill" id="wcWatch" title="Watchers on the live board">👁 — WATCHING THE GAME</span><button class="btn" id="wcSndBtn" type="button">🔊 SOUND ON</button><button class="btn" id="podiumBtn" type="button">📣 PODIUM CALL</button><span class="wc-set-wrap"><button class="btn" id="wcGearBtn" type="button" aria-label="Settings" aria-haspopup="true">⚙️ SETTINGS</button><span class="wc-set-panel" id="wcSetPanel" hidden><h4>SETTINGS</h4><div class="wc-set-row"><span>Sound</span><button id="wcSetSnd" type="button">🔊 ON</button></div><div class="wc-set-row"><span>Podium call</span><button id="wcSetPod" type="button">📣 PLAY</button></div></span></span>
       <a class="btn" href="https://kick.com/longshotwolf" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">▶ Watch on Kick</a>
     </div>
   </div>
@@ -1822,9 +1826,10 @@ async function fetchState() {
        the market light comes on, CLOSE when it goes dark. Driven by
        the same stock_market_open state that lights the badge above —
        no separate clock. The first state poll primes in silence (the
-       same law as the event cues), and sndFile rides the sound toggle
-       and the browser's first-tap audio unlock exactly like the
-       win / liq / bust cues. */
+       same law as the event cues). The ring itself goes through
+       wcRingBell: a persistent bell element primed on the page's first
+       gesture, one retry on a rejected play, and a badge pulse when a
+       ring still cannot sound — the Nov 13 fix for the silent open. */
     if (smoOpen != null) {
       if (SND.bellSeen === undefined) { SND.bellSeen = smoOpen; }
       else if (smoOpen !== SND.bellSeen) { SND.bellSeen = smoOpen; sndFile('bell'); }
@@ -1885,8 +1890,90 @@ const SND = {
 };
 function sndFile(kind) {
   if (!SND.on) return;
+  if (kind === 'bell') { wcRingBell(false); return; }
   try { const a = new Audio(SND.files[kind] + '?t=' + Date.now()); const p = a.play(); if (p && p.catch) p.catch(() => {}); } catch(e) {}
 }
+/* Market bell unlock (Nov 13, 2026 — fix for the Warlord's hand-test at the
+   open: "I seen the market open and it turned green but I didn't hear the
+   bell sound"). What was wrong in the shipped code: the bell rode sndFile,
+   which builds a throwaway Audio at flip time and swallows the play()
+   promise — on any page copy the browser has seen no gesture on (a fresh
+   tab, the stream-view copy, a page inside another app's frame) the
+   autoplay policy rejects that play and the rejection vanished silently:
+   no retry, no signal, badge green and no bell. The unlock flag the first
+   tap sets never primed the bell element itself. The fix: one persistent
+   bell element, primed inside the FIRST gesture anywhere on the page
+   (muted play/pause cycle, so the element itself is unlocked and the file
+   is loaded before any flip), a ring that retries once when a play is
+   rejected, and a gold pulse on the badge when a ring still cannot sound.
+   The sound toggle stays absolute for the automatic ring and the primer:
+   OFF means no ring and no primer noise. The manual bell button is the
+   one exception, on the PODIUM CALL precedent — a deliberate press plays
+   on the tap itself. */
+SND.bellEl = null; SND.primed = false; SND.bellBusy = false;
+function wcBellEl() {
+  if (!SND.bellEl) {
+    try {
+      SND.bellEl = new Audio(SND.files.bell);
+      SND.bellEl.preload = 'auto';
+      SND.bellEl.load();
+    } catch(e) { SND.bellEl = null; }
+  }
+  return SND.bellEl;
+}
+function wcPrimeAudio(force) {
+  if (SND.primed) return;
+  if (!SND.on && !force) return;
+  try {
+    const ctx = SND.ctx || (SND.ctx = new (window.AudioContext || window.webkitAudioContext)());
+    if (ctx && ctx.state === 'suspended') { const r = ctx.resume(); if (r && r.catch) r.catch(function(){}); }
+  } catch(e) {}
+  const el = wcBellEl();
+  if (!el) { SND.primed = true; return; }
+  try {
+    el.muted = true;
+    const p = el.play();
+    const done = function() {
+      try { el.muted = false; if (!SND.bellBusy) { el.pause(); el.currentTime = 0; } } catch(e) {}
+      SND.primed = true;
+    };
+    if (p && p.then) p.then(done).catch(function() { try { el.muted = false; } catch(e) {} });
+    else done();
+  } catch(e) { try { el.muted = false; } catch(e2) {} }
+}
+function wcBellMissed() {
+  const mb = $('marketBadge'); if (!mb) return;
+  mb.classList.remove('bell-missed'); void mb.offsetWidth; mb.classList.add('bell-missed');
+  setTimeout(function() { mb.classList.remove('bell-missed'); }, 3200);
+}
+function wcRingBell(manual) {
+  if (!SND.on && !manual) return;
+  if (manual) wcPrimeAudio(true);
+  const el = wcBellEl();
+  if (!el) { wcBellMissed(); return; }
+  let tried = false;
+  const attempt = function() {
+    try {
+      SND.bellBusy = true;
+      setTimeout(function() { SND.bellBusy = false; }, 7000);
+      el.muted = false;
+      try { el.pause(); } catch(e) {}
+      el.currentTime = 0;
+      const p = el.play();
+      if (p && p.catch) p.catch(function() {
+        if (!tried) { tried = true; setTimeout(attempt, 700); }
+        else wcBellMissed();
+      });
+    } catch(e) {
+      if (!tried) { tried = true; setTimeout(attempt, 700); }
+      else wcBellMissed();
+    }
+  };
+  attempt();
+}
+window.addEventListener('pointerdown', function() { wcPrimeAudio(false); }, true);
+window.addEventListener('keydown', function() { wcPrimeAudio(false); }, true);
+window.addEventListener('touchstart', function() { wcPrimeAudio(false); }, true);
 function sndSting() {
   if (!SND.on || !SND.unlocked) return;
   try {
@@ -2504,7 +2591,8 @@ $('buildSlider').addEventListener('input', e => setBuildLev(+e.target.value));
 $('buildChips').addEventListener('click', e => { const b = e.target.closest('button[data-lev]'); if (b) setBuildLev(+b.dataset.lev); });
 $('levSlider').addEventListener('input', e => setLev(+e.target.value));
 $('levChips').addEventListener('click', e => { const b = e.target.closest('button[data-lev]'); if (b) setLev(+b.dataset.lev); });
-$('wcSndBtn').addEventListener('click', () => { SND.on = !SND.on; try { localStorage.setItem('wc-sound', SND.on ? 'on' : 'off'); } catch(e) {} sndBtnSync(); });
+$('wcSndBtn').addEventListener('click', () => { SND.on = !SND.on; try { localStorage.setItem('wc-sound', SND.on ? 'on' : 'off'); } catch(e) {} sndBtnSync(); if (SND.on) wcPrimeAudio(false); });
+{ const bb = $('bellBtn'); if (bb) bb.addEventListener('click', () => { wcRingBell(true); }); }
 { const pb = $('podiumBtn'); if (pb) pb.addEventListener('click', () => { SND.unlocked = true; pb.classList.remove('pulse'); playPodium(); }); }
 window.addEventListener('pointerdown', () => {
   if (!SND.unlocked) { SND.unlocked = true; try { SND.ctx = SND.ctx || new (window.AudioContext || window.webkitAudioContext)(); if (SND.ctx.state === 'suspended') SND.ctx.resume(); } catch(e) {} const b = $('wcSndBtn'); if (b) b.classList.remove('pulse'); }
@@ -2659,6 +2747,7 @@ html.streamview .sym-picker{display:none!important}
     try{ if(typeof SND!=='undefined'&&SND){ SND.on=target; } }catch(e){}
     try{ localStorage.setItem('wc-sound', target?'on':'off'); }catch(e){}
     try{ if(typeof sndBtnSync==='function') sndBtnSync(); else { var hb=document.getElementById('wcSndBtn'); if(hb) hb.textContent=target?'\uD83D\uDD0A SOUND ON':'\uD83D\uDD07 SOUND OFF'; } }catch(e){}
+    if(target && typeof wcPrimeAudio==='function'){ try{ wcPrimeAudio(false); }catch(e){} }
     sndLabel();
   }); sndLabel(); }
   var pod=document.getElementById('wcSetPod');
