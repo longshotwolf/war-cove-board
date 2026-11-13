@@ -2546,34 +2546,40 @@ drawChart(); syncCoinUI();
 /* War Cove watcher counter (display-only). Reads presence.json from
    this origin for the current counter endpoint, pings it every 20s
    with a random per-tab id, and shows how many game pages are open.
-   The counter endpoint rotates (localhost.run tunnel): it is re-read
-   every 60s and immediately whenever a ping fails, so a page never
-   sits heartbeating a dead tunnel. Any failure shows a dash - the
-   number is never faked or stale. */
+   Any failure shows a dash - the number is never faked or stale.
+   v2 (Nov 13 2026): re-reads presence.json every 60s and right after
+   any failed ping, so an open page recovers on its own when the
+   counter endpoint rotates; pings carry surface + view so the
+   watcher log can tell board from battlefield, page from stream. */
 (function(){
   var el=document.getElementById('wcWatch');
   if(!el) return;
+  var SURF='board';
+  var VIEW=(/[?&]view=stream/.test(location.search||''))?'stream':'page';
   var id='';
   try{ id=sessionStorage.getItem('wcWatchId')||''; }catch(e){}
   if(!id){
     id='w'+Math.random().toString(36).slice(2)+Date.now().toString(36);
     try{ sessionStorage.setItem('wcWatchId',id); }catch(e){}
   }
-  var ep='';
+  var ep='', lastEp=0;
   function show(n){
     el.textContent=(typeof n==='number')
       ?('👁 '+n+' WATCHING THE GAME')
       :'👁 — WATCHING THE GAME';
   }
   function ping(){
-    if(!ep) return;
-    fetch(ep+'/ping?id='+encodeURIComponent(id),{cache:'no-store'})
+    if(!ep){ loadEp(); return; }
+    fetch(ep+'/ping?id='+encodeURIComponent(id)+'&s='+SURF+'&v='+VIEW,{cache:'no-store'})
       .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
       .then(function(j){ show(j.watching); })
       .catch(function(){ show(null); loadEp(); });
   }
   function loadEp(){
-    return fetch('presence.json?t='+Date.now(),{cache:'no-store'})
+    var now=Date.now();
+    if(now-lastEp<10000) return;
+    lastEp=now;
+    fetch('presence.json?t='+now,{cache:'no-store'})
       .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
       .then(function(j){
         var n=((j&&j.endpoint)||'').replace(/\/+$/,'');
