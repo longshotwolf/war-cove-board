@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0a0d12">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="War Cove Game">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="data:,">
 <title>War Cove Paper Game Tactical Chart</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2753,6 +2759,14 @@ html.streamview .sym-picker{display:none!important}
   var pod=document.getElementById('wcSetPod');
   if(pod){ pod.addEventListener('click', function(){ var pb=document.getElementById('podiumBtn'); if(pb) pb.click(); if(panel) panel.hidden=true; }); }
 })();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
 </script>
 </body>
 </html>
