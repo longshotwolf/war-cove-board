@@ -446,8 +446,14 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
 #bellBtn{cursor:pointer;padding:8px 11px;font-size:14px;line-height:1}
 @media(max-width:640px){.market-badge{white-space:normal;text-align:left}.market-badge .mkt-clock{display:none}}
 
-/* COMMANDS LIBRARY — tap a command, pick coin/stock + leverage, copy it,
-   paste it into Kick chat yourself. Builds and copies only. */
+/* COMMANDS LIBRARY — tap a command, pick coin/stock + leverage, fire it
+   right here under your Kick name or copy it and paste it into Kick
+   chat yourself. */
+/* ON-PAGE TRADE LANE — the name field + FIRE button on the panels */
+.trade-name{flex:1;min-width:150px;background:rgba(2,12,28,.85);border:1px solid rgba(0,170,255,.42);border-radius:8px;color:var(--text);padding:10px 12px;font:inherit;font-size:14px;min-height:44px}
+.fire-btn{min-height:44px;padding:10px 16px;border-radius:8px;font-weight:900;font-size:13px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;background:linear-gradient(180deg,#0d7a3f,#065c2c);border:1px solid rgba(47,214,122,.65);color:#eafff2;white-space:nowrap}
+.fire-btn:active{filter:brightness(1.3)}
+.trade-status{font-size:12.5px;color:var(--gold2);min-height:16px;margin-top:6px;line-height:1.45;font-weight:600}
 .cmd-scroll-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
 .cmd-scroll-head strong{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--text)}
 .cmd-scroll-head strong b{color:var(--gold2);font-family:"IBM Plex Mono",monospace}
@@ -1037,7 +1043,7 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
 
   <!-- BIG LONG / SHORT BUILDER — Kick only -->
   <section class="panel builder" aria-label="Trade builder">
-    <div class="panel-head"><div><h3>🎯 Trade Builder — Build It Here, Send It On Kick</h3><p>Big buttons, real leverage math. This page never fires a trade — it builds your chat command only.</p></div><span class="badge green" id="builderCoinBadge">LTC</span></div>
+    <div class="panel-head"><div><h3>🎯 Trade Builder — Build It Here, Fire It From Here</h3><p>Big buttons, real leverage math. Put your Kick name in once, then FIRE the trade right from this page — or copy the command and send it on Kick. Both lanes run the same game.</p></div><span class="badge green" id="builderCoinBadge">LTC</span></div>
     <div class="builder-body">
       <div class="side-btns">
         <button class="side-btn long" id="btnLong" onclick="setSide('LONG')">🟢 LONG ▲</button>
@@ -1056,16 +1062,18 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
         <div class="lev-stat"><label>Est. liquidation</label><b id="buildLiq" style="color:var(--red)">—</b></div>
         <div class="lev-stat"><label>Room to liq</label><b id="buildRoom">—</b></div>
       </div>
-      <label style="display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--muted)">Your Kick chat command</label>
+      <label style="display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--muted)">Your trade command — fire it here, or send it on Kick</label>
       <div class="cmd-box"><div class="cmd-code" id="buildCmd">!push LTC SHORT 50x</div><button class="copy-btn" id="buildCopyBtn" onclick="copyBuildCmd()">Copy Command</button></div>
+      <div class="cmd-box"><input class="trade-name" id="tradeName" maxlength="25" placeholder="Your Kick name — your trades land under it" autocomplete="off"><button class="fire-btn" id="buildFireBtn" onclick="fireTrade(document.getElementById('buildCmd').textContent, 'buildTradeStatus')">🔥 FIRE TRADE FROM THIS PAGE</button></div>
+      <div class="trade-status" id="buildTradeStatus"></div>
       <a class="kick-btn" href="https://kick.com/longshotwolf" target="_blank" rel="noopener">Send it on Kick — Open kick.com/longshotwolf ↗</a>
-      <p class="lev-note">Also works as <span class="mono" id="buildAlt">!LTC push 50x</span> in chat. Send it <strong style="color:var(--text)">from your own Kick account</strong> — trades fire only from Kick chat, never from this page.</p>
+      <p class="lev-note">Also works as <span class="mono" id="buildAlt">!LTC push 50x</span> in chat. Fire it <strong style="color:var(--text)">right here under your own Kick name</strong> — the game runs it exactly like a chat command — or send it from your own Kick account in chat.</p>
     </div>
   </section>
 
   <!-- COMMANDS LIBRARY — every game command, tap to build + copy -->
   <section class="panel builder" aria-label="Commands library">
-    <div class="panel-head"><div><h3>📖 COMMANDS — The Full Playbook</h3><p>Scroll through every command in the box below, tap the one you want, pick your coin or stock and leverage where it needs them, then copy the ready-made command and paste it into Kick chat yourself. This page builds and copies — it never fires a trade.</p></div><span class="badge green">COPY &amp; PASTE</span></div>
+    <div class="panel-head"><div><h3>📖 COMMANDS — The Full Playbook</h3><p>Scroll through every command in the box below, tap the one you want, pick your coin or stock and leverage where it needs them — then FIRE it right from this page under your Kick name, or copy the ready-made command and paste it into Kick chat yourself. Both lanes run the same game.</p></div><span class="badge green">FIRE HERE OR ON KICK</span></div>
     <div class="builder-body">
       <div class="cmd-scroll-head">
         <strong>All commands · <b id="cmdCountLabel">6 commands</b></strong>
@@ -1094,9 +1102,11 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
         <div class="lev-chips" id="cmdLevChips"><button data-lev="5">5x</button><button data-lev="10">10x</button><button data-lev="25">25x</button><button data-lev="50" class="active">50x</button><button data-lev="75">75x</button><button data-lev="100">100x</button></div>
       </div>
       <label class="cmd-pick-label">Your ready-made command</label>
-      <div class="cmd-box"><div class="cmd-code" id="cmdLibCode">!long LTC 50x</div><button class="copy-btn" id="cmdLibCopyBtn" onclick="copyCmdLib()">Copy Command</button></div>
+      <div class="cmd-box"><div class="cmd-code" id="cmdLibCode">!long LTC 50x</div><button class="copy-btn" id="cmdLibCopyBtn" onclick="copyCmdLib()">Copy Command</button><button class="fire-btn" id="cmdLibFireBtn" onclick="fireCmdLib()">🔥 FIRE IT HERE</button></div>
+      <div class="cmd-box"><input class="trade-name" maxlength="25" placeholder="Your Kick name — your trades land under it" autocomplete="off"></div>
+      <div class="trade-status" id="cmdLibTradeStatus"></div>
       <a class="kick-btn" href="https://kick.com/longshotwolf" target="_blank" rel="noopener">Paste it on Kick — Open kick.com/longshotwolf ↗</a>
-      <p class="lev-note" id="cmdLibAlt">Paste it in LongShotWolf's Kick chat <strong style="color:var(--text)">from your own Kick account</strong> — that's the only place a command fires.</p>
+      <p class="lev-note" id="cmdLibAlt">Fire it right here under your own Kick name, or paste it in LongShotWolf's Kick chat <strong style="color:var(--text)">from your own Kick account</strong> — both lanes run the same game.</p>
     </div>
   </section>
 
@@ -1141,13 +1151,15 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">Risk:</span><span id="riskLabel" style="font-weight:900">—</span><span style="font-size:12px;color:var(--muted)" id="riskText">—</span></div>
 
-        <label style="display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--muted);margin-top:16px">Your chat command — this board never fires a trade</label>
+        <label style="display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--muted);margin-top:16px">Your leverage command — fire it here, or send it on Kick</label>
         <div class="cmd-box">
           <div class="cmd-code" id="cmdCode">!leverage LTC 50x</div>
           <button class="copy-btn" id="copyBtn" onclick="copyCmd()">Copy Command</button>
+          <button class="fire-btn" id="levFireBtn" onclick="fireTrade(document.getElementById('cmdCode').textContent, 'levTradeStatus')">🔥 FIRE IT HERE</button>
         </div>
+        <div class="trade-status" id="levTradeStatus"></div>
         <a class="kick-btn" href="https://kick.com/longshotwolf" target="_blank" rel="noopener">Send it on Kick — Open kick.com/longshotwolf ↗</a>
-        <p class="lev-note">How it works: dial in your leverage here and watch the liquidation price move first. When you like the risk, copy the command, head to Kick, and send it <strong style="color:var(--text)">from your own account</strong> in LongShotWolf's chat. Nothing changes until you send it there.</p>
+        <p class="lev-note">How it works: dial in your leverage here and watch the liquidation price move first. When you like the risk, FIRE it right here under your own Kick name — it lands on YOUR open position on that coin — or copy the command and send it <strong style="color:var(--text)">from your own account</strong> in LongShotWolf's chat.</p>
         <button class="btn" onclick="closeLevPanel()" style="margin-top:12px">← Back to positions</button>
       </div>
     </section>
@@ -1190,10 +1202,12 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
    WAR COVE PAPER GAME TACTICAL CHART — LIVE CONSOLE (in-place update of the live pages)
    The approved console design wired onto the SAME live data the pages have
    always consumed: the War Cove game relay state.json (books, positions,
-   leaderboard, events — read-only; this page never trades), the certified
+   leaderboard, events — read-only), the certified
    battlefield.json market read, the OKX public tape for the chart (battlefield
    page) / the game's own Heikin-Ashi candles (board page), and the verbatim
-   watcher-presence line. Kick-only trading: buttons build chat commands only.
+   watcher-presence line. Trading runs two lanes: the panels build chat
+   commands for Kick, and the FIRE buttons send the same command through
+   the on-page trade lane under the player's typed Kick name.
    ============================================================================ */
 const GAME_BASE = '';
 const BF_URL = 'https://longshotwolf.github.io/war-cove-battlefield/battlefield.json';
@@ -2059,7 +2073,7 @@ function processGameEvents(s) {
 }
 function sndBtnSync() { const b = $('wcSndBtn'); if (b) b.textContent = SND.on ? '🔊 SOUND ON' : '🔇 SOUND OFF'; }
 
-/* ================= trade builder — builds the Kick command, never fires ==== */
+/* ================= trade builder — builds the command; FIRE sends it ===== */
 /* The game's own liquidation math, verified against the live books:
    long liq = entry × (1 − 1/lev) · short liq = entry × (1 + 1/lev). */
 const liqFor = (entry, lev, side) => side === 'LONG' || side === 'long' ? entry * (1 - 1 / lev) : entry * (1 + 1 / lev);
@@ -2112,7 +2126,73 @@ function copyText(t, okMsg) {
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done).catch(fallback);
   else fallback();
 }
-function copyBuildCmd() { copyText($('buildCmd').textContent, 'Opening command copied — paste it in Kick chat from your own account to fire it.'); }
+function copyBuildCmd() { copyText($('buildCmd').textContent, 'Opening command copied — FIRE it right here under your name, or paste it in Kick chat from your own account.'); }
+
+/* ================= on-page trade lane — FIRE from this page ================
+   The Warlord's order (Nov 22, 2026): everybody who clicks the link
+   takes the trade off the paper game page itself. The page discovers
+   the live trade door from trade-endpoint.json on this origin (the
+   door rotates; re-read every minute and after any failure), then
+   POSTs {user, cmd} — the player's Kick name as typed here (kept in
+   localStorage 'wc-name', shared with the chat box) and the exact
+   command the panels build. The game runs it through the same
+   command path as Kick chat, and the game's own reply comes back to
+   the panel. The Copy buttons stay as the fallback lane. */
+let WC_TRADE_EP = '', WC_TRADE_EP_AT = 0;
+async function wcTradeEndpoint() {
+  if (WC_TRADE_EP && Date.now() - WC_TRADE_EP_AT < 60000) return WC_TRADE_EP;
+  const er = await fetch('trade-endpoint.json?t=' + Date.now(), {cache: 'no-store'});
+  if (!er.ok) throw new Error('trade endpoint doc http ' + er.status);
+  const ej = await er.json();
+  WC_TRADE_EP = ((ej && ej.endpoint) || '').replace(/\/+$/, '');
+  WC_TRADE_EP_AT = Date.now();
+  if (!WC_TRADE_EP) throw new Error('no trade endpoint');
+  return WC_TRADE_EP;
+}
+function wcTradeName() {
+  let n = '';
+  document.querySelectorAll('.trade-name').forEach(el => { if (!n && el.value && el.value.trim()) n = el.value.trim(); });
+  if (!n) { try { n = (localStorage.getItem('wc-name') || '').trim(); } catch(e) {} }
+  if (!n) { const cn = $('chatName'); if (cn) n = (cn.value || '').trim(); }
+  return n;
+}
+function wcSetTradeName(n) {
+  try { localStorage.setItem('wc-name', n); } catch(e) {}
+  document.querySelectorAll('.trade-name').forEach(el => { if (el.value !== n) el.value = n; });
+  const cn = $('chatName'); if (cn && !cn.value) cn.value = n;
+}
+async function fireTrade(cmd, statusId) {
+  const st = $(statusId);
+  const name = wcTradeName();
+  if (!name) {
+    if (st) st.textContent = 'Type your Kick name first (in the Trade Builder) — your trades land under that name.';
+    const el = $('tradeName'); if (el) { el.focus(); el.scrollIntoView({block: 'nearest', behavior: 'smooth'}); }
+    return;
+  }
+  wcSetTradeName(name);
+  if (st) st.textContent = 'Firing ' + cmd + ' as ' + name + ' …';
+  try {
+    const ep = await wcTradeEndpoint();
+    const ctl = new AbortController();
+    const to = setTimeout(() => ctl.abort(), 50000);
+    let r;
+    try {
+      r = await fetch(ep + '/trade', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({user: name, cmd: cmd}), signal: ctl.signal});
+    } finally { clearTimeout(to); }
+    const j = await r.json().catch(() => null);
+    if (j && j.reply) {
+      if (st) st.textContent = j.reply;
+      addLog('🎯 ' + j.reply, j.ok ? 'gold' : 'note');
+    } else if (st) {
+      st.textContent = 'The game did not answer (HTTP ' + r.status + ') — copy the command and send it on Kick instead.';
+    }
+  } catch(e) {
+    WC_TRADE_EP = ''; WC_TRADE_EP_AT = 0;
+    if (st) st.textContent = 'Trade lane offline right now — copy the command and send it on Kick instead.';
+  }
+}
+function fireCmdLib() { const code = $('cmdLibCode'); if (code) fireTrade(code.textContent, 'cmdLibTradeStatus'); }
+try { const savedName = (localStorage.getItem('wc-name') || '').trim(); if (savedName) wcSetTradeName(savedName); } catch(e) {}
 
 /* ================= leverage dial — click a position, build !push =========== */
 function openLevPanel(i) {
@@ -2134,7 +2214,7 @@ function renderLev() {
   const p = POSITIONS[state.levPos]; if (!p) return;
   const px = COINS[p.coin] ? COINS[p.coin].price : null;
   $('levTitle').textContent = 'Adjust Leverage — ' + p.trader;
-  $('levSub').textContent = p.coin + ' ' + p.side.toUpperCase() + ' @ ' + fmtUsd(p.entry) + ' · margin ' + fmtInt(p.margin) + ' sats · this only builds the chat command';
+  $('levSub').textContent = p.coin + ' ' + p.side.toUpperCase() + ' @ ' + fmtUsd(p.entry) + ' · margin ' + fmtInt(p.margin) + ' sats · fire it here under your name, or build the chat command';
   $('levWas').textContent = p.lev + 'x'; $('levNow').textContent = state.levVal + 'x';
   $('levChange').textContent = state.levVal === p.lev ? 'No change yet — move the dial' : (state.levVal > p.lev ? 'Raising the heat by ' + (state.levVal - p.lev) + 'x' : 'Cooling it down by ' + (p.lev - state.levVal) + 'x');
   const newLiq = liqFor(p.entry, state.levVal, p.side);
@@ -2152,7 +2232,7 @@ function renderLev() {
   }
   $('cmdCode').textContent = '!push ' + p.coin + ' ' + state.levVal + 'x';
 }
-function copyCmd() { copyText($('cmdCode').textContent, 'Command copied — paste it in Kick chat from your own account. Nothing changes until you send it there.'); }
+function copyCmd() { copyText($('cmdCode').textContent, 'Command copied — FIRE it right here under your name, or paste it in Kick chat from your own account.'); }
 
 /* ================= the chart — Heikin-Ashi candles only ==================== */
 /* The list the chart actually draws. In game mode the candles are the
@@ -2538,9 +2618,10 @@ let CHART_H = window.innerWidth < 900 ? 260 : 340;
    Transplanted from the approved console design (where it was built and the
    Warlord approved it) — the live port carried the panel's markup but never
    wired its script, so the rows never rendered. Tap a command, pick the
-   coin/stock and leverage it needs, one-tap COPY the ready-made command and
-   paste it into Kick chat yourself. Kick-only trading: this page never
-   fires a trade. Stocks clamp to the game's 5–20x (crypto 5–100x). */
+   coin/stock and leverage it needs, then FIRE the ready-made command
+   right from this page under your Kick name — or one-tap COPY it and
+   paste it into Kick chat yourself. Stocks clamp to the game's
+   5–20x (crypto 5–100x). */
 const INSTRUMENTS = [
   {sym: 'LTC', name: 'Litecoin', kind: 'crypto'}, {sym: 'BTC', name: 'Bitcoin', kind: 'crypto'}, {sym: 'ETH', name: 'Ethereum', kind: 'crypto'},
   {sym: 'NVDA', name: 'NVIDIA', kind: 'stock'}, {sym: 'GOOGL', name: 'Alphabet', kind: 'stock'}, {sym: 'MSTR', name: 'MicroStrategy', kind: 'stock'},
@@ -2609,11 +2690,11 @@ function updateCmdLib() {
   const desc = $('cmdLibDesc'); if (desc) desc.textContent = d.desc;
   const code = $('cmdLibCode'); if (code) code.textContent = d.build(cmdLibState.inst, lev);
   const alt = $('cmdLibAlt');
-  if (alt) alt.innerHTML = (d.alt ? d.alt(cmdLibState.inst, lev) + ' ' : '') + 'Paste it in LongShotWolf\'s Kick chat <strong style="color:var(--text)">from your own Kick account</strong> — that\'s the only place a command fires.';
+  if (alt) alt.innerHTML = (d.alt ? d.alt(cmdLibState.inst, lev) + ' ' : '') + 'Fire it right here under your own Kick name, or paste it in LongShotWolf\'s Kick chat <strong style="color:var(--text)">from your own Kick account</strong> — both lanes run the same game.';
 }
 function copyCmdLib() {
   const code = $('cmdLibCode'); if (!code) return;
-  copyText(code.textContent, 'Command built from the COMMANDS library — ' + code.textContent + '. Waiting to be pasted into Kick chat.');
+  copyText(code.textContent, 'Command built from the COMMANDS library — ' + code.textContent + '. Fire it right here, or paste it into Kick chat.');
   const btn = $('cmdLibCopyBtn'); if (btn) { btn.textContent = 'Copied ✓'; setTimeout(() => { btn.textContent = 'Copy Command'; }, 1800); }
 }
 
