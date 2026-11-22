@@ -220,6 +220,22 @@ input[type=range].lev-slider::-moz-range-thumb{width:22px;height:22px;border-rad
 .pnl-down{color:var(--red);font-family:"IBM Plex Mono",monospace;font-weight:700}
 .close-btn{background:transparent;border:1px solid var(--line2);color:var(--text);padding:7px 10px;border-radius:999px;font-weight:800;font-size:12px}
 .log{max-height:276px;overflow:auto}
+/* ===== Shared chat room (Nov 21, 2026): ONE room — every bot and
+   every player in the same stream, fed by state.json's chat array. */
+.chatlog{max-height:300px;overflow:auto}
+.chat-line{padding:8px 16px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.45}
+.chat-line:last-child{border-bottom:0}
+.chat-t{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--gold);letter-spacing:.06em;margin-right:8px;white-space:nowrap}
+.chat-name{font-weight:800;color:var(--text);margin-right:6px}
+.chat-name.bot{color:var(--gold2)}
+.chat-bottag{font-size:9px;font-weight:800;letter-spacing:1.5px;color:#0a0d12;background:var(--gold2);border-radius:4px;padding:1px 5px;margin-right:6px;vertical-align:2px}
+.chat-sys{color:var(--muted)}
+.chat-post{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--line)}
+.chat-post input{background:var(--panel2);border:1px solid var(--line2);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13px;font-family:inherit}
+.chat-post input:focus{border-color:var(--gold);outline:none}
+#chatName{width:150px}#chatText{flex:1;min-width:180px}
+#chatSend{background:var(--gold);color:#0a0d12;border:0;border-radius:8px;padding:8px 18px;font-size:12px;font-weight:900;letter-spacing:.08em;cursor:pointer;font-family:inherit}
+.chat-stat{font-size:11px;color:var(--muted);padding:0 16px 12px;min-height:14px}
 .log-item{padding:11px 16px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.45}
 .log-item:last-child{border-bottom:0}
 .log-item time{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--gold);display:block;margin-bottom:2px;letter-spacing:.06em}
@@ -1142,6 +1158,19 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
       </div>
       <div class="log" id="battleLog"></div>
     </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div><h3>💬 WAR COVE CHAT — ONE ROOM</h3><p>Every bot + every player — one stream • live</p></div>
+      </div>
+      <div class="chatlog" id="chatStream"><div class="chat-line chat-sys">The room is warming up…</div></div>
+      <div class="chat-post">
+        <input id="chatName" maxlength="24" placeholder="Your name" autocomplete="off">
+        <input id="chatText" maxlength="240" placeholder="Post in the room — trades, calls, talk" autocomplete="off">
+        <button type="button" id="chatSend">POST</button>
+      </div>
+      <div class="chat-stat" id="chatStat"></div>
+    </section>
   </div>
 
   <div class="ticker" aria-label="Field Radar updates — all messages run through this bar">
@@ -1811,6 +1840,7 @@ async function fetchState() {
     });
     if (STOCKS[state.coin]) { drawChart(); syncCoinUI(); }
     renderArmy(); renderLeaders(); renderPositions(); renderLog(); renderPlayer(); renderCoins(); renderRace();
+    if (window.renderChat) window.renderChat(s.chat);
     if (CHART_MODE === 'game') { drawChart(); syncCoinUI(); }
     const badge = $('liveBadge');
     if (badge) badge.innerHTML = s.stalled ? '<i></i> ⏸ FEED STALLED' : '<i></i> LIVE BOARD';
@@ -2781,5 +2811,96 @@ setInterval(function(){if(ep){if(!viewed)send("/view");else send("/beat");}else 
 }catch(e){}})();
 </script>
 <!-- /WC-LINK-COUNTER -->
+<script>
+/* ===== Shared chat room (Nov 21, 2026) — ONE room for every bot and
+   every player. The stream rides state.json's chat array, built by
+   the game from its own books: bot trades + player opens, closes,
+   liquidations and blown accounts, merged with page posts. Posting
+   rides the game's display-only write lane (the house /chatpost
+   endpoint, same pattern as the classic board's reactions) and
+   reports honestly when that lane is offline. Rendering is
+   textContent-only: no post can inject HTML. */
+const WC_BOTS = {"marentrainee":1,"maren":1,"bria":1,"elia":1,
+                 "sanna":1,"casha":1,"bina":1};
+let wcChatSig = "";
+function wcChatTime(ts){
+  try{ return new Date(ts*1000).toLocaleTimeString("en-US",
+    {timeZone:"America/New_York", hour:"numeric",
+     minute:"2-digit"}) + " NYC"; }
+  catch(e){ return ""; }
+}
+function renderChat(chat){
+  const box = document.getElementById("chatStream"); if(!box) return;
+  chat = chat || [];
+  const sig = chat.length + "|" + (chat.length ? chat[chat.length-1].ts : 0);
+  if(sig === wcChatSig) return;
+  const pinned = box.scrollTop + box.clientHeight >= box.scrollHeight - 30;
+  const first = !wcChatSig;
+  wcChatSig = sig;
+  box.innerHTML = "";
+  if(!chat.length){
+    const d0 = document.createElement("div");
+    d0.className = "chat-line chat-sys";
+    d0.textContent = "Quiet in the room — the first trade opens the talk.";
+    box.appendChild(d0); return;
+  }
+  chat.forEach(l => {
+    const d = document.createElement("div"); d.className = "chat-line";
+    const t = document.createElement("span"); t.className = "chat-t";
+    t.textContent = wcChatTime(l.ts);
+    d.appendChild(t);
+    const isBot = !!WC_BOTS[String(l.user || "").toLowerCase()];
+    if(isBot){
+      const tag = document.createElement("span");
+      tag.className = "chat-bottag"; tag.textContent = "BOT";
+      d.appendChild(tag);
+    }
+    const n = document.createElement("span");
+    n.className = "chat-name" + (isBot ? " bot" : "");
+    n.textContent = l.user || "";
+    d.appendChild(n);
+    const m = document.createElement("span");
+    m.textContent = l.text || "";
+    d.appendChild(m);
+    box.appendChild(d);
+  });
+  if(first || pinned) box.scrollTop = box.scrollHeight;
+}
+window.renderChat = renderChat;
+(function(){
+  const nameEl = document.getElementById("chatName"),
+        textEl = document.getElementById("chatText"),
+        sendEl = document.getElementById("chatSend"),
+        statEl = document.getElementById("chatStat");
+  if(!nameEl || !textEl || !sendEl) return;
+  let apiBase = "";
+  try{ apiBase = localStorage.getItem("wc-api") || ""; }catch(e){}
+  let lastPost = 0;
+  const stat = t => { if(statEl) statEl.textContent = t; };
+  function send(){
+    const now = Date.now();
+    if(now - lastPost < 2000){ stat("easy — 1 post per 2s"); return; }
+    const text = (textEl.value || "").trim();
+    if(!text){ stat("type a post first"); return; }
+    lastPost = now;
+    fetch(apiBase + "/chatpost", {method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({name: (nameEl.value || "").trim(),
+                            text: text})})
+      .then(r => {
+        if(r.ok){ textEl.value = "";
+          stat("posted — it lands in the room on the next board refresh"); }
+        else if(r.status === 429){ stat("easy — 1 post per 2s"); }
+        else { stat("chat lane offline (HTTP " + r.status +
+                    ") — the post did not land"); }
+      })
+      .catch(() => { stat("chat post lane offline — the game " +
+        "tunnel is not live; the post did not land"); });
+  }
+  sendEl.addEventListener("click", send);
+  textEl.addEventListener("keydown",
+    e => { if(e.key === "Enter") send(); });
+})();
+</script>
 </body>
 </html>
