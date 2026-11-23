@@ -49,6 +49,9 @@ a{color:inherit}
 /* LAYOUT */
 .wrap{max-width:1440px;margin:0 auto;padding:18px 20px 28px}
 .intro{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end;margin-bottom:16px}
+.bigwin{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;text-align:center;margin:0 auto 14px;max-width:1180px;padding:10px 18px;border:1px solid var(--gold,#f5c542);border-radius:12px;background:linear-gradient(90deg,rgba(245,197,66,.16),rgba(245,197,66,.05),rgba(245,197,66,.16));box-shadow:0 0 24px rgba(245,197,66,.22);font-size:15px;letter-spacing:.02em}
+.bigwin .bigwin-label{font-weight:900;letter-spacing:.12em;color:var(--gold,#f5c542)}
+.bigwin .bigwin-pnl{color:var(--green,#2ecc71);font-size:17px}
 .intro h2{margin:0;font-size:28px;line-height:.95;letter-spacing:-.02em;font-weight:900;max-width:620px}
 .intro h2 em{font-style:normal;color:var(--gold)}
 .intro p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:520px}
@@ -873,6 +876,8 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
   </div>
 </header>
 
+<div class="bigwin" id="bigWin" hidden>🏆 <span class="bigwin-label">BIGGEST WIN SO FAR</span> <b id="bigWinWho">—</b> <span id="bigWinTrade">—</span> <b class="bigwin-pnl" id="bigWinPnl">—</b></div>
+
 <main class="wrap">
 <div class="wc-react" id="wcReact" role="group" aria-label="Reactions — tap to react"><span class="wc-react-label">REACT</span><button type="button" data-r="fire" aria-label="Fire reaction">🔥 <b>0</b></button><button type="button" data-r="green" aria-label="Green army reaction">🟢 <b>0</b></button><button type="button" data-r="red" aria-label="Red army reaction">🔴 <b>0</b></button><button type="button" data-r="swords" aria-label="Battle reaction">⚔️ <b>0</b></button><button type="button" data-r="skull" aria-label="Liquidated reaction">💀 <b>0</b></button><button type="button" data-r="trophy" aria-label="Trophy reaction">🏆 <b>0</b></button><button type="button" data-r="wolf" aria-label="Wolf reaction">🐺 <b>0</b></button></div>
   <div class="intro">
@@ -1673,6 +1678,15 @@ function renderLeaders() {
   });
   renderPodium();
 }
+function renderBiggest() {
+  const bw = GAME && GAME.biggest_win, el = $('bigWin');
+  if (!el) return;
+  if (!bw) { el.hidden = true; return; }
+  el.hidden = false;
+  $('bigWinWho').textContent = bw.display || '—';
+  $('bigWinTrade').textContent = '· ' + (bw.side === 'long' ? 'LONG' : 'SHORT') + ' ' + bw.coin + ' ' + bw.lev + 'x · ' + fmtUsd(bw.entry) + ' → ' + fmtUsd(bw.exit) + ' ·';
+  $('bigWinPnl').textContent = '+' + fmtInt(bw.pnl) + ' sats';
+}
 function renderPodium() {
   let pd = $('podium');
   if (!pd) {
@@ -1853,7 +1867,7 @@ async function fetchState() {
       });
     });
     if (STOCKS[state.coin]) { drawChart(); syncCoinUI(); }
-    renderArmy(); renderLeaders(); renderPositions(); renderLog(); renderPlayer(); renderCoins(); renderRace();
+    renderArmy(); renderLeaders(); renderPositions(); renderLog(); renderPlayer(); renderCoins(); renderRace(); renderBiggest();
     if (window.renderChat) window.renderChat(s.chat);
     if (CHART_MODE === 'game') { drawChart(); syncCoinUI(); }
     const badge = $('liveBadge');
