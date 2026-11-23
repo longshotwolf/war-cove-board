@@ -553,6 +553,9 @@ body:not(.old-mode) .compare-note-new{background:rgba(4,40,30,.85)}
    instead of washing it out, and the gold tag/card colors below restore
    real gold where the hologram pass had blued them. */
 .leader-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.leader-row.crown{background:linear-gradient(90deg,rgba(245,197,66,.18),rgba(245,197,66,.04));border-bottom:1px solid var(--gold,#f5c542)}
+.leader-row.crown .rk{font-size:18px}
+.leader-row.crown .tag.crown-tag{background:var(--gold,#f5c542);color:#1a1405}
 .leader-row .rk{font-size:16px;width:26px;text-align:center;flex:0 0 auto}
 .leader-row.metal-1{background-image:linear-gradient(90deg,rgba(140,210,255,.42),rgba(140,210,255,.10) 72%);border-left:4px solid #bfe9ff;box-shadow:inset 0 0 26px rgba(159,216,255,.22)}
 .leader-row.metal-2{background-image:linear-gradient(90deg,rgba(255,196,64,.44),rgba(255,196,64,.10) 72%);border-left:4px solid #ffc940;box-shadow:inset 0 0 26px rgba(255,201,64,.24)}
@@ -1664,13 +1667,18 @@ function buildLeaders(s) {
 function renderLeaders() {
   const list = LEADERS.filter(L => state.armyFilter === 'all' || L.army === state.armyFilter);
   const METAL_TAGS = [['diamond', '💎 #1 DIAMOND'], ['gold24', '🥇 #2 · 24-KARAT GOLD'], ['platinum', '🤍 #3 PLATINUM']];
-  $('leaderList').innerHTML = list.slice(0, 100).map(L => {
+  const bw = GAME && GAME.biggest_win;
+  const crown = bw ? `<div class="leader-row crown" data-player="${esc(bw.display)}" role="button" tabindex="0" aria-label="Load ${esc(bw.display)}">
+      <span class="rk">🏆</span>
+      <span class="leader-main"><b>${esc(bw.display)} <span class="tag crown-tag">BIGGEST WIN</span></b><small>${bw.side === 'long' ? 'LONG' : 'SHORT'} ${esc(bw.coin)} ${bw.lev}x · ${fmtUsd(bw.entry)} → ${fmtUsd(bw.exit)}</small></span>
+      <span class="leader-nums"><b class="pos">+${fmtInt(bw.pnl)}</b><small>sats · one trade</small></span></div>` : '';
+  $('leaderList').innerHTML = crown + (list.slice(0, 100).map(L => {
     const i = LEADERS.indexOf(L);
     return `<div class="leader-row${i >= 0 && i < 3 ? ' metal-' + (i + 1) : ''}${flashCls(L.name)}" data-player="${esc(L.name)}" role="button" tabindex="0" aria-label="Load ${esc(L.name)}">
       <span class="rk">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1)}</span>
       <span class="leader-main"><b>${esc(L.name)} ${L.army === 'green' || L.army === 'red' ? `<span class="dot ${L.army === 'green' ? 'g' : 'r'}"></span>` : ''}${i >= 0 && i < 3 ? `<span class="tag ${METAL_TAGS[i][0]}">${METAL_TAGS[i][1]}</span>` : ''}</b><small>${esc(L.note || '')}</small></span>
       <span class="leader-nums"><b>${fmtInt(L.sats)}</b><small class="${L.pnl >= 0 ? 'pos' : 'neg'}">${fmtSigned(L.pnl)}</small></span></div>`;
-  }).join('') || '<div style="padding:14px 16px;color:var(--muted);font-size:13px">No soldiers on the board yet.</div>';
+  }).join('') || '<div style="padding:14px 16px;color:var(--muted);font-size:13px">No soldiers on the board yet.</div>');
   $('playerCount').textContent = GAME && GAME.counts ? fmtInt(GAME.counts.ranked || LEADERS.length) : fmtInt(LEADERS.length);
   document.querySelectorAll('#leaderList .leader-row').forEach(row => {
     row.addEventListener('click', () => selectPlayer(row.dataset.player));
