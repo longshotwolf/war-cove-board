@@ -52,6 +52,12 @@ a{color:inherit}
 .bigwin{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;text-align:center;margin:0 auto 14px;max-width:1180px;padding:10px 18px;border:1px solid var(--gold,#f5c542);border-radius:12px;background:linear-gradient(90deg,rgba(245,197,66,.16),rgba(245,197,66,.05),rgba(245,197,66,.16));box-shadow:0 0 24px rgba(245,197,66,.22);font-size:15px;letter-spacing:.02em}
 .bigwin .bigwin-label{font-weight:900;letter-spacing:.12em;color:var(--gold,#f5c542)}
 .bigwin .bigwin-pnl{color:var(--green,#2ecc71);font-size:17px}
+.wall-switch{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px 16px 2px}
+.wall-switch .ws-label{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--muted)}
+.wall-switch .ws-btn{padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--text);font-size:12px;font-weight:700;cursor:pointer}
+.wall-switch .ws-btn.active{border-color:var(--gold,#f5c542);color:var(--gold,#f5c542)}
+.wall-switch .ws-btn.eff{border-color:var(--green,#2ecc71);color:var(--green,#2ecc71)}
+.wall-switch .ws-mode{font-size:11px;color:var(--muted)}
 .intro h2{margin:0;font-size:28px;line-height:.95;letter-spacing:-.02em;font-weight:900;max-width:620px}
 .intro h2 em{font-style:normal;color:var(--gold)}
 .intro p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:520px}
@@ -898,6 +904,7 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
   <div class="market-army" id="marketArmy">
     <section class="panel" aria-label="The Market">
       <div class="ma-head"><h3>📈 THE MARKET</h3><span>Win race • Walls • Liquidity</span></div>
+      <div class="wall-switch" id="wallSwitch" role="group" aria-label="Liquidity and walls coin switch"></div>
       <div id="raceList"></div>
       <div class="ba-grid">
         <div class="ba-box bid"><label>Bid — buyers</label><b id="mktBid">—</b></div>
@@ -1538,6 +1545,9 @@ const AGG_PAIRS = {
   BTC: {bn: 'BTCUSDT', kr: 'XBTUSD', cb: 'BTC-USD'},
   ETH: {bn: 'ETHUSDT', kr: 'ETHUSD', cb: 'ETH-USD'},
   LTC: {bn: 'LTCUSDT', kr: 'LTCUSD', cb: 'LTC-USD'},
+  SOL: {bn: 'SOLUSDT', kr: 'SOLUSD', cb: 'SOL-USD'},
+  BCH: {bn: 'BCHUSDT', kr: 'BCHUSD', cb: 'BCH-USD'},
+  BNB: {bn: 'BNBUSDT', kr: 'BNBUSD', cb: 'BNB-USD'},
 };
 async function jget(url) {
   const r = await fetch(url, {cache: 'no-store'});
@@ -1584,8 +1594,46 @@ async function fetchAggBook(k, mid) {
   return calcAggBook(books, mid);
 }
 let bookFetchSeq = 0;
+/* Walls coin switch (Warlord's order, Nov 23, 2026): the liquidity and
+   both walls in THE MARKET panel flip to any of the six game coins,
+   independent of the chart coin. WALLCOIN null = the walls follow the
+   chart coin (the standing behavior); a tapped coin pins the walls to
+   it; CHART hands them back to the chart coin. */
+let WALLCOIN = null, WALL_EFF = 'LTC';
+const WALL_KEYS = ['LTC', 'BTC', 'ETH', 'SOL', 'BCH', 'BNB'];
+const WALL_DEC = {LTC: 2, BTC: 2, ETH: 2, SOL: 2, BCH: 2, BNB: 2};
+function wallCoin() {
+  if (WALLCOIN) return WALLCOIN;
+  if (COINS[state.coin]) return state.coin;
+  return WALL_EFF;
+}
+function setWallCoin(k) {
+  WALLCOIN = k;
+  BOOK = null;
+  renderWallSwitch();
+  renderBook();
+  fetchBook();
+}
+function renderWallSwitch() {
+  const ws = $('wallSwitch'); if (!ws) return;
+  const eff = wallCoin();
+  if (!ws.dataset.built) {
+    ws.dataset.built = '1';
+    ws.innerHTML = '<span class="ws-label">WALLS · LIQUIDITY</span>' +
+      WALL_KEYS.map(k => `<button type="button" class="ws-btn" data-w="${k}">${k}</button>`).join('') +
+      '<button type="button" class="ws-btn" data-w="">CHART</button>' +
+      '<span class="ws-mode" id="wallMode"></span>';
+    ws.querySelectorAll('.ws-btn').forEach(b => b.addEventListener('click', () => setWallCoin(b.dataset.w || null)));
+  }
+  ws.querySelectorAll('.ws-btn').forEach(b => {
+    b.classList.toggle('active', WALLCOIN ? b.dataset.w === WALLCOIN : b.dataset.w === '');
+    b.classList.toggle('eff', !WALLCOIN && b.dataset.w === eff);
+  });
+  const wm = $('wallMode');
+  if (wm) wm.textContent = WALLCOIN ? '— showing ' + eff + ' walls (pinned)' : '— showing ' + eff + ' walls (follows the chart)';
+}
 async function fetchBook() {
-  const k = state.coin, seq = ++bookFetchSeq;
+  const k = wallCoin(), seq = ++bookFetchSeq;
   try {
     const data = await okxGet('/market/books?instId=' + k + '-USDT&sz=400');
     const c = calcBook(data[0].bids || [], data[0].asks || []);
@@ -1594,14 +1642,15 @@ async function fetchBook() {
         const agg = await fetchAggBook(k, c.mid);
         if (agg) { c.bT = agg.bT; c.aT = agg.aT; c.bW = agg.bW; c.aW = agg.aW; c.bRes = agg.bRes; c.aRes = agg.aRes; }
       }
-      if (seq !== bookFetchSeq || state.coin !== k) return;
-      BOOK = c; renderBook();
+      if (seq !== bookFetchSeq || wallCoin() !== k) return;
+      c.coin = k; WALL_EFF = k; BOOK = c; renderBook(); renderWallSwitch();
     }
   } catch(e) { /* keep last book */ }
 }
 function renderBook() {
-  const k = state.coin, C = COINS[k];
-  const bid = BOOK ? BOOK.bid : C.bid, ask = BOOK ? BOOK.ask : C.ask;
+  const k = wallCoin(), C = COINS[k] || {dec: WALL_DEC[k] != null ? WALL_DEC[k] : 2, bid: null, ask: null};
+  const B = (BOOK && BOOK.coin === k) ? BOOK : null;
+  const bid = B ? B.bid : C.bid, ask = B ? B.ask : C.ask;
   if (bid != null) $('mktBid').textContent = '$' + fmt(bid, C.dec);
   if (ask != null) $('mktAsk').textContent = '$' + fmt(ask, C.dec);
   if (bid != null && ask != null) {
@@ -1612,16 +1661,24 @@ function renderBook() {
     $('mktSpreadValue').textContent = '$' + fmt(sp, C.dec + 2);
     $('mktSpreadLabel').textContent = (bps < 3 ? 'tight' : bps < 10 ? 'normal' : 'wide') + ' — ' + bps.toFixed(1) + ' bps on ' + k;
   }
-  if (!BOOK) return;
-  $('mktLiquidity').textContent = fmtMoney(BOOK.bT + BOOK.aT);
-  $('mktLiquidityDetail').textContent = 'Bids ' + fmtMoney(BOOK.bT) + ' · Asks ' + fmtMoney(BOOK.aT) + ' inside ±1% of mid';
-  if (BOOK.bW) { $('bidWall').textContent = '$' + fmt(BOOK.bW.px, C.dec); $('bidWallSize').textContent = fmtMoney(BOOK.bW.usd) + ' stacked at the wall · ' + fmtMoney(BOOK.bRes) + ' behind it'; }
-  if (BOOK.aW) { $('askWall').textContent = '$' + fmt(BOOK.aW.px, C.dec); $('askWallSize').textContent = fmtMoney(BOOK.aW.usd) + ' stacked at the wall · ' + fmtMoney(BOOK.aRes) + ' behind it'; }
-  const mx = Math.max(BOOK.bW ? BOOK.bW.usd : 0, BOOK.aW ? BOOK.aW.usd : 0, 1);
-  $('bidWallBar').style.width = (BOOK.bW ? BOOK.bW.usd / mx * 100 : 0).toFixed(1) + '%';
-  $('askWallBar').style.width = (BOOK.aW ? BOOK.aW.usd / mx * 100 : 0).toFixed(1) + '%';
-  $('wallVerdict').textContent = BOOK.bT === BOOK.aT ? 'The book is balanced inside ±1% — no wall owns this range.'
-    : 'Liquidity leans ' + (BOOK.bT > BOOK.aT ? 'BID — buyers stacked heavier' : 'ASK — sellers stacked heavier') + ' inside ±1% of mid on ' + k + '. The biggest single levels are marked as the walls.';
+  if (!B) {
+    $('mktLiquidity').textContent = '—';
+    $('mktLiquidityDetail').textContent = '—';
+    $('bidWall').textContent = '—'; $('bidWallSize').textContent = '—';
+    $('askWall').textContent = '—'; $('askWallSize').textContent = '—';
+    $('bidWallBar').style.width = '0%'; $('askWallBar').style.width = '0%';
+    $('wallVerdict').textContent = 'Loading the ' + k + ' book…';
+    return;
+  }
+  $('mktLiquidity').textContent = fmtMoney(B.bT + B.aT);
+  $('mktLiquidityDetail').textContent = 'Bids ' + fmtMoney(B.bT) + ' · Asks ' + fmtMoney(B.aT) + ' inside ±1% of mid';
+  if (B.bW) { $('bidWall').textContent = '$' + fmt(B.bW.px, C.dec); $('bidWallSize').textContent = fmtMoney(B.bW.usd) + ' stacked at the wall · ' + fmtMoney(B.bRes) + ' behind it'; }
+  if (B.aW) { $('askWall').textContent = '$' + fmt(B.aW.px, C.dec); $('askWallSize').textContent = fmtMoney(B.aW.usd) + ' stacked at the wall · ' + fmtMoney(B.aRes) + ' behind it'; }
+  const mx = Math.max(B.bW ? B.bW.usd : 0, B.aW ? B.aW.usd : 0, 1);
+  $('bidWallBar').style.width = (B.bW ? B.bW.usd / mx * 100 : 0).toFixed(1) + '%';
+  $('askWallBar').style.width = (B.aW ? B.aW.usd / mx * 100 : 0).toFixed(1) + '%';
+  $('wallVerdict').textContent = B.bT === B.aT ? 'The book is balanced inside ±1% — no wall owns this range.'
+    : 'Liquidity leans ' + (B.bT > B.aT ? 'BID — buyers stacked heavier' : 'ASK — sellers stacked heavier') + ' inside ±1% of mid on ' + k + '. The biggest single levels are marked as the walls.';
 }
 
 /* ================= THE ARMY — the Cove's paper sats, never the market ===== */
@@ -2758,6 +2815,7 @@ if (CHART_MODE === 'okx') {
    page bid/ask, spread, liquidity and both walls stood at — forever. The
    book is the same OKX public book either way; the board page's chart
    stays on the game's own candles, untouched by this lane. */
+renderWallSwitch();
 fetchBook();
 setInterval(fetchBook, 30000);
 renderCmdLib();
