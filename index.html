@@ -57,6 +57,19 @@ a{color:inherit}
 .bigwin #bigWinWho{font-size:19px}
 .bigwin #bigWinTrade{font-size:14.5px;color:var(--muted);line-height:1.5}
 .bigwin .bigwin-pnl{color:var(--green,#2ecc71);font-size:23px}
+.bigwin .bw-podium{width:100%;border-top:1px solid rgba(245,197,66,.35);padding-top:9px;display:flex;flex-direction:column;gap:7px}
+.bigwin .bw-place{display:flex;flex-direction:column;gap:1px;align-items:center;padding:7px 8px;border-radius:9px;font-size:13.5px;line-height:1.45}
+.bigwin .bw-place .bw-rank{font-weight:900;letter-spacing:.1em;font-size:12.5px}
+.bigwin .bw-place .bw-pnl2{font-weight:900;color:var(--green,#2ecc71)}
+.bigwin .bw-place.silver{background:linear-gradient(180deg,rgba(192,198,208,.16),rgba(192,198,208,.05));border:1px solid rgba(192,198,208,.55)}
+.bigwin .bw-place.silver .bw-rank{color:#c0c6d0}
+.bigwin .bw-place.bronze{background:linear-gradient(180deg,rgba(205,127,50,.16),rgba(205,127,50,.05));border:1px solid rgba(205,127,50,.55)}
+.bigwin .bw-place.bronze .bw-rank{color:#cd7f32}
+.leader-row.podium2{background:linear-gradient(90deg,rgba(192,198,208,.16),rgba(192,198,208,.03));border-bottom:1px solid rgba(192,198,208,.6)}
+.leader-row.podium3{background:linear-gradient(90deg,rgba(205,127,50,.16),rgba(205,127,50,.03));border-bottom:1px solid rgba(205,127,50,.6)}
+.leader-row.podium2 .rk,.leader-row.podium3 .rk{font-size:18px}
+.leader-row .tag.silver-tag{background:#c0c6d0;color:#14161a}
+.leader-row .tag.bronze-tag{background:#cd7f32;color:#1a1005}
 @media(max-width:900px){.leader-flex{flex-direction:column}.bigwin{flex:1 1 auto;margin:10px 12px 14px}}
 .wall-switch{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px 16px 2px}
 .wall-switch .ws-label{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--muted)}
@@ -1030,7 +1043,7 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
 <div class="podium" id="podium" aria-label="Top three — Diamond, 24-karat gold and platinum"></div>
         <div class="leader-head">📋 LEADERBOARD — THE BOOKS</div>
 <div class="leader-flex"><div id="leaderList"></div>
-<aside class="bigwin" id="bigWin" hidden>🏆 <span class="bigwin-label">BIGGEST WIN SO FAR</span> <b id="bigWinWho">—</b> <span id="bigWinTrade">—</span> <b class="bigwin-pnl" id="bigWinPnl">—</b></aside></div>
+<aside class="bigwin" id="bigWin" hidden>🏆 <span class="bigwin-label">BIGGEST WIN SO FAR</span> <b id="bigWinWho">—</b> <span id="bigWinTrade">—</span> <b class="bigwin-pnl" id="bigWinPnl">—</b> <div class="bw-podium" id="bigWinPodium"></div></aside></div>
         <div style="padding:12px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Total players tracked</span><strong style="color:var(--text)" id="playerCount">—</strong></div>
       </section>
 
@@ -1750,7 +1763,12 @@ function buildLeaders(s) {
 function renderLeaders() {
   const list = LEADERS.filter(L => state.armyFilter === 'all' || L.army === state.armyFilter);
   const METAL_TAGS = [['diamond', '💎 #1 DIAMOND'], ['gold24', '🥇 #2 · 24-KARAT GOLD'], ['platinum', '🤍 #3 PLATINUM']];
-  $('leaderList').innerHTML = (list.slice(0, 100).map(L => {
+  const winPlaces = [['crown', '🏆', 'crown-tag', '🥇 1ST · BIGGEST WIN'], ['podium2', '🥈', 'silver-tag', '2ND PLACE'], ['podium3', '🥉', 'bronze-tag', '3RD PLACE']];
+  const winRows = biggestWins().map((w, i) => { const p = winPlaces[i]; return `<div class="leader-row ${p[0]}" data-player="${esc(w.display || '')}" role="button" tabindex="0" aria-label="Load ${esc(w.display || '')}">
+      <span class="rk">${p[1]}</span>
+      <span class="leader-main"><b>${esc(w.display || '—')} <span class="tag ${p[2]}">${p[3]}</span></b><small>${w.side === 'long' ? 'LONG' : 'SHORT'} ${esc(w.coin)} ${w.lev}x · ${fmtUsd(w.entry)} → ${fmtUsd(w.exit)}</small></span>
+      <span class="leader-nums"><b class="pos">+${fmtInt(w.pnl)}</b><small>sats · one trade</small></span></div>`; }).join('');
+  $('leaderList').innerHTML = winRows + (list.slice(0, 100).map(L => {
     const i = LEADERS.indexOf(L);
     return `<div class="leader-row${i >= 0 && i < 3 ? ' metal-' + (i + 1) : ''}${flashCls(L.name)}" data-player="${esc(L.name)}" role="button" tabindex="0" aria-label="Load ${esc(L.name)}">
       <span class="rk">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1)}</span>
@@ -1764,14 +1782,24 @@ function renderLeaders() {
   });
   renderPodium();
 }
+function biggestWins() {
+  const list = (GAME && GAME.biggest_wins && GAME.biggest_wins.length) ? GAME.biggest_wins : (GAME && GAME.biggest_win ? [GAME.biggest_win] : []);
+  return list.slice(0, 3);
+}
 function renderBiggest() {
-  const bw = GAME && GAME.biggest_win, el = $('bigWin');
+  const wins = biggestWins(), bw = wins[0], el = $('bigWin');
   if (!el) return;
   if (!bw) { el.hidden = true; return; }
   el.hidden = false;
   $('bigWinWho').textContent = bw.display || '—';
   $('bigWinTrade').textContent = (bw.side === 'long' ? 'LONG' : 'SHORT') + ' ' + bw.coin + ' ' + bw.lev + 'x · ' + fmtUsd(bw.entry) + ' → ' + fmtUsd(bw.exit);
   $('bigWinPnl').textContent = '+' + fmtInt(bw.pnl) + ' sats';
+  const pd = $('bigWinPodium');
+  if (pd) {
+    const places = [['silver', '🥈 2ND PLACE'], ['bronze', '🥉 3RD PLACE']];
+    pd.innerHTML = wins.slice(1, 3).map((w, i) => `<div class="bw-place ${places[i][0]}"><span class="bw-rank">${places[i][1]}</span><b>${esc(w.display || '—')}</b><span>${w.side === 'long' ? 'LONG' : 'SHORT'} ${esc(w.coin)} ${w.lev}x · ${fmtUsd(w.entry)} → ${fmtUsd(w.exit)}</span><span class="bw-pnl2">+${fmtInt(w.pnl)} sats</span></div>`).join('');
+    pd.style.display = wins.length > 1 ? '' : 'none';
+  }
 }
 function renderPodium() {
   let pd = $('podium');
