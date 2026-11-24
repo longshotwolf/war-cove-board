@@ -1272,8 +1272,8 @@ const ALL_SYMS = COIN_KEYS.concat(STOCK_KEYS);
 const TFS = ['1M', '3M', '1H', '4H', '6H', '1D', '1W', '1MO'];
 /* OKX bar names + bucket sizes. OKX '1M' bar = monthly; key '1MO' keeps it apart from 1-minute. */
 const TF_BAR = {'1M': '1m', '3M': '3m', '1H': '1H', '4H': '4H', '6H': '6H', '1D': '1D', '1W': '1W', '1MO': '1M'};
-const TF_MS  = {'1M': 6e4, '3M': 18e4, '1H': 36e5, '4H': 144e5, '6H': 216e5, '1D': 864e5, '1W': 6048e5};
-const GAME_TF_KEY = {'3M': '3m', '1H': '1h', '6H': '6h'};
+const TF_MS  = {'1M': 6e4, '3M': 18e4, '1H': 36e5, '4H': 144e5, '6H': 216e5, '1D': 864e5, '1W': 6048e5, '1MO': 2592e6};
+const GAME_TF_KEY = {'3M': '3m', '1H': '1h', '4H': '4h', '6H': '6h', '1D': '1d', '1W': '1w', '1MO': '1mo'};
 
 const state = {
   coin: 'LTC', tf: '3M', live: true, following: true, autoScale: true, autoCentre: true, lastManual: 0,
