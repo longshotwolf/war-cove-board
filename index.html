@@ -1634,8 +1634,9 @@ function renderWallSwitch() {
   const eff = wallCoin();
   if (!ws.dataset.built) {
     ws.dataset.built = '1';
-    ws.innerHTML = '<span class="ws-label">COIN — WHOLE BOARD</span>' +
+    ws.innerHTML = '<span class="ws-label">WHOLE BOARD — COINS + STOCKS</span>' +
       WALL_KEYS.map(k => `<button type="button" class="ws-btn" data-w="${k}">${k}</button>`).join('') +
+      STOCK_KEYS.map(k => `<button type="button" class="ws-btn" data-w="${k}">${k}</button>`).join('') +
       '<button type="button" class="ws-btn" data-w="">CHART</button>' +
       '<span class="ws-mode" id="wallMode"></span>';
     ws.querySelectorAll('.ws-btn').forEach(b => b.addEventListener('click', () => setBoardCoin(b.dataset.w || null)));
@@ -1649,6 +1650,7 @@ function renderWallSwitch() {
 }
 async function fetchBook() {
   const k = wallCoin(), seq = ++bookFetchSeq;
+  if (STOCKS[k]) return; /* stocks ride the game tape — no order book to fetch */
   try {
     const data = await okxGet('/market/books?instId=' + k + '-USDT&sz=400');
     const c = calcBook(data[0].bids || [], data[0].asks || []);
@@ -1664,6 +1666,19 @@ async function fetchBook() {
 }
 function renderBook() {
   const k = wallCoin(), C = COINS[k] || {dec: WALL_DEC[k] != null ? WALL_DEC[k] : 2, bid: null, ask: null};
+  if (STOCKS[k]) {
+    const px = STOCKS[k].price;
+    $('mktBid').textContent = '—'; $('mktAsk').textContent = '—';
+    $('mktMid').textContent = px != null ? '$' + fmt(px, 2) : '—';
+    $('mktSpread').textContent = '—'; $('mktSpreadValue').textContent = '—';
+    $('mktSpreadLabel').textContent = 'stock tape — no spread on ' + k;
+    $('mktLiquidity').textContent = '—'; $('mktLiquidityDetail').textContent = '—';
+    $('bidWall').textContent = '—'; $('bidWallSize').textContent = '—';
+    $('askWall').textContent = '—'; $('askWallSize').textContent = '—';
+    $('bidWallBar').style.width = '0%'; $('askWallBar').style.width = '0%';
+    $('wallVerdict').textContent = k + ' rides the game tape — stocks carry no order book, so no bid wall or ask wall stands here. The chart and the reads are all on ' + k + '.';
+    return;
+  }
   const B = (BOOK && BOOK.coin === k) ? BOOK : null;
   const bid = B ? B.bid : C.bid, ask = B ? B.ask : C.ask;
   if (bid != null) $('mktBid').textContent = '$' + fmt(bid, C.dec);
