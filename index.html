@@ -1766,12 +1766,7 @@ function buildLeaders(s) {
 function renderLeaders() {
   const list = LEADERS.filter(L => state.armyFilter === 'all' || L.army === state.armyFilter);
   const METAL_TAGS = [['diamond', '💎 #1 DIAMOND'], ['gold24', '🥇 #2 · 24-KARAT GOLD'], ['platinum', '🤍 #3 PLATINUM']];
-  const winPlaces = [['crown', '🏆', 'crown-tag', '🥇 1ST · BIGGEST WIN'], ['podium2', '🥈', 'silver-tag', '2ND PLACE'], ['podium3', '🥉', 'bronze-tag', '3RD PLACE']];
-  const winRows = biggestWins().map((w, i) => { const p = winPlaces[i]; return `<div class="leader-row ${p[0]}" data-player="${esc(w.display || '')}" role="button" tabindex="0" aria-label="Load ${esc(w.display || '')}">
-      <span class="rk">${p[1]}</span>
-      <span class="leader-main"><b>${esc(w.display || '—')} <span class="tag ${p[2]}">${p[3]}</span></b><small>${w.side === 'long' ? 'LONG' : 'SHORT'} ${esc(w.coin)} ${w.lev}x · ${fmtUsd(w.entry)} → ${fmtUsd(w.exit)}</small></span>
-      <span class="leader-nums"><b class="pos">+${fmtInt(w.pnl)}</b><small>sats · one trade</small></span></div>`; }).join('');
-  $('leaderList').innerHTML = winRows + (list.slice(0, 100).map(L => {
+  $('leaderList').innerHTML = (list.slice(0, 100).map(L => {
     const i = LEADERS.indexOf(L);
     return `<div class="leader-row${i >= 0 && i < 3 ? ' metal-' + (i + 1) : ''}${flashCls(L.name)}" data-player="${esc(L.name)}" role="button" tabindex="0" aria-label="Load ${esc(L.name)}">
       <span class="rk">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1)}</span>
