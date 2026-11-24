@@ -906,7 +906,7 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
   <div class="market-army" id="marketArmy">
     <section class="panel" aria-label="The Market">
       <div class="ma-head"><h3>📈 THE MARKET</h3><span>Win race • Walls • Liquidity</span></div>
-      <div class="wall-switch" id="wallSwitch" role="group" aria-label="Liquidity and walls coin switch"></div>
+      <div class="wall-switch" id="wallSwitch" role="group" aria-label="Whole board coin switch"></div>
       <div id="raceList"></div>
       <div class="ba-grid">
         <div class="ba-box bid"><label>Bid — buyers</label><b id="mktBid">—</b></div>
@@ -1247,8 +1247,11 @@ const COINS = {
   LTC: {name: 'Litecoin', dec: 2, price: null, chg: null, bid: null, ask: null},
   BTC: {name: 'Bitcoin',  dec: 2, price: null, chg: null, bid: null, ask: null},
   ETH: {name: 'Ethereum', dec: 2, price: null, chg: null, bid: null, ask: null},
+  SOL: {name: 'Solana', dec: 2, price: null, chg: null, bid: null, ask: null},
+  BCH: {name: 'Bitcoin Cash', dec: 2, price: null, chg: null, bid: null, ask: null},
+  BNB: {name: 'BNB', dec: 2, price: null, chg: null, bid: null, ask: null},
 };
-const COIN_KEYS = ['LTC', 'BTC', 'ETH'];
+const COIN_KEYS = ['LTC', 'BTC', 'ETH', 'SOL', 'BCH', 'BNB'];
 /* Chart instrument picker (the Warlord's order, Nov 12 2026): every
    instrument we trade gets a button on the chart — the 3 coins plus
    the 7 stocks. Stock Heikin-Ashi candles ride the game relay
@@ -1275,9 +1278,9 @@ const state = {
   view: {count: 42, endOff: 0, yScale: 1, yOff: 0}, selectedPlayer: null,
   armyFilter: 'all', buildSide: 'LONG', buildLev: 25, levPos: -1, levVal: 25,
 };
-const RAW = {LTC: {}, BTC: {}, ETH: {}};   /* raw candles per coin/tf (okx mode) */
-const HIST = {LTC: {}, BTC: {}, ETH: {}};  /* Heikin-Ashi candles {t,o,h,l,c} */
-const READS = {LTC: {}, BTC: {}, ETH: {}}; /* per coin/tf: {pvc, army, gas, momentum, spread, word} */
+const RAW = {LTC: {}, BTC: {}, ETH: {}, SOL: {}, BCH: {}, BNB: {}};   /* raw candles per coin/tf (okx mode) */
+const HIST = {LTC: {}, BTC: {}, ETH: {}, SOL: {}, BCH: {}, BNB: {}};  /* Heikin-Ashi candles {t,o,h,l,c} */
+const READS = {LTC: {}, BTC: {}, ETH: {}, SOL: {}, BCH: {}, BNB: {}}; /* per coin/tf: {pvc, army, gas, momentum, spread, word} */
 STOCK_KEYS.forEach(k => { RAW[k] = {}; HIST[k] = {}; READS[k] = {}; });
 let LEADERS = [], POSITIONS = [], GAME = null, BFDATA = null, BOOK = null;
 let LOCAL_NOTES = [], LOG_CLEARED_BEFORE = 0;
@@ -1597,11 +1600,14 @@ async function fetchAggBook(k, mid) {
   return calcAggBook(books, mid);
 }
 let bookFetchSeq = 0;
-/* Walls coin switch (Warlord's order, Nov 23, 2026): the liquidity and
-   both walls in THE MARKET panel flip to any of the six game coins,
-   independent of the chart coin. WALLCOIN null = the walls follow the
-   chart coin (the standing behavior); a tapped coin pins the walls to
-   it; CHART hands them back to the chart coin. */
+/* Whole-board coin switch (Warlord's orders, Nov 23, 2026): the coin
+   buttons flip EVERYTHING to the tapped coin together — the chart
+   candles, the market panel, the liquidity and both walls (bid wall =
+   support, ask wall = resistance) all read for that one coin. "If I'm
+   on Bitcoin Cash, everything reads for Bitcoin Cash." WALLCOIN null =
+   the walls follow the chart coin; a tapped coin drives the chart to
+   it AND pins the walls to it; CHART hands the walls back to following
+   the chart coin. */
 let WALLCOIN = null, WALL_EFF = 'LTC';
 const WALL_KEYS = ['LTC', 'BTC', 'ETH', 'SOL', 'BCH', 'BNB'];
 const WALL_DEC = {LTC: 2, BTC: 2, ETH: 2, SOL: 2, BCH: 2, BNB: 2};
@@ -1617,23 +1623,29 @@ function setWallCoin(k) {
   renderBook();
   fetchBook();
 }
+/* One tap, whole board: the chart coin and the walls move together. */
+function setBoardCoin(k) {
+  if (!k) { setWallCoin(null); return; }
+  setCoin(k);
+  setWallCoin(k);
+}
 function renderWallSwitch() {
   const ws = $('wallSwitch'); if (!ws) return;
   const eff = wallCoin();
   if (!ws.dataset.built) {
     ws.dataset.built = '1';
-    ws.innerHTML = '<span class="ws-label">WALLS · LIQUIDITY</span>' +
+    ws.innerHTML = '<span class="ws-label">COIN — WHOLE BOARD</span>' +
       WALL_KEYS.map(k => `<button type="button" class="ws-btn" data-w="${k}">${k}</button>`).join('') +
       '<button type="button" class="ws-btn" data-w="">CHART</button>' +
       '<span class="ws-mode" id="wallMode"></span>';
-    ws.querySelectorAll('.ws-btn').forEach(b => b.addEventListener('click', () => setWallCoin(b.dataset.w || null)));
+    ws.querySelectorAll('.ws-btn').forEach(b => b.addEventListener('click', () => setBoardCoin(b.dataset.w || null)));
   }
   ws.querySelectorAll('.ws-btn').forEach(b => {
     b.classList.toggle('active', WALLCOIN ? b.dataset.w === WALLCOIN : b.dataset.w === '');
     b.classList.toggle('eff', !WALLCOIN && b.dataset.w === eff);
   });
   const wm = $('wallMode');
-  if (wm) wm.textContent = WALLCOIN ? '— showing ' + eff + ' walls (pinned)' : '— showing ' + eff + ' walls (follows the chart)';
+  if (wm) wm.textContent = WALLCOIN ? '— whole board on ' + eff : '— walls follow the chart (' + eff + ')';
 }
 async function fetchBook() {
   const k = wallCoin(), seq = ++bookFetchSeq;
@@ -2706,6 +2718,7 @@ let CHART_H = window.innerWidth < 900 ? 260 : 340;
    5–20x (crypto 5–100x). */
 const INSTRUMENTS = [
   {sym: 'LTC', name: 'Litecoin', kind: 'crypto'}, {sym: 'BTC', name: 'Bitcoin', kind: 'crypto'}, {sym: 'ETH', name: 'Ethereum', kind: 'crypto'},
+  {sym: 'SOL', name: 'Solana', kind: 'crypto'}, {sym: 'BCH', name: 'Bitcoin Cash', kind: 'crypto'}, {sym: 'BNB', name: 'BNB', kind: 'crypto'},
   {sym: 'NVDA', name: 'NVIDIA', kind: 'stock'}, {sym: 'GOOGL', name: 'Alphabet', kind: 'stock'}, {sym: 'MSTR', name: 'MicroStrategy', kind: 'stock'},
   {sym: 'TSLA', name: 'Tesla', kind: 'stock'}, {sym: 'META', name: 'Meta', kind: 'stock'}, {sym: 'PLTR', name: 'Palantir', kind: 'stock'}, {sym: 'COIN', name: 'Coinbase', kind: 'stock'}
 ];
