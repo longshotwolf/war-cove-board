@@ -51,10 +51,12 @@ a{color:inherit}
 .intro{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end;margin-bottom:16px}
 .leader-flex{display:flex;align-items:stretch}
 .leader-flex #leaderList{flex:1;min-width:0}
-.bigwin{display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;flex:0 0 228px;margin:6px 12px 12px 4px;padding:16px 14px;border:1px solid var(--gold,#f5c542);border-radius:12px;background:linear-gradient(180deg,rgba(245,197,66,.16),rgba(245,197,66,.05),rgba(245,197,66,.16));box-shadow:0 0 24px rgba(245,197,66,.22);font-size:15px;letter-spacing:.02em}
+.bigwin{display:flex;flex-direction:column;gap:9px;align-items:center;justify-content:center;text-align:center;flex:0 0 252px;margin:6px 12px 12px 4px;padding:18px 16px;border:1px solid var(--gold,#f5c542);border-radius:12px;background:linear-gradient(180deg,rgba(245,197,66,.16),rgba(245,197,66,.05),rgba(245,197,66,.16));box-shadow:0 0 24px rgba(245,197,66,.22);font-size:15px;letter-spacing:.02em}
 .bigwin[hidden]{display:none}
-.bigwin .bigwin-label{font-weight:900;letter-spacing:.12em;color:var(--gold,#f5c542)}
-.bigwin .bigwin-pnl{color:var(--green,#2ecc71);font-size:19px}
+.bigwin .bigwin-label{font-weight:900;letter-spacing:.12em;color:var(--gold,#f5c542);font-size:16px}
+.bigwin #bigWinWho{font-size:19px}
+.bigwin #bigWinTrade{font-size:14.5px;color:var(--muted);line-height:1.5}
+.bigwin .bigwin-pnl{color:var(--green,#2ecc71);font-size:23px}
 @media(max-width:900px){.leader-flex{flex-direction:column}.bigwin{flex:1 1 auto;margin:10px 12px 14px}}
 .wall-switch{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px 16px 2px}
 .wall-switch .ws-label{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--muted)}
@@ -1748,12 +1750,7 @@ function buildLeaders(s) {
 function renderLeaders() {
   const list = LEADERS.filter(L => state.armyFilter === 'all' || L.army === state.armyFilter);
   const METAL_TAGS = [['diamond', '💎 #1 DIAMOND'], ['gold24', '🥇 #2 · 24-KARAT GOLD'], ['platinum', '🤍 #3 PLATINUM']];
-  const bw = GAME && GAME.biggest_win;
-  const crown = bw ? `<div class="leader-row crown" data-player="${esc(bw.display)}" role="button" tabindex="0" aria-label="Load ${esc(bw.display)}">
-      <span class="rk">🏆</span>
-      <span class="leader-main"><b>${esc(bw.display)} <span class="tag crown-tag">BIGGEST WIN</span></b><small>${bw.side === 'long' ? 'LONG' : 'SHORT'} ${esc(bw.coin)} ${bw.lev}x · ${fmtUsd(bw.entry)} → ${fmtUsd(bw.exit)}</small></span>
-      <span class="leader-nums"><b class="pos">+${fmtInt(bw.pnl)}</b><small>sats · one trade</small></span></div>` : '';
-  $('leaderList').innerHTML = crown + (list.slice(0, 100).map(L => {
+  $('leaderList').innerHTML = (list.slice(0, 100).map(L => {
     const i = LEADERS.indexOf(L);
     return `<div class="leader-row${i >= 0 && i < 3 ? ' metal-' + (i + 1) : ''}${flashCls(L.name)}" data-player="${esc(L.name)}" role="button" tabindex="0" aria-label="Load ${esc(L.name)}">
       <span class="rk">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1)}</span>
@@ -1773,7 +1770,7 @@ function renderBiggest() {
   if (!bw) { el.hidden = true; return; }
   el.hidden = false;
   $('bigWinWho').textContent = bw.display || '—';
-  $('bigWinTrade').textContent = '· ' + (bw.side === 'long' ? 'LONG' : 'SHORT') + ' ' + bw.coin + ' ' + bw.lev + 'x · ' + fmtUsd(bw.entry) + ' → ' + fmtUsd(bw.exit) + ' ·';
+  $('bigWinTrade').textContent = (bw.side === 'long' ? 'LONG' : 'SHORT') + ' ' + bw.coin + ' ' + bw.lev + 'x · ' + fmtUsd(bw.entry) + ' → ' + fmtUsd(bw.exit);
   $('bigWinPnl').textContent = '+' + fmtInt(bw.pnl) + ' sats';
 }
 function renderPodium() {
