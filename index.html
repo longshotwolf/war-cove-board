@@ -1600,14 +1600,13 @@ async function fetchAggBook(k, mid) {
   return calcAggBook(books, mid);
 }
 let bookFetchSeq = 0;
-/* Whole-board coin switch (Warlord's orders, Nov 23, 2026): the coin
-   buttons flip EVERYTHING to the tapped coin together — the chart
-   candles, the market panel, the liquidity and both walls (bid wall =
-   support, ask wall = resistance) all read for that one coin. "If I'm
-   on Bitcoin Cash, everything reads for Bitcoin Cash." WALLCOIN null =
-   the walls follow the chart coin; a tapped coin drives the chart to
-   it AND pins the walls to it; CHART hands the walls back to following
-   the chart coin. */
+/* Walls · liquidity switch (Warlord's orders, Nov 23, 2026, narrowed
+   same evening): this row drives the MARKET panel only — the liquidity
+   and both walls (bid wall = support, ask wall = resistance) pin to
+   the tapped coin or stock. The candle chart does NOT ride with these
+   buttons: it keeps its OWN coin buttons, uncoupled, and those now
+   carry all six coins (LTC · BTC · ETH · SOL · BCH · BNB). WALLCOIN
+   null = the walls follow the chart coin; CHART hands them back. */
 let WALLCOIN = null, WALL_EFF = 'LTC';
 const WALL_KEYS = ['LTC', 'BTC', 'ETH', 'SOL', 'BCH', 'BNB'];
 const WALL_DEC = {LTC: 2, BTC: 2, ETH: 2, SOL: 2, BCH: 2, BNB: 2};
@@ -1623,30 +1622,25 @@ function setWallCoin(k) {
   renderBook();
   fetchBook();
 }
-/* One tap, whole board: the chart coin and the walls move together. */
-function setBoardCoin(k) {
-  if (!k) { setWallCoin(null); return; }
-  setCoin(k);
-  setWallCoin(k);
-}
+
 function renderWallSwitch() {
   const ws = $('wallSwitch'); if (!ws) return;
   const eff = wallCoin();
   if (!ws.dataset.built) {
     ws.dataset.built = '1';
-    ws.innerHTML = '<span class="ws-label">WHOLE BOARD — COINS + STOCKS</span>' +
+    ws.innerHTML = '<span class="ws-label">WALLS · LIQUIDITY — COINS + STOCKS</span>' +
       WALL_KEYS.map(k => `<button type="button" class="ws-btn" data-w="${k}">${k}</button>`).join('') +
       STOCK_KEYS.map(k => `<button type="button" class="ws-btn" data-w="${k}">${k}</button>`).join('') +
       '<button type="button" class="ws-btn" data-w="">CHART</button>' +
       '<span class="ws-mode" id="wallMode"></span>';
-    ws.querySelectorAll('.ws-btn').forEach(b => b.addEventListener('click', () => setBoardCoin(b.dataset.w || null)));
+    ws.querySelectorAll('.ws-btn').forEach(b => b.addEventListener('click', () => setWallCoin(b.dataset.w || null)));
   }
   ws.querySelectorAll('.ws-btn').forEach(b => {
     b.classList.toggle('active', WALLCOIN ? b.dataset.w === WALLCOIN : b.dataset.w === '');
     b.classList.toggle('eff', !WALLCOIN && b.dataset.w === eff);
   });
   const wm = $('wallMode');
-  if (wm) wm.textContent = WALLCOIN ? '— whole board on ' + eff : '— walls follow the chart (' + eff + ')';
+  if (wm) wm.textContent = WALLCOIN ? (STOCKS[eff] ? '— ' + eff + ' stock tape (pinned)' : '— showing ' + eff + ' walls (pinned)') : '— showing ' + eff + ' walls (follows the chart)';
 }
 async function fetchBook() {
   const k = wallCoin(), seq = ++bookFetchSeq;
