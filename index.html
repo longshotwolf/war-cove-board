@@ -49,9 +49,13 @@ a{color:inherit}
 /* LAYOUT */
 .wrap{max-width:1440px;margin:0 auto;padding:18px 20px 28px}
 .intro{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end;margin-bottom:16px}
-.bigwin{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;text-align:center;margin:0 auto 14px;max-width:1180px;padding:10px 18px;border:1px solid var(--gold,#f5c542);border-radius:12px;background:linear-gradient(90deg,rgba(245,197,66,.16),rgba(245,197,66,.05),rgba(245,197,66,.16));box-shadow:0 0 24px rgba(245,197,66,.22);font-size:15px;letter-spacing:.02em}
+.leader-flex{display:flex;align-items:stretch}
+.leader-flex #leaderList{flex:1;min-width:0}
+.bigwin{display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;flex:0 0 228px;margin:6px 12px 12px 4px;padding:16px 14px;border:1px solid var(--gold,#f5c542);border-radius:12px;background:linear-gradient(180deg,rgba(245,197,66,.16),rgba(245,197,66,.05),rgba(245,197,66,.16));box-shadow:0 0 24px rgba(245,197,66,.22);font-size:15px;letter-spacing:.02em}
+.bigwin[hidden]{display:none}
 .bigwin .bigwin-label{font-weight:900;letter-spacing:.12em;color:var(--gold,#f5c542)}
-.bigwin .bigwin-pnl{color:var(--green,#2ecc71);font-size:17px}
+.bigwin .bigwin-pnl{color:var(--green,#2ecc71);font-size:19px}
+@media(max-width:900px){.leader-flex{flex-direction:column}.bigwin{flex:1 1 auto;margin:10px 12px 14px}}
 .wall-switch{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px 16px 2px}
 .wall-switch .ws-label{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--muted)}
 .wall-switch .ws-btn{padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--text);font-size:12px;font-weight:700;cursor:pointer}
@@ -885,8 +889,6 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
   </div>
 </header>
 
-<div class="bigwin" id="bigWin" hidden>🏆 <span class="bigwin-label">BIGGEST WIN SO FAR</span> <b id="bigWinWho">—</b> <span id="bigWinTrade">—</span> <b class="bigwin-pnl" id="bigWinPnl">—</b></div>
-
 <main class="wrap">
 <div class="wc-react" id="wcReact" role="group" aria-label="Reactions — tap to react"><span class="wc-react-label">REACT</span><button type="button" data-r="fire" aria-label="Fire reaction">🔥 <b>0</b></button><button type="button" data-r="green" aria-label="Green army reaction">🟢 <b>0</b></button><button type="button" data-r="red" aria-label="Red army reaction">🔴 <b>0</b></button><button type="button" data-r="swords" aria-label="Battle reaction">⚔️ <b>0</b></button><button type="button" data-r="skull" aria-label="Liquidated reaction">💀 <b>0</b></button><button type="button" data-r="trophy" aria-label="Trophy reaction">🏆 <b>0</b></button><button type="button" data-r="wolf" aria-label="Wolf reaction">🐺 <b>0</b></button></div>
   <div class="intro">
@@ -1025,7 +1027,8 @@ html.streamview .wc-react,html.streamview #wcGearBtn,html.streamview .wc-set-pan
   </div></div><div class="podium-head">🏆 THE PODIUM — TOP OF THE BOOKS</div>
 <div class="podium" id="podium" aria-label="Top three — Diamond, 24-karat gold and platinum"></div>
         <div class="leader-head">📋 LEADERBOARD — THE BOOKS</div>
-<div id="leaderList"></div>
+<div class="leader-flex"><div id="leaderList"></div>
+<aside class="bigwin" id="bigWin" hidden>🏆 <span class="bigwin-label">BIGGEST WIN SO FAR</span> <b id="bigWinWho">—</b> <span id="bigWinTrade">—</span> <b class="bigwin-pnl" id="bigWinPnl">—</b></aside></div>
         <div style="padding:12px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Total players tracked</span><strong style="color:var(--text)" id="playerCount">—</strong></div>
       </section>
 
